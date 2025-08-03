@@ -1,12 +1,54 @@
 ﻿<Window x:Class="GestionConges.WPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:GestionConges.WPF"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Gestion des Congés - Test Base de Données" 
+        Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
 
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titre -->
+        <TextBlock Grid.Row="0" 
+                   Text="🎉 Test de Connexion Base de Données" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,0,0,20"/>
+
+        <!-- Boutons de test -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <Button Name="BtnTestConnexion" Content="🔗 Tester Connexion" 
+                    Padding="15,5" Margin="5" Click="BtnTestConnexion_Click"/>
+            <Button Name="BtnAfficherUtilisateurs" Content="👥 Afficher Utilisateurs" 
+                    Padding="15,5" Margin="5" Click="BtnAfficherUtilisateurs_Click"/>
+            <Button Name="BtnAfficherPoles" Content="🏢 Afficher Pôles" 
+                    Padding="15,5" Margin="5" Click="BtnAfficherPoles_Click"/>
+            <Button Name="BtnAfficherTypesAbsences" Content="📝 Types Absences" 
+                    Padding="15,5" Margin="5" Click="BtnAfficherTypesAbsences_Click"/>
+        </StackPanel>
+
+        <!-- Zone d'affichage des résultats -->
+        <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="10">
+            <ScrollViewer>
+                <TextBlock Name="TxtResultats" 
+                           Text="Cliquez sur un bouton pour tester la base de données..."
+                           FontFamily="Consolas"
+                           FontSize="12"
+                           TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Statut -->
+        <StatusBar Grid.Row="3" Margin="0,10,0,0">
+            <StatusBarItem>
+                <TextBlock Name="TxtStatut" Text="Prêt"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

@@ -91,21 +91,23 @@ namespace GestionConges.Core.Data
 
         private void SeedData(ModelBuilder modelBuilder)
         {
+            var seedDate = new DateTime(2025, 1, 1, 12, 0, 0);
+
             // Types d'absences par défaut
             modelBuilder.Entity<TypeAbsence>().HasData(
-                new TypeAbsence { Id = 1, Nom = "Congés Payés", CouleurHex = "#e74c3c", OrdreAffichage = 1 },
-                new TypeAbsence { Id = 2, Nom = "RTT", CouleurHex = "#3498db", OrdreAffichage = 2 },
-                new TypeAbsence { Id = 3, Nom = "Maladie", CouleurHex = "#f39c12", OrdreAffichage = 3 },
-                new TypeAbsence { Id = 4, Nom = "Déplacement", CouleurHex = "#27ae60", OrdreAffichage = 4 },
-                new TypeAbsence { Id = 5, Nom = "Formation", CouleurHex = "#9b59b6", OrdreAffichage = 5 }
+                new TypeAbsence { Id = 1, Nom = "Congés Payés", CouleurHex = "#e74c3c", OrdreAffichage = 1, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
+                new TypeAbsence { Id = 2, Nom = "RTT", CouleurHex = "#3498db", OrdreAffichage = 2, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
+                new TypeAbsence { Id = 3, Nom = "Maladie", CouleurHex = "#f39c12", OrdreAffichage = 3, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
+                new TypeAbsence { Id = 4, Nom = "Déplacement", CouleurHex = "#27ae60", OrdreAffichage = 4, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
+                new TypeAbsence { Id = 5, Nom = "Formation", CouleurHex = "#9b59b6", OrdreAffichage = 5, Actif = true, NecessiteValidation = true, DateCreation = seedDate }
             );
 
             // Pôles par défaut
             modelBuilder.Entity<Pole>().HasData(
-                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel" },
-                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux" },
-                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex" },
-                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support" }
+                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", Actif = true, DateCreation = seedDate }
             );
 
             // Utilisateur admin par défaut (mot de passe: "admin123")
@@ -117,9 +119,11 @@ namespace GestionConges.Core.Data
                     Prenom = "Super",
                     Email = "admin@entreprise.com",
                     Login = "admin",
-                    MotDePasseHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    MotDePasseHash = "$2a$11$rBV2HDeWlL.rsozGbz2gauO9H8sAzM7Ke.K5nCS5JoTa/4EK8TA4K", // BCrypt de "admin123"
                     Role = RoleUtilisateur.ChefEquipe,
-                    PoleId = null
+                    PoleId = null,
+                    Actif = true,
+                    DateCreation = seedDate
                 }
             );
         }
