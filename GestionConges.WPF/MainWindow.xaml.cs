@@ -1,172 +1,177 @@
-﻿using System.Text;
-using System.Windows;
-using Microsoft.EntityFrameworkCore;
-using GestionConges.Core.Data;
-using GestionConges.Core.Models;
+﻿using System.Windows;
+using System.Windows.Controls;
+using GestionConges.Core.Enums;
 
 namespace GestionConges.WPF
 {
     public partial class MainWindow : Window
     {
-        private readonly GestionCongesContext _context;
-
         public MainWindow()
         {
             InitializeComponent();
-            _context = App.GetService<GestionCongesContext>();
+            InitialiserInterface();
         }
 
-        private async void BtnTestConnexion_Click(object sender, RoutedEventArgs e)
+        private void InitialiserInterface()
         {
-            TxtStatut.Text = "Test de connexion en cours...";
+            var utilisateur = App.UtilisateurConnecte;
 
-            try
+            if (utilisateur == null)
             {
-                var canConnect = await _context.Database.CanConnectAsync();
-                var result = new StringBuilder();
-                result.AppendLine("=== TEST DE CONNEXION ===");
-                result.AppendLine($"✅ Connexion: {(canConnect ? "RÉUSSIE" : "ÉCHEC")}");
-                result.AppendLine($"📍 Base: {_context.Database.GetConnectionString()}");
-                result.AppendLine($"🕒 Date/Heure: {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
-
-                if (canConnect)
-                {
-                    var pendingMigrations = await _context.Database.GetPendingMigrationsAsync();
-                    var appliedMigrations = await _context.Database.GetAppliedMigrationsAsync();
-
-                    result.AppendLine($"📊 Migrations appliquées: {appliedMigrations.Count()}");
-                    result.AppendLine($"⏳ Migrations en attente: {pendingMigrations.Count()}");
-
-                    if (pendingMigrations.Any())
-                    {
-                        result.AppendLine("⚠️ ATTENTION: Migrations en attente!");
-                        foreach (var migration in pendingMigrations)
-                        {
-                            result.AppendLine($"   - {migration}");
-                        }
-                    }
-                }
-
-                TxtResultats.Text = result.ToString();
-                TxtStatut.Text = canConnect ? "✅ Connexion réussie" : "❌ Échec connexion";
+                MessageBox.Show("Erreur: Aucun utilisateur connecté", "Erreur");
+                Close();
+                return;
             }
-            catch (Exception ex)
-            {
-                TxtResultats.Text = $"❌ ERREUR DE CONNEXION:\n\n{ex.Message}\n\nDétails:\n{ex}";
-                TxtStatut.Text = "❌ Erreur de connexion";
-            }
+
+            // Affichage des infos utilisateur
+            TxtUtilisateurNom.Text = utilisateur.NomComplet;
+            TxtUtilisateurRole.Text = $"{utilisateur.RoleLibelle} - {utilisateur.Pole?.Nom ?? "Équipe Projets"}";
+            TxtBienvenue.Text = $"Connecté en tant que {utilisateur.NomComplet}";
+
+            // Affichage des boutons selon les droits
+            ConfigurerMenuSelonDroits(utilisateur.Role);
+
+            // Sélection de l'onglet accueil par défaut
+            SelectionnerOnglet(BtnAccueil);
         }
 
-        private async void BtnAfficherUtilisateurs_Click(object sender, RoutedEventArgs e)
+        private void ConfigurerMenuSelonDroits(RoleUtilisateur role)
         {
-            TxtStatut.Text = "Chargement des utilisateurs...";
+            // Tous les utilisateurs voient : Accueil, Mes Congés, Calendrier
+            BtnAccueil.Visibility = Visibility.Visible;
+            BtnMesConges.Visibility = Visibility.Visible;
+            BtnCalendrier.Visibility = Visibility.Visible;
 
-            try
+            // Les chefs de pôle et chef d'équipe voient les validations
+            if (role == RoleUtilisateur.ChefPole || role == RoleUtilisateur.ChefEquipe)
             {
-                var utilisateurs = await _context.Utilisateurs
-                    .Include(u => u.Pole)
-                    .ToListAsync();
-
-                var result = new StringBuilder();
-                result.AppendLine("=== UTILISATEURS ===");
-                result.AppendLine($"📊 Total: {utilisateurs.Count} utilisateur(s)");
-                result.AppendLine();
-
-                foreach (var user in utilisateurs)
-                {
-                    result.AppendLine($"👤 {user.NomComplet}");
-                    result.AppendLine($"   📧 {user.Email}");
-                    result.AppendLine($"   🏷️ {user.RoleLibelle}");
-                    result.AppendLine($"   🏢 {user.Pole?.Nom ?? "Aucun pôle"}");
-                    result.AppendLine($"   ✅ {(user.Actif ? "Actif" : "Inactif")}");
-                    result.AppendLine();
-                }
-
-                TxtResultats.Text = result.ToString();
-                TxtStatut.Text = $"✅ {utilisateurs.Count} utilisateur(s) chargé(s)";
+                BtnValidation.Visibility = Visibility.Visible;
             }
-            catch (Exception ex)
+
+            // Seul le chef d'équipe voit l'administration
+            if (role == RoleUtilisateur.ChefEquipe)
             {
-                TxtResultats.Text = $"❌ ERREUR:\n\n{ex.Message}";
-                TxtStatut.Text = "❌ Erreur chargement utilisateurs";
+                BtnAdmin.Visibility = Visibility.Visible;
             }
         }
 
-        private async void BtnAfficherPoles_Click(object sender, RoutedEventArgs e)
+        private void SelectionnerOnglet(Button boutonActif)
         {
-            TxtStatut.Text = "Chargement des pôles...";
+            // Reset de tous les boutons - couleurs directes
+            var boutons = new[] { BtnAccueil, BtnMesConges, BtnCalendrier, BtnValidation, BtnAdmin };
 
-            try
+            foreach (var btn in boutons)
             {
-                var poles = await _context.Poles
-                    .Include(p => p.Chef)
-                    .Include(p => p.Employes)
-                    .ToListAsync();
-
-                var result = new StringBuilder();
-                result.AppendLine("=== PÔLES ===");
-                result.AppendLine($"📊 Total: {poles.Count} pôle(s)");
-                result.AppendLine();
-
-                foreach (var pole in poles)
-                {
-                    result.AppendLine($"🏢 {pole.Nom}");
-                    result.AppendLine($"   📝 {pole.Description ?? "Pas de description"}");
-                    result.AppendLine($"   👨‍💼 Chef: {pole.Chef?.NomComplet ?? "Aucun chef"}");
-                    result.AppendLine($"   👥 Employés: {pole.Employes.Count}");
-                    result.AppendLine($"   ✅ {(pole.Actif ? "Actif" : "Inactif")}");
-                    result.AppendLine();
-                }
-
-                TxtResultats.Text = result.ToString();
-                TxtStatut.Text = $"✅ {poles.Count} pôle(s) chargé(s)";
+                btn.Background = System.Windows.Media.Brushes.Transparent;
+                btn.Foreground = System.Windows.Media.Brushes.Blue;
+                btn.BorderBrush = System.Windows.Media.Brushes.Blue;
+                btn.BorderThickness = new Thickness(1);
             }
-            catch (Exception ex)
+
+            // Activation du bouton sélectionné
+            boutonActif.Background = System.Windows.Media.Brushes.Blue;
+            boutonActif.Foreground = System.Windows.Media.Brushes.White;
+            boutonActif.BorderThickness = new Thickness(0);
+        }
+
+        // ===============================================
+        // Gestionnaires d'événements du menu
+        // ===============================================
+
+        private void BtnAccueil_Click(object sender, RoutedEventArgs e)
+        {
+            SelectionnerOnglet(BtnAccueil);
+            TxtStatut.Text = "Accueil";
+        }
+
+        private void BtnMesConges_Click(object sender, RoutedEventArgs e)
+        {
+            SelectionnerOnglet(BtnMesConges);
+            TxtStatut.Text = "Mes congés";
+            AfficherMessageTemporaire("📅 Vue 'Mes Congés' - En cours de développement");
+        }
+
+        private void BtnCalendrier_Click(object sender, RoutedEventArgs e)
+        {
+            SelectionnerOnglet(BtnCalendrier);
+            TxtStatut.Text = "Calendrier équipe";
+            AfficherMessageTemporaire("📊 Vue 'Calendrier Équipe' - En cours de développement");
+        }
+
+        private void BtnValidation_Click(object sender, RoutedEventArgs e)
+        {
+            SelectionnerOnglet(BtnValidation);
+            TxtStatut.Text = "Validations";
+            AfficherMessageTemporaire("✅ Vue 'Validations' - En cours de développement");
+        }
+
+        private void BtnAdmin_Click(object sender, RoutedEventArgs e)
+        {
+            SelectionnerOnglet(BtnAdmin);
+            TxtStatut.Text = "Administration";
+            AfficherMessageTemporaire("⚙️ Vue 'Administration' - En cours de développement");
+        }
+
+        private void BtnNouvelleDemandeRaccourci_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Fonctionnalité 'Nouvelle demande' en cours de développement !",
+                          "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BtnDeconnexion_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?",
+                                       "Déconnexion",
+                                       MessageBoxButton.YesNo,
+                                       MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
             {
-                TxtResultats.Text = $"❌ ERREUR:\n\n{ex.Message}";
-                TxtStatut.Text = "❌ Erreur chargement pôles";
+                App.UtilisateurConnecte = null;
+
+                // Fermer et relancer
+                Application.Current.Shutdown();
+                System.Diagnostics.Process.Start(System.Diagnostics.Process.GetCurrentProcess().MainModule!.FileName!);
             }
         }
 
-        private async void BtnAfficherTypesAbsences_Click(object sender, RoutedEventArgs e)
+        // ===============================================
+        // Méthodes utilitaires
+        // ===============================================
+
+        private void AfficherMessageTemporaire(string message)
         {
-            TxtStatut.Text = "Chargement des types d'absences...";
+            ContentArea.Children.Clear();
 
-            try
+            var stackPanel = new StackPanel
             {
-                var types = await _context.TypesAbsences
-                    .OrderBy(t => t.OrdreAffichage)
-                    .ToListAsync();
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
 
-                var result = new StringBuilder();
-                result.AppendLine("=== TYPES D'ABSENCES ===");
-                result.AppendLine($"📊 Total: {types.Count} type(s)");
-                result.AppendLine();
-
-                foreach (var type in types)
-                {
-                    result.AppendLine($"📝 {type.Nom}");
-                    result.AppendLine($"   🎨 Couleur: {type.CouleurHex}");
-                    result.AppendLine($"   📋 Description: {type.Description ?? "Aucune"}");
-                    result.AppendLine($"   ⚡ Validation requise: {(type.NecessiteValidation ? "Oui" : "Non")}");
-                    result.AppendLine($"   ✅ {(type.Actif ? "Actif" : "Inactif")}");
-                    result.AppendLine();
-                }
-
-                TxtResultats.Text = result.ToString();
-                TxtStatut.Text = $"✅ {types.Count} type(s) chargé(s)";
-            }
-            catch (Exception ex)
+            var textBlock = new TextBlock
             {
-                TxtResultats.Text = $"❌ ERREUR:\n\n{ex.Message}";
-                TxtStatut.Text = "❌ Erreur chargement types";
-            }
-        }
+                Text = message,
+                FontSize = 18,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(20)
+            };
 
-        protected override void OnClosed(EventArgs e)
-        {
-            _context?.Dispose();
-            base.OnClosed(e);
+            var boutonRetour = new Button
+            {
+                Content = "🏠 Retour à l'accueil",
+                Margin = new Thickness(20),
+                Padding = new Thickness(20, 10, 20, 10),
+                Background = System.Windows.Media.Brushes.Blue,
+                Foreground = System.Windows.Media.Brushes.White,
+                BorderThickness = new Thickness(0)
+            };
+            boutonRetour.Click += (s, e) => BtnAccueil_Click(s, e);
+
+            stackPanel.Children.Add(textBlock);
+            stackPanel.Children.Add(boutonRetour);
+
+            ContentArea.Children.Add(stackPanel);
         }
     }
 }

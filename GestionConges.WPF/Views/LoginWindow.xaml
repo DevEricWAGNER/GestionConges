@@ -1,0 +1,130 @@
+﻿<Window x:Class="GestionConges.WPF.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Connexion - Gestion des Congés" 
+        Height="600" Width="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header avec logo/titre -->
+        <Border Grid.Row="0" Background="#2196F3" Padding="20">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="📅" FontSize="40" HorizontalAlignment="Center" Foreground="White"/>
+                <TextBlock Text="Gestion des Congés" 
+                         FontSize="24" FontWeight="Bold" 
+                         Foreground="White" 
+                         HorizontalAlignment="Center" 
+                         Margin="0,10,0,0"/>
+                <TextBlock Text="Équipe Projets" 
+                         FontSize="14" 
+                         Foreground="White" 
+                         HorizontalAlignment="Center" 
+                         Opacity="0.8"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Formulaire de connexion -->
+        <StackPanel Grid.Row="1" Margin="40" VerticalAlignment="Center">
+
+            <!-- Titre -->
+            <TextBlock Text="Connexion" 
+                     FontSize="20" FontWeight="SemiBold" 
+                     HorizontalAlignment="Center" 
+                     Margin="0,0,0,30"/>
+
+            <!-- Login -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Nom d'utilisateur" FontSize="12" Foreground="Gray" Margin="0,0,0,5"/>
+                <TextBox Name="TxtLogin"
+                       FontSize="16"
+                       Padding="8"
+                       BorderBrush="#CCCCCC"
+                       BorderThickness="1"
+                       KeyDown="TxtLogin_KeyDown"/>
+            </StackPanel>
+
+            <!-- Mot de passe -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Mot de passe" FontSize="12" Foreground="Gray" Margin="0,0,0,5"/>
+                <PasswordBox Name="TxtPassword"
+                           FontSize="16"
+                           Padding="8"
+                           BorderBrush="#CCCCCC"
+                           BorderThickness="1"
+                           KeyDown="TxtPassword_KeyDown"/>
+            </StackPanel>
+
+            <!-- Message d'erreur -->
+            <Border Name="ErrorPanel"
+                  Background="#FFEBEE" 
+                  BorderBrush="#F44336" 
+                  BorderThickness="1" 
+                  CornerRadius="4" 
+                  Padding="10"
+                  Margin="0,0,0,20"
+                  Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⚠️" 
+                             Foreground="#F44336" 
+                             VerticalAlignment="Center" 
+                             Margin="0,0,10,0"
+                             FontSize="16"/>
+                    <TextBlock Name="TxtError" 
+                             Foreground="#F44336" 
+                             TextWrapping="Wrap" 
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Bouton de connexion -->
+            <Button Name="BtnLogin"
+                  Content="SE CONNECTER" 
+                  Background="#2196F3"
+                  Foreground="White"
+                  BorderThickness="0"
+                  Height="45"
+                  FontSize="14"
+                  FontWeight="SemiBold"
+                  Margin="0,0,0,20"
+                  Click="BtnLogin_Click"/>
+
+            <!-- Loading indicator -->
+            <StackPanel Name="LoadingPanel"
+                      Orientation="Horizontal" 
+                      HorizontalAlignment="Center" 
+                      Visibility="Collapsed"
+                      Margin="0,0,0,20">
+                <ProgressBar IsIndeterminate="True" Width="30" Height="30"/>
+                <TextBlock Text="Connexion en cours..." 
+                         Margin="15,0,0,0" 
+                         VerticalAlignment="Center"
+                         Foreground="Gray"/>
+            </StackPanel>
+
+            <!-- Version -->
+            <TextBlock Text="Version 1.0.0 - Équipe Projets" 
+                     FontSize="10" 
+                     HorizontalAlignment="Center" 
+                     Foreground="Gray"/>
+
+
+            <!-- Bouton DEBUG temporaire -->
+            <Button Name="BtnCreerAdmin"
+                Content="🔧 RECRÉER ADMIN avec bon mot de passe" 
+                Background="Green"
+                Foreground="White"
+                BorderThickness="0"
+                Height="35"
+                FontSize="11"
+                Margin="0,5,0,0"
+                Click="BtnCreerAdmin_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
