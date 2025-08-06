@@ -1,7 +1,4 @@
-﻿// ===============================================
-// 📁 GestionConges.WPF/App.xaml.cs - FIX SHUTDOWNMODE
-// ===============================================
-using System.Windows;
+﻿using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,9 +54,12 @@ namespace GestionConges.WPF
 
         private void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
-            // Configuration Entity Framework
-            services.AddDbContext<GestionCongesContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Configuration Entity Framework - TRANSIENT au lieu de Scoped
+            services.AddTransient<GestionCongesContext>(provider =>
+                new GestionCongesContext(
+                    new DbContextOptionsBuilder<GestionCongesContext>()
+                        .UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+                        .Options));
         }
 
         private void ShowLoginWindow()

@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using GestionConges.Core.Enums;
+using GestionConges.WPF.Views;
 
 namespace GestionConges.WPF
 {
@@ -109,7 +110,18 @@ namespace GestionConges.WPF
         {
             SelectionnerOnglet(BtnAdmin);
             TxtStatut.Text = "Administration";
-            AfficherMessageTemporaire("⚙️ Vue 'Administration' - En cours de développement");
+
+            // Ouvrir la fenêtre de gestion des utilisateurs
+            try
+            {
+                var gestionUtilisateursWindow = new Views.GestionUtilisateursWindow();
+                gestionUtilisateursWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la gestion des utilisateurs : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnNouvelleDemandeRaccourci_Click(object sender, RoutedEventArgs e)

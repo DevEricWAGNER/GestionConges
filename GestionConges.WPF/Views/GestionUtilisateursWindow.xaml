@@ -1,0 +1,168 @@
+﻿<Window x:Class="GestionConges.WPF.Views.GestionUtilisateursWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gestion des Utilisateurs - Administration" 
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Titre -->
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="3" 
+                 Text="👥 Gestion des Utilisateurs"
+                 FontSize="24" FontWeight="Bold"
+                 Margin="0,0,0,20"
+                 HorizontalAlignment="Center"/>
+
+        <!-- Barre de recherche et filtres -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <TextBlock Text="🔍 Recherche :" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox Name="TxtRecherche" Width="200" Padding="5" 
+                   TextChanged="TxtRecherche_TextChanged"
+                   ToolTip="Rechercher par nom, prénom ou email"/>
+
+            <TextBlock Text="Pôle :" VerticalAlignment="Center" Margin="20,0,10,0"/>
+            <ComboBox Name="CmbFiltreRole" Width="150" Padding="5"
+                    SelectionChanged="CmbFiltreRole_SelectionChanged">
+                <ComboBoxItem Content="Tous les pôles" IsSelected="True"/>
+            </ComboBox>
+
+            <CheckBox Name="ChkAfficherInactifs" Content="Afficher inactifs" 
+                    VerticalAlignment="Center" Margin="20,0,0,0"
+                    Checked="ChkAfficherInactifs_Checked" 
+                    Unchecked="ChkAfficherInactifs_Unchecked"/>
+        </StackPanel>
+
+        <!-- Liste des utilisateurs -->
+        <Border Grid.Row="2" Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="1" Background="White">
+            <DataGrid Name="DgUtilisateurs" 
+                    AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    SelectionMode="Single"
+                    SelectionChanged="DgUtilisateurs_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="👤 Nom" Binding="{Binding Nom}" Width="120"/>
+                    <DataGridTextColumn Header="Prénom" Binding="{Binding Prenom}" Width="120"/>
+                    <DataGridTextColumn Header="📧 Email" Binding="{Binding Email}" Width="180"/>
+                    <DataGridTextColumn Header="🏷️ Rôle" Binding="{Binding RoleLibelle}" Width="120"/>
+                    <DataGridTextColumn Header="🏢 Pôle" Binding="{Binding Pole.Nom}" Width="120"/>
+                    <DataGridCheckBoxColumn Header="✅ Actif" Binding="{Binding Actif}" Width="60"/>
+                    <DataGridTextColumn Header="📅 Dernière Connexion" 
+                                      Binding="{Binding DerniereConnexion, StringFormat='dd/MM/yyyy HH:mm'}" 
+                                      Width="140"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Boutons d'action -->
+        <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" 
+                  HorizontalAlignment="Left" Margin="0,20,0,0">
+            <Button Name="BtnNouvelUtilisateur" Content="➕ Nouvel Utilisateur"
+                  Background="#4CAF50" Foreground="White" BorderThickness="0"
+                  Padding="15,8" Margin="0,0,10,0" Click="BtnNouvelUtilisateur_Click"/>
+            <Button Name="BtnModifier" Content="✏️ Modifier"
+                  Background="#FF9800" Foreground="White" BorderThickness="0"
+                  Padding="15,8" Margin="0,0,10,0" 
+                  IsEnabled="False" Click="BtnModifier_Click"/>
+            <Button Name="BtnSupprimer" Content="🗑️ Supprimer"
+                  Background="#F44336" Foreground="White" BorderThickness="0"
+                  Padding="15,8" Margin="0,0,10,0" 
+                  IsEnabled="False" Click="BtnSupprimer_Click"/>
+            <Button Name="BtnActiver" Content="✅ Activer/Désactiver"
+                  Background="#2196F3" Foreground="White" BorderThickness="0"
+                  Padding="15,8" Margin="0,0,20,0" 
+                  IsEnabled="False" Click="BtnActiver_Click"/>
+
+            <!-- Séparateur visuel -->
+            <Border Width="2" Background="#CCCCCC" Margin="10,0"/>
+
+            <Button Name="BtnGestionPoles" Content="🏢 Gérer les Pôles"
+                  Background="#9C27B0" Foreground="White" BorderThickness="0"
+                  Padding="15,8" Margin="20,0,0,0" Click="BtnGestionPoles_Click"/>
+        </StackPanel>
+
+        <!-- Panneau de détail/édition -->
+        <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" 
+              BorderBrush="#CCCCCC" BorderThickness="1" 
+              Background="White" Padding="15">
+            <ScrollViewer>
+                <StackPanel Name="PanneauDetail">
+                    <TextBlock Text="📝 Détails / Édition" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <!-- Nom -->
+                    <TextBlock Text="Nom :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBox Name="TxtNom" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Prénom -->
+                    <TextBlock Text="Prénom :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBox Name="TxtPrenom" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Email -->
+                    <TextBlock Text="Email :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBox Name="TxtEmail" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Login -->
+                    <TextBlock Text="Login :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBox Name="TxtLogin" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Rôle -->
+                    <TextBlock Text="Rôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <ComboBox Name="CmbRole" Padding="5" Margin="0,0,0,10">
+                        <ComboBoxItem Content="Employé" Tag="0"/>
+                        <ComboBoxItem Content="Chef de Pôle" Tag="1"/>
+                        <ComboBoxItem Content="Chef d'Équipe" Tag="2"/>
+                    </ComboBox>
+
+                    <!-- Pôle -->
+                    <TextBlock Text="Pôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <ComboBox Name="CmbPole" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Mot de passe (pour nouveau) -->
+                    <TextBlock Name="LblMotDePasse" Text="Mot de passe :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <PasswordBox Name="TxtMotDePasse" Padding="5" Margin="0,0,0,10"/>
+
+                    <!-- Actif -->
+                    <CheckBox Name="ChkActif" Content="Utilisateur actif" Margin="0,10,0,20"/>
+
+                    <!-- Boutons de validation -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Name="BtnSauvegarder" Content="💾 Sauvegarder"
+                              Background="#4CAF50" Foreground="White" BorderThickness="0"
+                              Padding="15,8" Margin="0,0,10,0" 
+                              Click="BtnSauvegarder_Click" IsEnabled="False"/>
+                        <Button Name="BtnAnnuler" Content="❌ Annuler"
+                              Background="#757575" Foreground="White" BorderThickness="0"
+                              Padding="15,8" 
+                              Click="BtnAnnuler_Click" IsEnabled="False"/>
+                    </StackPanel>
+
+                    <!-- Informations supplémentaires -->
+                    <Separator Margin="0,20,0,10"/>
+                    <TextBlock Name="TxtInfos" Text="Sélectionnez un utilisateur pour voir les détails"
+                             TextWrapping="Wrap" FontStyle="Italic" Foreground="Gray"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Bouton Fermer -->
+        <Button Grid.Row="3" Grid.Column="2" Content="🚪 Fermer"
+              Background="#757575" Foreground="White" BorderThickness="0"
+              Padding="15,8" HorizontalAlignment="Right"
+              Click="BtnFermer_Click"/>
+    </Grid>
+</Window>
