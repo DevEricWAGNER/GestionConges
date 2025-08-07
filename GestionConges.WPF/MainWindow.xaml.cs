@@ -96,7 +96,21 @@ namespace GestionConges.WPF
         {
             SelectionnerOnglet(BtnCalendrier);
             TxtStatut.Text = "Calendrier équipe";
-            AfficherMessageTemporaire("📊 Vue 'Calendrier Équipe' - En cours de développement");
+
+            // Nettoyer la zone de contenu
+            ContentArea.Children.Clear();
+
+            try
+            {
+                // Créer et ajouter le contrôle calendrier
+                var calendrierControl = new Controls.CalendrierControl();
+                ContentArea.Children.Add(calendrierControl);
+            }
+            catch (Exception ex)
+            {
+                // Fallback en cas d'erreur
+                AfficherMessageTemporaire($"❌ Erreur lors du chargement du calendrier : {ex.Message}");
+            }
         }
 
         private void BtnValidation_Click(object sender, RoutedEventArgs e)
