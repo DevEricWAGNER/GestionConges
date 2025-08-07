@@ -6,6 +6,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -27,10 +28,16 @@
                         Click="BtnPrecedent_Click"/>
 
                 <!-- Titre mois/année -->
-                <TextBlock Grid.Column="1" Name="TxtTitreMois" 
-                         Text="Janvier 2025"
-                         FontSize="24" FontWeight="Bold"
-                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
+                    <TextBlock Name="TxtTitreMois" 
+                             Text="Janvier 2025"
+                             FontSize="24" FontWeight="Bold"
+                             HorizontalAlignment="Center"/>
+                    <TextBlock Name="TxtStatutCalendrier"
+                             Text="Chargement..."
+                             FontSize="12" Foreground="Gray"
+                             HorizontalAlignment="Center"/>
+                </StackPanel>
 
                 <!-- Bouton mois suivant -->
                 <Button Grid.Column="2" Name="BtnSuivant" 
@@ -41,8 +48,41 @@
             </Grid>
         </Border>
 
+        <!-- Barre de filtres -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="15">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🔍 Filtres :" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0"/>
+
+                <!-- Filtre par pôle -->
+                <TextBlock Text="Pôle :" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Name="CmbFiltrePole" Width="150" Padding="5" Margin="0,0,15,0"
+                        SelectionChanged="CmbFiltrePole_SelectionChanged">
+                    <ComboBoxItem Content="Tous les pôles" IsSelected="True"/>
+                </ComboBox>
+
+                <!-- Filtre par type d'absence -->
+                <TextBlock Text="Type :" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Name="CmbFiltreType" Width="150" Padding="5" Margin="0,0,15,0"
+                        SelectionChanged="CmbFiltreType_SelectionChanged">
+                    <ComboBoxItem Content="Tous les types" IsSelected="True"/>
+                </ComboBox>
+
+                <!-- Bouton aujourd'hui -->
+                <Button Name="BtnAujourdhui" Content="📅 Aujourd'hui"
+                        Background="#4CAF50" Foreground="White" BorderThickness="0"
+                        Padding="12,6" Margin="10,0,0,0"
+                        Click="BtnAujourdhui_Click"/>
+
+                <!-- Bouton actualiser -->
+                <Button Name="BtnActualiser" Content="🔄 Actualiser"
+                        Background="#FF9800" Foreground="White" BorderThickness="0"
+                        Padding="12,6" Margin="10,0,0,0"
+                        Click="BtnActualiser_Click"/>
+            </StackPanel>
+        </Border>
+
         <!-- Grille calendrier -->
-        <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" Margin="10">
+        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" Margin="10">
             <Grid Name="GridCalendrier" Background="White">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"/>
@@ -86,35 +126,32 @@
                     <TextBlock Text="Dimanche" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F44336"/>
                 </Border>
 
-                <!-- Les cases de jours seront générées dynamiquement dans le code-behind -->
+                <!-- Cases dynamiques générées dans le code -->
             </Grid>
         </Border>
 
-        <!-- Légende -->
-        <Border Grid.Row="2" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBlock Text="🔍 Légende :" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0"/>
+        <!-- Légende améliorée -->
+        <Border Grid.Row="3" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <!-- Congés Payés -->
-                <Border Background="#e74c3c" Width="20" Height="15" Margin="5,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Congés Payés" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                <!-- Première ligne : légende types -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="🎨 Types d'absences :" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0"/>
 
-                <!-- RTT -->
-                <Border Background="#3498db" Width="20" Height="15" Margin="5,0" VerticalAlignment="Center"/>
-                <TextBlock Text="RTT" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <StackPanel Name="PanneauLegendeTypes" Orientation="Horizontal"/>
+                </StackPanel>
 
-                <!-- Maladie -->
-                <Border Background="#f39c12" Width="20" Height="15" Margin="5,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Maladie" VerticalAlignment="Center" Margin="0,0,15,0"/>
-
-                <!-- Déplacement -->
-                <Border Background="#27ae60" Width="20" Height="15" Margin="5,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Déplacement" VerticalAlignment="Center" Margin="0,0,15,0"/>
-
-                <!-- Formation -->
-                <Border Background="#9b59b6" Width="20" Height="15" Margin="5,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Formation" VerticalAlignment="Center" Margin="0,0,15,0"/>
-            </StackPanel>
+                <!-- Deuxième ligne : informations -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Name="TxtNombrePersonnes" Text="👥 0 personnes" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                    <TextBlock Name="TxtNombreConges" Text="📅 0 congés ce mois" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                    <TextBlock Text="💡 Survolez les cases pour plus de détails" FontStyle="Italic" Foreground="Gray" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>
