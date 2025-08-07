@@ -24,8 +24,12 @@ namespace GestionConges.WPF.Controls
             _demandes = new ObservableCollection<DemandeConge>();
             _toutesLesDemandes = new List<DemandeConge>();
 
-            InitialiserInterface();
-            ChargerDemandes();
+            // Utiliser Dispatcher pour s'assurer que tout est initialisé
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                InitialiserInterface();
+                ChargerDemandes();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         private GestionCongesContext CreerContexte()
@@ -39,16 +43,28 @@ namespace GestionConges.WPF.Controls
 
         private void InitialiserInterface()
         {
-            DgDemandes.ItemsSource = _demandes;
-
-            // Remplir le filtre des années
-            var anneeCourante = DateTime.Now.Year;
-            for (int annee = anneeCourante + 1; annee >= anneeCourante - 3; annee--)
+            // Vérifier que les contrôles existent avant de les utiliser
+            if (DgDemandes != null)
             {
-                CmbFiltreAnnee.Items.Add(new ComboBoxItem { Content = annee.ToString(), Tag = annee });
+                // Vider la collection Items avant de définir ItemsSource
+                DgDemandes.Items.Clear();
+                DgDemandes.ItemsSource = _demandes;
             }
-            CmbFiltreAnnee.Items.Insert(0, new ComboBoxItem { Content = "Toutes les années", Tag = null, IsSelected = true });
-            CmbFiltreAnnee.SelectedIndex = 0;
+
+            // Remplir le filtre des années seulement si le contrôle existe
+            if (CmbFiltreAnnee != null)
+            {
+                // Vider les items existants
+                CmbFiltreAnnee.Items.Clear();
+
+                var anneeCourante = DateTime.Now.Year;
+                for (int annee = anneeCourante + 1; annee >= anneeCourante - 3; annee--)
+                {
+                    CmbFiltreAnnee.Items.Add(new ComboBoxItem { Content = annee.ToString(), Tag = annee });
+                }
+                CmbFiltreAnnee.Items.Insert(0, new ComboBoxItem { Content = "Toutes les années", Tag = null, IsSelected = true });
+                CmbFiltreAnnee.SelectedIndex = 0;
+            }
         }
 
         private async void ChargerDemandes()
@@ -122,6 +138,9 @@ namespace GestionConges.WPF.Controls
 
         private void MettreAJourStatistiques()
         {
+            if (_demandes == null || TxtNombreDemandes == null || TxtTotalJours == null)
+                return;
+
             var totalDemandes = _demandes.Count;
             var totalJours = _demandes.Sum(d => d.NombreJours);
 
@@ -285,7 +304,7 @@ namespace GestionConges.WPF.Controls
 
         private void CmbFiltreStatut_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_toutesLesDemandes != null)
+            if (_toutesLesDemandes != null && _demandes != null && IsLoaded)
             {
                 AppliquerFiltres();
                 MettreAJourStatistiques();
@@ -294,7 +313,7 @@ namespace GestionConges.WPF.Controls
 
         private void CmbFiltreAnnee_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_toutesLesDemandes != null)
+            if (_toutesLesDemandes != null && _demandes != null && IsLoaded)
             {
                 AppliquerFiltres();
                 MettreAJourStatistiques();
@@ -303,32 +322,75 @@ namespace GestionConges.WPF.Controls
 
         private void AfficherDetailsDemande(DemandeConge demande)
         {
-            var details = $"📋 DÉTAILS DE LA DEMANDE\n\n";
-            details += $"🏷️ Type : {demande.TypeAbsence?.Nom}\n";
-            details += $"📅 Période : du {demande.DateDebut:dd/MM/yyyy} au {demande.DateFin:dd/MM/yyyy}\n";
-            details += $"⏱️ Durée : {demande.NombreJours} jour(s)\n";
-            details += $"📊 Statut : {demande.StatutLibelle}\n";
-            details += $"📝 Créée le : {demande.DateCreation:dd/MM/yyyy HH:mm}\n";
+            try
+            {
+                var detailsWindow = new DemandeDetailsWindow(demande);
+                var result = detailsWindow.ShowDialog();
 
-            if (demande.DateModification.HasValue)
-                details += $"✏️ Modifiée le : {demande.DateModification:dd/MM/yyyy HH:mm}\n";
-
-            if (demande.DateValidationFinale.HasValue)
-                details += $"✅ Validée le : {demande.DateValidationFinale:dd/MM/yyyy HH:mm}\n";
-
-            if (!string.IsNullOrWhiteSpace(demande.Commentaire))
-                details += $"\n💬 Commentaire :\n{demande.Commentaire}";
-
-            if (!string.IsNullOrWhiteSpace(demande.CommentaireRefus))
-                details += $"\n❌ Motif de refus :\n{demande.CommentaireRefus}";
-
-            MessageBox.Show(details, "Détails de la demande", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Si une action a été effectuée (modification, suppression), recharger
+                if (detailsWindow.ActionEffectuee)
+                {
+                    ChargerDemandes();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'affichage des détails : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // Méthode publique pour rafraîchir depuis l'extérieur
         public void Rafraichir()
         {
             ChargerDemandes();
+        }
+
+        // Gestionnaires du menu contextuel
+        private void MenuVoirDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (_demandeSelectionnee != null)
+            {
+                AfficherDetailsDemande(_demandeSelectionnee);
+            }
+        }
+
+        private void MenuModifier_Click(object sender, RoutedEventArgs e)
+        {
+            BtnModifier_Click(sender, e);
+        }
+
+        private void MenuDupliquer_Click(object sender, RoutedEventArgs e)
+        {
+            BtnDupliquer_Click(sender, e);
+        }
+
+        private void MenuSupprimer_Click(object sender, RoutedEventArgs e)
+        {
+            BtnSupprimer_Click(sender, e);
+        }
+
+        private void MenuContextuel_Opened(object sender, RoutedEventArgs e)
+        {
+            // Activer/désactiver les éléments du menu selon la sélection
+            var hasSelection = _demandeSelectionnee != null;
+            MenuVoirDetails.IsEnabled = hasSelection;
+            MenuDupliquer.IsEnabled = hasSelection;
+
+            if (hasSelection)
+            {
+                var peutModifier = _demandeSelectionnee.Statut == StatusDemande.Brouillon;
+                var peutSupprimer = _demandeSelectionnee.Statut == StatusDemande.Brouillon ||
+                                   _demandeSelectionnee.Statut == StatusDemande.Refuse;
+
+                MenuModifier.IsEnabled = peutModifier;
+                MenuSupprimer.IsEnabled = peutSupprimer;
+            }
+            else
+            {
+                MenuModifier.IsEnabled = false;
+                MenuSupprimer.IsEnabled = false;
+            }
         }
     }
 }

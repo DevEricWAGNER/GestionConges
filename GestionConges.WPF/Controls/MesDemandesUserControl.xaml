@@ -69,9 +69,28 @@
                     SelectionMode="Single"
                     SelectionChanged="DgDemandes_SelectionChanged"
                     MouseDoubleClick="DgDemandes_MouseDoubleClick">
+
+                <!-- Menu contextuel -->
+                <DataGrid.ContextMenu>
+                    <ContextMenu Name="MenuContextuel" Opened="MenuContextuel_Opened">
+                        <MenuItem Name="MenuVoirDetails" Header="👁️ Voir les détails" Click="MenuVoirDetails_Click"/>
+                        <Separator/>
+                        <MenuItem Name="MenuModifier" Header="✏️ Modifier" Click="MenuModifier_Click"/>
+                        <MenuItem Name="MenuDupliquer" Header="📋 Dupliquer" Click="MenuDupliquer_Click"/>
+                        <Separator/>
+                        <MenuItem Name="MenuSupprimer" Header="🗑️ Supprimer" Click="MenuSupprimer_Click"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+                AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    SelectionMode="Single"
+                    SelectionChanged="DgDemandes_SelectionChanged"
+                    MouseDoubleClick="DgDemandes_MouseDoubleClick">
                 <DataGrid.Columns>
                     <!-- Statut avec couleur -->
-                    <DataGridTemplateColumn Header="📊 Statut" Width="240">
+                    <DataGridTemplateColumn Header="📊 Statut" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border Padding="8,4" CornerRadius="3" Margin="2">
@@ -135,47 +154,26 @@
                             <DataTrigger Binding="{Binding Statut}" Value="Brouillon">
                                 <Setter Property="FontStyle" Value="Italic"/>
                             </DataTrigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                            </Trigger>
                         </Style.Triggers>
-                        <!-- Style de sélection personnalisé -->
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="DataGridRow">
-                                    <Border x:Name="DGR_Border" 
-                                            Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}" 
-                                            BorderThickness="{TemplateBinding BorderThickness}">
-                                        <SelectiveScrollingGrid>
-                                            <SelectiveScrollingGrid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </SelectiveScrollingGrid.ColumnDefinitions>
-                                            <SelectiveScrollingGrid.RowDefinitions>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </SelectiveScrollingGrid.RowDefinitions>
-                                            <DataGridCellsPresenter Grid.Column="1" 
-                                                                  ItemsPanel="{TemplateBinding ItemsPanel}" 
-                                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                            <DataGridDetailsPresenter Grid.Column="1" Grid.Row="1" 
-                                                                    SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" 
-                                                                    Visibility="{TemplateBinding DetailsVisibility}"/>
-                                            <DataGridRowHeader Grid.RowSpan="2" 
-                                                             SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical" 
-                                                             Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
-                                        </SelectiveScrollingGrid>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="DGR_Border" Property="BorderBrush" Value="#2196F3"/>
-                                            <Setter TargetName="DGR_Border" Property="BorderThickness" Value="2"/>
-                                            <Setter TargetName="DGR_Border" Property="Background" Value="#E3F2FD"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
                     </Style>
                 </DataGrid.RowStyle>
+
+                <!-- Style des cellules pour éviter l'override de la sélection -->
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
             </DataGrid>
         </Border>
 
