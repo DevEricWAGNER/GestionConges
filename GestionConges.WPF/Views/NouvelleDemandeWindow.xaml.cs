@@ -332,19 +332,42 @@ namespace GestionConges.WPF.Views
                 demande.TypeJourneeDebut = (TypeJournee)CmbTypeJourneeDebut.SelectedIndex;
                 demande.TypeJourneeFin = (TypeJournee)CmbTypeJourneeFin.SelectedIndex;
                 demande.Commentaire = string.IsNullOrWhiteSpace(TxtCommentaire.Text) ? null : TxtCommentaire.Text.Trim();
-                demande.Statut = statut;
 
                 // Calculer le nombre de jours
                 demande.NombreJours = CalculerNombreJoursReel(demande.DateDebut, demande.DateFin,
                     demande.TypeJourneeDebut, demande.TypeJourneeFin);
 
+                if (statut == StatusDemande.Brouillon)
+                {
+                    demande.Statut = StatusDemande.Brouillon;
+                }
+                else
+                {
+                    // Déterminer le statut initial selon la hiérarchie
+                    demande.Statut = DeterminerStatutInitial(demande);
+                    if (demande.Statut == StatusDemande.Approuve)
+                    {
+                        demande.DateValidationFinale = DateTime.Now;
+                    }
+                }
+
                 await context.SaveChangesAsync();
 
                 DemandeCreee = true;
 
-                string message = statut == StatusDemande.Brouillon
-                    ? "Demande sauvegardée en brouillon avec succès !"
-                    : "Demande soumise avec succès ! Elle sera examinée par votre hiérarchie.";
+                string message;
+                if (statut == StatusDemande.Brouillon)
+                {
+                    message = "Demande sauvegardée en brouillon avec succès !";
+                }
+                else if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+                {
+                    message = "Demande approuvée automatiquement ! (Chef d'équipe)";
+                }
+                else
+                {
+                    message = "Demande soumise avec succès ! Elle sera examinée par votre hiérarchie.";
+                }
 
                 MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -356,6 +379,28 @@ namespace GestionConges.WPF.Views
                 MessageBox.Show($"Erreur lors de la sauvegarde : {ex.Message}",
                               "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private StatusDemande DeterminerStatutInitial(DemandeConge demande)
+        {
+            // Si c'est un chef d'équipe → approuvé automatiquement
+            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+            {
+                return StatusDemande.Approuve;
+            }
+
+            // Si l'utilisateur n'a pas de pôle OU si le pôle n'a pas de chef
+            // OU si l'utilisateur EST le chef de son pôle
+            // → Aller directement au chef d'équipe
+            if (_utilisateurConnecte.PoleId == null ||
+                _utilisateurConnecte.Pole?.ChefId == null ||
+                _utilisateurConnecte.Pole?.ChefId == _utilisateurConnecte.Id)
+            {
+                return StatusDemande.EnAttenteChefEquipe;
+            }
+
+            // Sinon, commencer par le chef de pôle
+            return StatusDemande.EnAttenteChefPole;
         }
 
         private decimal CalculerNombreJoursReel(DateTime dateDebut, DateTime dateFin, TypeJournee typeDebut, TypeJournee typeFin)

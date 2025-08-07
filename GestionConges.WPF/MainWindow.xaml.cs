@@ -131,8 +131,23 @@ namespace GestionConges.WPF
         {
             SelectionnerOnglet(BtnValidation);
             TxtStatut.Text = "Validations";
-            AfficherMessageTemporaire("✅ Vue 'Validations' - En cours de développement");
+
+            // Nettoyer la zone de contenu
+            ContentArea.Children.Clear();
+
+            try
+            {
+                // Créer et ajouter le contrôle validations
+                var validationsControl = new Controls.ValidationsUserControl();
+                ContentArea.Children.Add(validationsControl);
+            }
+            catch (Exception ex)
+            {
+                // Fallback en cas d'erreur
+                AfficherMessageTemporaire($"❌ Erreur lors du chargement des validations : {ex.Message}");
+            }
         }
+
 
         private void BtnAdmin_Click(object sender, RoutedEventArgs e)
         {
