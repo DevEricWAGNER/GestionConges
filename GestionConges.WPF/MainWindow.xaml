@@ -48,12 +48,22 @@
                                  Opacity="0.8" 
                                  HorizontalAlignment="Right"/>
                     </StackPanel>
-                    <Button Name="BtnDeconnexion" 
-                          Content="DÉCONNEXION" 
-                          Background="Transparent"
+
+                    <!-- Bouton Mon Profil -->
+                    <Button Name="BtnMonProfil" 
+                          Content="👤 PROFIL" 
+                          Style="{StaticResource MaterialDesignOutlineButton}"
                           Foreground="White" 
                           BorderBrush="White"
-                          BorderThickness="1"
+                          Padding="10,5"
+                          Margin="0,0,10,0"
+                          Click="BtnMonProfil_Click"/>
+
+                    <Button Name="BtnDeconnexion" 
+                          Content="DÉCONNEXION" 
+                          Style="{StaticResource MaterialDesignOutlineButton}"
+                          Foreground="White" 
+                          BorderBrush="White"
                           Padding="15,5"
                           Click="BtnDeconnexion_Click"/>
                 </StackPanel>
@@ -71,46 +81,32 @@
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,30">
                 <Button Name="BtnAccueil" 
                       Content="🏠 ACCUEIL" 
-                      Background="#2196F3"
-                      Foreground="White"
-                      BorderThickness="0"
+                      Style="{StaticResource MaterialDesignRaisedButton}"
                       Margin="0,0,10,0" 
                       Padding="20,10"
                       Click="BtnAccueil_Click"/>
                 <Button Name="BtnMesConges" 
                       Content="📅 MES CONGÉS" 
-                      Background="Transparent"
-                      Foreground="#2196F3"
-                      BorderBrush="#2196F3"
-                      BorderThickness="1"
+                      Style="{StaticResource MaterialDesignOutlineButton}"
                       Margin="0,0,10,0" 
                       Padding="20,10"
                       Click="BtnMesConges_Click"/>
                 <Button Name="BtnCalendrier" 
                       Content="📊 CALENDRIER ÉQUIPE" 
-                      Background="Transparent"
-                      Foreground="#2196F3"
-                      BorderBrush="#2196F3"
-                      BorderThickness="1"
+                      Style="{StaticResource MaterialDesignOutlineButton}"
                       Margin="0,0,10,0" 
                       Padding="20,10"
                       Click="BtnCalendrier_Click"/>
                 <Button Name="BtnValidation" 
                       Content="✅ VALIDATIONS" 
-                      Background="Transparent"
-                      Foreground="#2196F3"
-                      BorderBrush="#2196F3"
-                      BorderThickness="1"
+                      Style="{StaticResource MaterialDesignOutlineButton}"
                       Margin="0,0,10,0" 
                       Padding="20,10"
                       Visibility="Collapsed"
                       Click="BtnValidation_Click"/>
                 <Button Name="BtnAdmin" 
                       Content="⚙️ ADMINISTRATION" 
-                      Background="Transparent"
-                      Foreground="#2196F3"
-                      BorderBrush="#2196F3"
-                      BorderThickness="1"
+                      Style="{StaticResource MaterialDesignOutlineButton}"
                       Padding="20,10"
                       Visibility="Collapsed"
                       Click="BtnAdmin_Click"/>
@@ -139,20 +135,20 @@
                         <!-- Raccourcis -->
                         <StackPanel Orientation="Horizontal" Margin="0,30,0,0">
                             <Button Content="📝 Nouvelle demande" 
-                                  Background="#2196F3"
-                                  Foreground="White"
-                                  BorderThickness="0"
+                                  Style="{StaticResource MaterialDesignRaisedButton}"
                                   Margin="10" 
                                   Padding="20,15"
                                   Click="BtnNouvelleDemandeRaccourci_Click"/>
                             <Button Content="📊 Voir le calendrier" 
-                                  Background="Transparent"
-                                  Foreground="#2196F3"
-                                  BorderBrush="#2196F3"
-                                  BorderThickness="1"
+                                  Style="{StaticResource MaterialDesignOutlineButton}"
                                   Margin="10" 
                                   Padding="20,15"
                                   Click="BtnCalendrier_Click"/>
+                            <Button Content="👤 Mon profil" 
+                                  Style="{StaticResource MaterialDesignOutlineButton}"
+                                  Margin="10" 
+                                  Padding="20,15"
+                                  Click="BtnMonProfil_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

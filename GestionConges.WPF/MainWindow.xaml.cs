@@ -130,6 +130,20 @@ namespace GestionConges.WPF
                           "Information", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void BtnMonProfil_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var monProfilWindow = new Views.MonProfilWindow();
+                monProfilWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture du profil : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void BtnDeconnexion_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show("Êtes-vous sûr de vouloir vous déconnecter ?",
