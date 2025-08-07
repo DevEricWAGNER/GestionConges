@@ -89,7 +89,21 @@ namespace GestionConges.WPF
         {
             SelectionnerOnglet(BtnMesConges);
             TxtStatut.Text = "Mes congés";
-            AfficherMessageTemporaire("📅 Vue 'Mes Congés' - En cours de développement");
+
+            // Nettoyer la zone de contenu
+            ContentArea.Children.Clear();
+
+            try
+            {
+                // Créer et ajouter le contrôle mes demandes
+                var mesDemandesControl = new Controls.MesDemandesUserControl();
+                ContentArea.Children.Add(mesDemandesControl);
+            }
+            catch (Exception ex)
+            {
+                // Fallback en cas d'erreur
+                AfficherMessageTemporaire($"❌ Erreur lors du chargement de vos demandes : {ex.Message}");
+            }
         }
 
         private void BtnCalendrier_Click(object sender, RoutedEventArgs e)
@@ -140,8 +154,23 @@ namespace GestionConges.WPF
 
         private void BtnNouvelleDemandeRaccourci_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Fonctionnalité 'Nouvelle demande' en cours de développement !",
-                          "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                var nouvelleDemandeWindow = new Views.NouvelleDemandeWindow();
+                var result = nouvelleDemandeWindow.ShowDialog();
+
+                if (result == true && nouvelleDemandeWindow.DemandeCreee)
+                {
+                    // Optionnel : rafraîchir le calendrier si il est ouvert
+                    MessageBox.Show("Demande créée avec succès !", "Information",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture du formulaire de demande : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnMonProfil_Click(object sender, RoutedEventArgs e)

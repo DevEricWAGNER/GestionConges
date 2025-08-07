@@ -1,0 +1,194 @@
+﻿<Window x:Class="GestionConges.WPF.Views.NouvelleDemandeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nouvelle Demande de Congés" 
+        Height="650" Width="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titre -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <TextBlock Text="📝" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="Nouvelle Demande de Congés"
+                     FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Formulaire principal -->
+        <ScrollViewer Grid.Row="1" Padding="10">
+            <StackPanel>
+
+                <!-- Informations demandeur -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,15" Background="White">
+                    <StackPanel>
+                        <TextBlock Text="👤 Demandeur" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Nom :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtNomDemandeur" IsReadOnly="True" Background="#F8F8F8" Padding="8"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Pôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtPoleDemandeur" IsReadOnly="True" Background="#F8F8F8" Padding="8"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Type d'absence -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,15" Background="White">
+                    <StackPanel>
+                        <TextBlock Text="🏷️ Type d'absence" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <ComboBox Name="CmbTypeAbsence" Padding="8" FontSize="14"
+                                SelectionChanged="CmbTypeAbsence_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="15" Background="{Binding CouleurHex}" 
+                                              Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Nom}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Dates -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,15" Background="White">
+                    <StackPanel>
+                        <TextBlock Text="📅 Période" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                        <!-- Date de début -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Du :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <DatePicker Name="DpDateDebut" Padding="8" FontSize="14"
+                                          SelectedDateChanged="DpDateDebut_SelectedDateChanged"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Width="120">
+                                <TextBlock Text="Type journée :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <ComboBox Name="CmbTypeJourneeDebut" Padding="5" FontSize="12">
+                                    <ComboBoxItem Content="Journée complète" IsSelected="True"/>
+                                    <ComboBoxItem Content="Matin seulement"/>
+                                    <ComboBoxItem Content="Après-midi seulement"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Date de fin -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Au :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <DatePicker Name="DpDateFin" Padding="8" FontSize="14"
+                                          SelectedDateChanged="DpDateFin_SelectedDateChanged"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Width="120">
+                                <TextBlock Text="Type journée :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <ComboBox Name="CmbTypeJourneeFin" Padding="5" FontSize="12">
+                                    <ComboBoxItem Content="Journée complète" IsSelected="True"/>
+                                    <ComboBoxItem Content="Matin seulement"/>
+                                    <ComboBoxItem Content="Après-midi seulement"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Calcul automatique -->
+                        <Border Background="#E8F5E8" BorderBrush="#4CAF50" BorderThickness="1" 
+                              CornerRadius="4" Padding="10" Margin="0,5,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <StackPanel>
+                                    <TextBlock Name="TxtNombreJours" Text="Durée calculée : 0 jour(s)" 
+                                             FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock Name="TxtDetailsCalcul" Text="Sélectionnez les dates pour voir le calcul"
+                                             FontSize="12" Foreground="Gray"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Commentaires -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,15" Background="White">
+                    <StackPanel>
+                        <TextBlock Text="💬 Commentaire" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBox Name="TxtCommentaire" 
+                               Height="80" 
+                               TextWrapping="Wrap" 
+                               AcceptsReturn="True"
+                               VerticalScrollBarVisibility="Auto"
+                               Padding="8"
+                               MaxLength="1000"/>
+                        <TextBlock Text="Optionnel - Précisez le motif ou des informations supplémentaires" 
+                                 FontStyle="Italic" FontSize="11" Foreground="Gray" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Validation des conflits -->
+                <Border Name="PanneauConflits" BorderBrush="#FF9800" BorderThickness="2" 
+                      Padding="15" Margin="0,0,0,15" Background="#FFF8E1" Visibility="Collapsed">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="⚠️" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Attention - Conflits détectés" FontWeight="Bold" FontSize="14" Foreground="#E65100"/>
+                        </StackPanel>
+                        <TextBlock Name="TxtConflits" TextWrapping="Wrap" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Boutons d'action -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="BtnSauvegarderBrouillon" 
+                      Content="📄 Sauver brouillon"
+                      Background="#757575" Foreground="White" BorderThickness="0"
+                      Padding="20,10" Margin="0,0,10,0"
+                      Click="BtnSauvegarderBrouillon_Click"/>
+
+                <Button Name="BtnSoumettre" 
+                      Content="📤 Soumettre la demande"
+                      Background="#4CAF50" Foreground="White" BorderThickness="0"
+                      Padding="20,10" Margin="0,0,10,0"
+                      Click="BtnSoumettre_Click"/>
+
+                <Button Name="BtnAnnuler" 
+                      Content="❌ Annuler"
+                      Background="#F44336" Foreground="White" BorderThickness="0"
+                      Padding="20,10"
+                      Click="BtnAnnuler_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
