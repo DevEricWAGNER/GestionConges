@@ -259,7 +259,8 @@ namespace GestionConges.WPF.Controls
                 BorderBrush = Brushes.LightGray,
                 BorderThickness = new Thickness(0, 0, 1, 1),
                 Background = Brushes.White,
-                Margin = new Thickness(0)
+                Margin = new Thickness(0),
+                Tag = date // Stocker la date pour les événements
             };
 
             var stackPanel = new StackPanel
@@ -326,7 +327,8 @@ namespace GestionConges.WPF.Controls
                         Margin = new Thickness(0, 1, 0, 0),
                         Height = 18,
                         ToolTip = tooltipText,
-                        Cursor = System.Windows.Input.Cursors.Hand
+                        Cursor = System.Windows.Input.Cursors.Hand,
+                        Tag = date // Ajouter la date aussi ici pour les clics
                     };
 
                     var textConge = new TextBlock
@@ -341,6 +343,17 @@ namespace GestionConges.WPF.Controls
                     };
 
                     rectangleConge.Child = textConge;
+
+                    // Ajouter l'événement double-clic sur les congés
+                    rectangleConge.MouseLeftButtonDown += (s, e) =>
+                    {
+                        if (e.ClickCount == 2)
+                        {
+                            e.Handled = true; // Empêcher la propagation
+                            AfficherDetailsJour(date);
+                        }
+                    };
+
                     stackPanel.Children.Add(rectangleConge);
                 }
 
@@ -359,7 +372,8 @@ namespace GestionConges.WPF.Controls
                         Height = 14,
                         Margin = new Thickness(0, 1, 0, 0),
                         ToolTip = $"+{nombreRestant} autre(s) type(s)\n👥 {string.Join(", ", personnesRestantes)}",
-                        Cursor = System.Windows.Input.Cursors.Hand
+                        Cursor = System.Windows.Input.Cursors.Hand,
+                        Tag = date
                     };
 
                     var textPlus = new TextBlock
@@ -373,9 +387,32 @@ namespace GestionConges.WPF.Controls
                     };
 
                     indicateurPlus.Child = textPlus;
+
+                    // Double-clic sur l'indicateur aussi
+                    indicateurPlus.MouseLeftButtonDown += (s, e) =>
+                    {
+                        if (e.ClickCount == 2)
+                        {
+                            e.Handled = true;
+                            AfficherDetailsJour(date);
+                        }
+                    };
+
                     stackPanel.Children.Add(indicateurPlus);
                 }
+
+                // Si il y a des congés, rendre toute la case cliquable
+                border.Cursor = System.Windows.Input.Cursors.Hand;
             }
+
+            // Double-clic sur la case entière (pour les jours sans congés ou en complément)
+            border.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ClickCount == 2)
+                {
+                    AfficherDetailsJour(date);
+                }
+            };
 
             border.Child = stackPanel;
             return border;
@@ -453,6 +490,238 @@ namespace GestionConges.WPF.Controls
         {
             _moisAffiche = new DateTime(mois.Year, mois.Month, 1);
             _ = ChargerCalendrierAsync();
+        }
+
+        private void AfficherDetailsJour(DateTime date)
+        {
+            if (!_congesParJour.ContainsKey(date.Date))
+            {
+                // Aucun congé ce jour-là
+                MessageBox.Show($"Aucun congé prévu le {date:dd/MM/yyyy}.",
+                              "Détails du jour", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var congesDuJour = _congesParJour[date.Date];
+
+            // Créer une fenêtre de détails pour ce jour
+            var detailsWindow = new Window
+            {
+                Title = $"Congés du {date:dddd dd/MM/yyyy}",
+                Width = 500,
+                Height = 400,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Window.GetWindow(this),
+                Background = new SolidColorBrush(Color.FromRgb(245, 245, 245))
+            };
+
+            var mainGrid = new Grid();
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // En-tête
+            var headerBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+                Padding = new Thickness(20, 15, 20, 15)
+            };
+
+            var headerStack = new StackPanel { Orientation = Orientation.Horizontal };
+            headerStack.Children.Add(new TextBlock
+            {
+                Text = "📅",
+                FontSize = 24,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 15, 0)
+            });
+
+            var headerText = new StackPanel();
+            headerText.Children.Add(new TextBlock
+            {
+                Text = $"Congés du {date:dddd dd MMMM yyyy}",
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White
+            });
+            headerText.Children.Add(new TextBlock
+            {
+                Text = $"{congesDuJour.Count} personne(s) absente(s)",
+                FontSize = 12,
+                Foreground = Brushes.White,
+                Opacity = 0.9
+            });
+
+            headerStack.Children.Add(headerText);
+            headerBorder.Child = headerStack;
+            Grid.SetRow(headerBorder, 0);
+            mainGrid.Children.Add(headerBorder);
+
+            // Liste des congés
+            var listView = new ListView
+            {
+                Margin = new Thickness(10),
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(221, 221, 221)),
+                BorderThickness = new Thickness(1)
+            };
+
+            // Grouper par personne
+            var congesParPersonne = congesDuJour
+                .GroupBy(c => new { c.Utilisateur.Id, c.Utilisateur.NomComplet, c.Utilisateur.Pole?.Nom })
+                .Select(g => new
+                {
+                    Personne = g.Key.NomComplet,
+                    Pole = g.Key.Nom ?? "Sans pôle",
+                    Conges = g.ToList()
+                })
+                .OrderBy(x => x.Personne)
+                .ToList();
+
+            foreach (var groupe in congesParPersonne)
+            {
+                var border = new Border
+                {
+                    Margin = new Thickness(5),
+                    Padding = new Thickness(15),
+                    Background = Brushes.White,
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(238, 238, 238)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(5)
+                };
+
+                var stack = new StackPanel();
+
+                // En-tête personne
+                var personneStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+                personneStack.Children.Add(new TextBlock
+                {
+                    Text = "👤",
+                    FontSize = 16,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 10, 0)
+                });
+
+                var personneInfo = new StackPanel();
+                personneInfo.Children.Add(new TextBlock
+                {
+                    Text = groupe.Personne,
+                    FontWeight = FontWeights.SemiBold,
+                    FontSize = 14
+                });
+                personneInfo.Children.Add(new TextBlock
+                {
+                    Text = $"🏢 {groupe.Pole}",
+                    FontSize = 12,
+                    Foreground = Brushes.Gray
+                });
+
+                personneStack.Children.Add(personneInfo);
+                stack.Children.Add(personneStack);
+
+                // Types d'absences
+                foreach (var conge in groupe.Conges)
+                {
+                    var congeStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(20, 5, 0, 5) };
+
+                    var colorRect = new Border
+                    {
+                        Width = 16,
+                        Height = 12,
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(conge.TypeAbsence.CouleurHex)),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(0, 0, 10, 0)
+                    };
+
+                    var congeText = new StackPanel();
+                    congeText.Children.Add(new TextBlock
+                    {
+                        Text = conge.TypeAbsence.Nom,
+                        FontWeight = FontWeights.SemiBold
+                    });
+
+                    // Détails de la période si ce n'est qu'une partie du congé
+                    if (conge.DateDebut != date || conge.DateFin != date)
+                    {
+                        var periodeText = $"Période complète : {conge.DateDebut:dd/MM} au {conge.DateFin:dd/MM} ({conge.NombreJours} j)";
+                        congeText.Children.Add(new TextBlock
+                        {
+                            Text = periodeText,
+                            FontSize = 11,
+                            Foreground = Brushes.Gray
+                        });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(conge.Commentaire))
+                    {
+                        congeText.Children.Add(new TextBlock
+                        {
+                            Text = $"💬 {conge.Commentaire}",
+                            FontSize = 11,
+                            Foreground = Brushes.Gray,
+                            FontStyle = FontStyles.Italic
+                        });
+                    }
+
+                    congeStack.Children.Add(colorRect);
+                    congeStack.Children.Add(congeText);
+
+                    // Bouton voir détails si on a les permissions
+                    var detailsBtn = new Button
+                    {
+                        Content = "👁️",
+                        Width = 30,
+                        Height = 25,
+                        Margin = new Thickness(10, 0, 0, 0),
+                        Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+                        Foreground = Brushes.White,
+                        BorderThickness = new Thickness(0),
+                        ToolTip = "Voir les détails de cette demande",
+                        Tag = conge
+                    };
+                    detailsBtn.Click += (s, e) =>
+                    {
+                        try
+                        {
+                            var demandeDetails = new Views.DemandeDetailsWindow(conge, modeConsultation: true);
+                            demandeDetails.ShowDialog();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    };
+
+                    congeStack.Children.Add(detailsBtn);
+                    stack.Children.Add(congeStack);
+                }
+
+                border.Child = stack;
+                listView.Items.Add(border);
+            }
+
+            Grid.SetRow(listView, 1);
+            mainGrid.Children.Add(listView);
+
+            // Bouton fermer
+            var btnFermer = new Button
+            {
+                Content = "🚪 Fermer",
+                Background = new SolidColorBrush(Color.FromRgb(117, 117, 117)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(20, 10, 20, 10),
+                Margin = new Thickness(10),
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            btnFermer.Click += (s, e) => detailsWindow.Close();
+
+            Grid.SetRow(btnFermer, 2);
+            mainGrid.Children.Add(btnFermer);
+
+            detailsWindow.Content = mainGrid;
+            detailsWindow.ShowDialog();
         }
     }
 }

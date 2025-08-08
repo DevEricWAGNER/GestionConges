@@ -107,7 +107,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Utilisateur.NomComplet}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Utilisateur.NomComplet}" FontWeight="SemiBold" Foreground="Black"/>
                                     <TextBlock Text="{Binding Utilisateur.Pole.Nom}" FontSize="11" Foreground="Gray"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -121,17 +121,52 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Border Width="16" Height="12" Background="{Binding TypeAbsence.CouleurHex}" 
                                           Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding TypeAbsence.Nom}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TypeAbsence.Nom}" VerticalAlignment="Center" Foreground="Black"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="📅 Du" Binding="{Binding DateDebut, StringFormat='dd/MM/yyyy'}" Width="90"/>
-                    <DataGridTextColumn Header="📅 Au" Binding="{Binding DateFin, StringFormat='dd/MM/yyyy'}" Width="90"/>
-                    <DataGridTextColumn Header="⏱️ Durée" Binding="{Binding NombreJours, StringFormat='{}{0} j'}" Width="70"/>
-                    <DataGridTextColumn Header="💬 Commentaire" Binding="{Binding Commentaire}" Width="200"/>
-                    <DataGridTextColumn Header="📝 Demandée le" Binding="{Binding DateCreation, StringFormat='dd/MM/yyyy HH:mm'}" Width="120"/>
+                    <DataGridTextColumn Header="📅 Du" Binding="{Binding DateDebut, StringFormat='dd/MM/yyyy'}" Width="90">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="📅 Au" Binding="{Binding DateFin, StringFormat='dd/MM/yyyy'}" Width="90">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="⏱️ Durée" Binding="{Binding NombreJours, StringFormat='{}{0} j'}" Width="70">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="💬 Commentaire" Binding="{Binding Commentaire}" Width="200">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="📝 Demandée le" Binding="{Binding DateCreation, StringFormat='dd/MM/yyyy HH:mm'}" Width="120">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
                     <!-- Ancienneté -->
                     <DataGridTemplateColumn Header="⏰ Ancienneté" Width="100">
@@ -139,6 +174,7 @@
                             <DataTemplate>
                                 <TextBlock Text="{Binding AncienneteTexte}" 
                                          HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
                                          Foreground="{Binding AncienneteCouleur}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -155,6 +191,21 @@
                         </Style.Triggers>
                     </Style>
                 </DataGrid.RowStyle>
+
+                <!-- Style des cellules pour éviter les problèmes de couleur -->
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Trigger>
+                        </Style.Triggers>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                    </Style>
+                </DataGrid.CellStyle>
             </DataGrid>
         </Border>
 

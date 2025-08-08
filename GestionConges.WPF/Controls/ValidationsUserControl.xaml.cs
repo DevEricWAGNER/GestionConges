@@ -63,17 +63,24 @@ namespace GestionConges.WPF.Controls
                 {
                     _demandes.Clear();
 
+                    // Debug : vérifier les données
+                    System.Diagnostics.Debug.WriteLine($"Nombre de demandes trouvées : {demandesAValider.Count}");
+
                     foreach (var demande in demandesAValider)
                     {
+                        System.Diagnostics.Debug.WriteLine($"Demande ID {demande.Id} - Utilisateur: {demande.Utilisateur?.NomComplet} - Type: {demande.TypeAbsence?.Nom}");
+
                         var viewModel = new DemandeValidationViewModel(demande);
                         _demandes.Add(viewModel);
                     }
 
+                    System.Diagnostics.Debug.WriteLine($"Nombre dans ObservableCollection : {_demandes.Count}");
                     MettreAJourStatistiques();
                 });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Erreur dans ChargerDemandesAValider : {ex.Message}");
                 await Dispatcher.InvokeAsync(() =>
                 {
                     MessageBox.Show($"Erreur lors du chargement des demandes : {ex.Message}",
@@ -297,9 +304,18 @@ namespace GestionConges.WPF.Controls
         public string AncienneteTexte { get; }
         public Brush AncienneteCouleur { get; }
 
+        // Propriétés pour binding direct (éviter les problèmes de navigation)
+        public Utilisateur Utilisateur => Demande?.Utilisateur;
+        public TypeAbsence TypeAbsence => Demande?.TypeAbsence;
+        public DateTime DateDebut => Demande?.DateDebut ?? DateTime.MinValue;
+        public DateTime DateFin => Demande?.DateFin ?? DateTime.MinValue;
+        public decimal NombreJours => Demande?.NombreJours ?? 0;
+        public string Commentaire => Demande?.Commentaire ?? "";
+        public DateTime DateCreation => Demande?.DateCreation ?? DateTime.MinValue;
+
         public DemandeValidationViewModel(DemandeConge demande)
         {
-            Demande = demande;
+            Demande = demande ?? throw new ArgumentNullException(nameof(demande));
 
             // Calculer l'ancienneté
             var anciennete = DateTime.Now - demande.DateCreation;
@@ -325,6 +341,11 @@ namespace GestionConges.WPF.Controls
                 AncienneteTexte = $"{(int)anciennete.TotalDays} jours";
                 AncienneteCouleur = Brushes.Red;
             }
+
+            // Debug
+            System.Diagnostics.Debug.WriteLine($"ViewModel créé pour demande ID {demande.Id}");
+            System.Diagnostics.Debug.WriteLine($"  Utilisateur: {Utilisateur?.NomComplet}");
+            System.Diagnostics.Debug.WriteLine($"  TypeAbsence: {TypeAbsence?.Nom}");
         }
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestionConges.Core.Migrations
 {
     [DbContext(typeof(GestionCongesContext))]
-    [Migration("20250803192404_FixSeedData")]
-    partial class FixSeedData
+    [Migration("20250808175335_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
