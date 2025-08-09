@@ -1,7 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using GestionConges.Core.Enums;
+﻿using GestionConges.Core.Enums;
 using GestionConges.WPF.Views;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace GestionConges.WPF
 {
@@ -154,17 +155,176 @@ namespace GestionConges.WPF
             SelectionnerOnglet(BtnAdmin);
             TxtStatut.Text = "Administration";
 
-            // Ouvrir la fenêtre de gestion des utilisateurs
-            try
+            // Créer un menu d'administration avec plusieurs options
+            ContentArea.Children.Clear();
+
+            var stackPanel = new StackPanel
             {
-                var gestionUtilisateursWindow = new Views.GestionUtilisateursWindow();
-                gestionUtilisateursWindow.ShowDialog();
-            }
-            catch (Exception ex)
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            // Titre
+            var titre = new TextBlock
             {
-                MessageBox.Show($"Erreur lors de l'ouverture de la gestion des utilisateurs : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                Text = "⚙️ Administration",
+                FontSize = 24,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 30)
+            };
+            stackPanel.Children.Add(titre);
+
+            // Description
+            var description = new TextBlock
+            {
+                Text = "Choisissez une section à administrer :",
+                FontSize = 14,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 30),
+                Foreground = Brushes.Gray
+            };
+            stackPanel.Children.Add(description);
+
+            // Boutons d'administration
+            var boutonsPanel = new WrapPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Orientation = Orientation.Horizontal
+            };
+
+            // Bouton Gestion Utilisateurs
+            var btnUtilisateurs = new Button
+            {
+                Content = "👥\nGestion des Utilisateurs",
+                Width = 180,
+                Height = 100,
+                Margin = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold
+            };
+            btnUtilisateurs.Click += (s, e) =>
+            {
+                try
+                {
+                    var gestionUtilisateursWindow = new Views.GestionUtilisateursWindow();
+                    gestionUtilisateursWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ouverture de la gestion des utilisateurs : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+            boutonsPanel.Children.Add(btnUtilisateurs);
+
+            // ✅ NOUVEAU : Bouton Gestion Types d'Absences
+            var btnTypesAbsences = new Button
+            {
+                Content = "🏷️\nTypes d'Absences",
+                Width = 180,
+                Height = 100,
+                Margin = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold
+            };
+            btnTypesAbsences.Click += (s, e) =>
+            {
+                try
+                {
+                    var gestionTypesWindow = new Views.GestionTypesAbsencesWindow();
+                    gestionTypesWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ouverture de la gestion des types d'absences : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+            boutonsPanel.Children.Add(btnTypesAbsences);
+
+            // Bouton Gestion Pôles
+            var btnPoles = new Button
+            {
+                Content = "🏢\nGestion des Pôles",
+                Width = 180,
+                Height = 100,
+                Margin = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromRgb(156, 39, 176)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold
+            };
+            btnPoles.Click += (s, e) =>
+            {
+                try
+                {
+                    var gestionPolesWindow = new Views.GestionPolesWindow();
+                    gestionPolesWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ouverture de la gestion des pôles : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+            boutonsPanel.Children.Add(btnPoles);
+
+            // 🔮 FUTURS BOUTONS (Étape 8.2)
+            var btnParametres = new Button
+            {
+                Content = "⚙️\nParamètres Globaux",
+                Width = 180,
+                Height = 100,
+                Margin = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromRgb(255, 152, 0)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                IsEnabled = false // Désactivé pour l'instant
+            };
+            btnParametres.ToolTip = "Paramètres globaux - Prochainement disponible";
+            boutonsPanel.Children.Add(btnParametres);
+
+            var btnSauvegarde = new Button
+            {
+                Content = "💾\nSauvegarde & Export",
+                Width = 180,
+                Height = 100,
+                Margin = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromRgb(121, 85, 72)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                IsEnabled = false // Désactivé pour l'instant
+            };
+            btnSauvegarde.ToolTip = "Sauvegarde et export - Prochainement disponible";
+            boutonsPanel.Children.Add(btnSauvegarde);
+
+            stackPanel.Children.Add(boutonsPanel);
+
+            // Info utilisateur admin
+            var infoAdmin = new TextBlock
+            {
+                Text = $"👤 Connecté en tant que {App.UtilisateurConnecte?.NomComplet} (Chef d'Équipe)",
+                FontSize = 12,
+                FontStyle = FontStyles.Italic,
+                Foreground = Brushes.Gray,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 30, 0, 0)
+            };
+            stackPanel.Children.Add(infoAdmin);
+
+            ContentArea.Children.Add(stackPanel);
         }
 
         private void BtnNouvelleDemandeRaccourci_Click(object sender, RoutedEventArgs e)
