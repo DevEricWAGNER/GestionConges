@@ -1,0 +1,179 @@
+﻿<Window x:Class="GestionConges.WPF.Views.EditerRegleTypeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Éditer les Règles du Type d'Absence" 
+        Height="500" Width="450"
+        WindowStartupLocation="CenterOwner"
+        Background="#F5F5F5"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête avec type d'absence -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#DDDDDD" BorderThickness="1" 
+                Padding="15" Margin="0,0,0,20" CornerRadius="5">
+            <StackPanel Orientation="Horizontal">
+                <Border Name="BorderCouleurType" Width="25" Height="20" 
+                        Margin="0,0,15,0" VerticalAlignment="Center"/>
+                <StackPanel>
+                    <TextBlock Name="TxtNomType" Text="Type d'Absence" 
+                             FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="Configuration des règles spécifiques" 
+                             FontSize="12" Foreground="Gray"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Formulaire des règles -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel>
+
+                <!-- Section Limites Quantitatives -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" 
+                        Margin="0,0,0,15" Background="White" CornerRadius="5">
+                    <StackPanel>
+                        <TextBlock Text="📊 Limites Quantitatives" FontSize="14" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                        <!-- Maximum par an -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Maximum de jours par an :" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtMaximumParAn" Padding="8" 
+                                       ToolTip="Laissez vide pour aucune limite"/>
+                            </StackPanel>
+
+                            <CheckBox Grid.Column="1" Name="ChkIllimiteParAn" Content="Illimité" 
+                                    VerticalAlignment="Bottom" Margin="10,0,0,8"
+                                    Checked="ChkIllimiteParAn_Checked" 
+                                    Unchecked="ChkIllimiteParAn_Unchecked"/>
+                        </Grid>
+
+                        <!-- Maximum consécutif -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Maximum de jours consécutifs :" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtMaximumConsecutif" Padding="8" 
+                                       ToolTip="Laissez vide pour aucune limite"/>
+                            </StackPanel>
+
+                            <CheckBox Grid.Column="1" Name="ChkIllimiteConsecutif" Content="Illimité" 
+                                    VerticalAlignment="Bottom" Margin="10,0,0,8"
+                                    Checked="ChkIllimiteConsecutif_Checked" 
+                                    Unchecked="ChkIllimiteConsecutif_Unchecked"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section Délais -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" 
+                        Margin="0,0,0,15" Background="White" CornerRadius="5">
+                    <StackPanel>
+                        <TextBlock Text="⏰ Délais Spécifiques" FontSize="14" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                        <!-- Préavis minimum -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Préavis minimum (jours) :" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtPreavisMinimum" Padding="8" 
+                                       ToolTip="Laissez vide pour utiliser le préavis global"/>
+                            </StackPanel>
+
+                            <CheckBox Grid.Column="1" Name="ChkPreavisGlobal" Content="Global" 
+                                    VerticalAlignment="Bottom" Margin="10,0,0,8"
+                                    Checked="ChkPreavisGlobal_Checked" 
+                                    Unchecked="ChkPreavisGlobal_Unchecked"/>
+                        </Grid>
+
+                        <!-- Anticipation maximum -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Anticipation maximum (jours) :" Margin="0,0,0,5"/>
+                                <TextBox Name="TxtAnticipationMaximum" Padding="8" 
+                                       ToolTip="Laissez vide pour utiliser l'anticipation globale"/>
+                            </StackPanel>
+
+                            <CheckBox Grid.Column="1" Name="ChkAnticipationGlobal" Content="Global" 
+                                    VerticalAlignment="Bottom" Margin="10,0,0,8"
+                                    Checked="ChkAnticipationGlobal_Checked" 
+                                    Unchecked="ChkAnticipationGlobal_Unchecked"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section Options -->
+                <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" 
+                        Margin="0,0,0,15" Background="White" CornerRadius="5">
+                    <StackPanel>
+                        <TextBlock Text="⚙️ Options Supplémentaires" FontSize="14" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                        <CheckBox Name="ChkNecessiteJustification" 
+                                Content="Nécessite une justification écrite" 
+                                Margin="0,0,0,10"/>
+
+                        <!-- Règles personnalisées -->
+                        <TextBlock Text="Règles personnalisées :" Margin="0,0,0,5"/>
+                        <TextBox Name="TxtReglesPersonnalisees" 
+                               Height="80" TextWrapping="Wrap" AcceptsReturn="True"
+                               VerticalScrollBarVisibility="Auto" Padding="8"
+                               MaxLength="1000"/>
+                        <TextBlock Text="Ex: Certificat médical requis au-delà de 3 jours, Pas pendant les périodes de pointe..." 
+                                 FontSize="11" Foreground="Gray" FontStyle="Italic" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Informations supplémentaires -->
+                <Border Background="#E8F5E8" BorderBrush="#4CAF50" BorderThickness="1" 
+                        CornerRadius="4" Padding="15">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="💡" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Informations" FontWeight="SemiBold" FontSize="14"/>
+                        </StackPanel>
+                        <TextBlock TextWrapping="Wrap" FontSize="12">
+                            • Les valeurs vides utilisent les paramètres globaux<LineBreak/>
+                            • Les règles spécifiques prévalent sur les règles globales<LineBreak/>
+                            • Les validations s'appliquent lors de la création des demandes
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Boutons d'action -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" 
+                  Margin="0,20,0,0">
+            <Button Name="BtnSauvegarder" Content="💾 Sauvegarder"
+                  Background="#4CAF50" Foreground="White" BorderThickness="0"
+                  Padding="20,10" Margin="0,0,10,0" Click="BtnSauvegarder_Click"/>
+            <Button Name="BtnAnnuler" Content="❌ Annuler"
+                  Background="#757575" Foreground="White" BorderThickness="0"
+                  Padding="20,10" Click="BtnAnnuler_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

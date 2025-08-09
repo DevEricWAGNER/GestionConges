@@ -51,6 +51,9 @@ namespace GestionConges.WPF.Views
             DgJoursFeries.ItemsSource = _joursFeries;
             DgReglesTypes.ItemsSource = _reglesTypes;
 
+            // Event pour double-clic sur les règles
+            DgReglesTypes.MouseDoubleClick += DgReglesTypes_MouseDoubleClick;
+
             // Initialiser les templates d'emails
             LstTemplates.SelectedIndex = 0;
 
@@ -190,18 +193,23 @@ namespace GestionConges.WPF.Views
         {
             using var context = CreerContexte();
 
-            var typesAvecRegles = await context.TypesAbsences
-                .Where(t => t.Actif)
-                .Select(t => new RegleTypeViewModel
-                {
-                    TypeAbsenceId = t.Id,
-                    Nom = t.Nom,
-                    CouleurHex = t.CouleurHex,
-                    MaximumParAn = 25, // Valeurs par défaut à personnaliser
-                    MaximumConsecutif = 15,
-                    PreavisMinimum = 14
-                })
-                .ToListAsync();
+            // Charger les types d'absences avec leurs règles existantes
+            var typesAvecRegles = await (from type in context.TypesAbsences
+                                         where type.Actif
+                                         join regle in context.ReglesTypesAbsences
+                                             on type.Id equals regle.TypeAbsenceId into reglesGroup
+                                         from regle in reglesGroup.DefaultIfEmpty()
+                                         select new RegleTypeViewModel
+                                         {
+                                             TypeAbsenceId = type.Id,
+                                             Nom = type.Nom,
+                                             CouleurHex = type.CouleurHex,
+                                             MaximumParAn = regle != null ? regle.MaximumParAn : null,
+                                             MaximumConsecutif = regle != null ? regle.MaximumConsecutif : null,
+                                             PreavisMinimum = regle != null ? regle.PreavisMinimum : null,
+                                             AnticipationMaximum = regle != null ? regle.AnticipationMaximum : null,
+                                             NecessiteJustification = regle != null ? regle.NecessiteJustification : false
+                                         }).ToListAsync();
 
             _reglesTypes.Clear();
             foreach (var regle in typesAvecRegles)
@@ -581,6 +589,51 @@ namespace GestionConges.WPF.Views
             Close();
         }
 
+        private void DgReglesTypes_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            var regleSelectionnee = DgReglesTypes.SelectedItem as RegleTypeViewModel;
+            if (regleSelectionnee != null)
+            {
+                OuvrirEditeurRegle(regleSelectionnee);
+            }
+        }
+
+        private async void OuvrirEditeurRegle(RegleTypeViewModel regle)
+        {
+            var dialog = new EditerRegleTypeWindow(regle);
+            var result = dialog.ShowDialog();
+
+            if (result == true && dialog.RegleModifiee != null)
+            {
+                try
+                {
+                    using var context = CreerContexte();
+                    var parametresService = new ParametresService(context);
+
+                    var nouvelleRegle = new RegleTypeAbsence
+                    {
+                        TypeAbsenceId = dialog.RegleModifiee.TypeAbsenceId,
+                        MaximumParAn = dialog.RegleModifiee.MaximumParAn,
+                        MaximumConsecutif = dialog.RegleModifiee.MaximumConsecutif,
+                        PreavisMinimum = dialog.RegleModifiee.PreavisMinimum,
+                        AnticipationMaximum = dialog.RegleModifiee.AnticipationMaximum,
+                        NecessiteJustification = dialog.RegleModifiee.NecessiteJustification
+                    };
+
+                    await parametresService.SauvegarderRegleTypeAbsence(nouvelleRegle);
+                    await ChargerReglesTypes(); // Recharger la liste
+
+                    MessageBox.Show("Règle sauvegardée avec succès !", "Succès",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la sauvegarde : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             // Nettoyage si nécessaire
@@ -597,5 +650,13 @@ namespace GestionConges.WPF.Views
         public int? MaximumParAn { get; set; }
         public int? MaximumConsecutif { get; set; }
         public int? PreavisMinimum { get; set; }
+        public int? AnticipationMaximum { get; set; }
+        public bool NecessiteJustification { get; set; }
+
+        // Propriétés d'affichage
+        public string MaximumParAnTexte => MaximumParAn?.ToString() ?? "Illimité";
+        public string MaximumConsecutifTexte => MaximumConsecutif?.ToString() ?? "Illimité";
+        public string PreavisMinimumTexte => PreavisMinimum?.ToString() ?? "Global";
+        public string AnticipationMaximumTexte => AnticipationMaximum?.ToString() ?? "Global";
     }
 }
