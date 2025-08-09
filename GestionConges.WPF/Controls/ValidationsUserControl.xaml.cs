@@ -57,30 +57,33 @@ namespace GestionConges.WPF.Controls
         {
             try
             {
+                // ✅ DEBUG: Vérifier l'ID utilisateur
+                System.Diagnostics.Debug.WriteLine($"🔍 ChargerDemandesAValider appelé pour utilisateur ID: {_utilisateurConnecte.Id}");
+                System.Diagnostics.Debug.WriteLine($"   Nom: {_utilisateurConnecte.NomComplet}");
+                System.Diagnostics.Debug.WriteLine($"   Rôle: {_utilisateurConnecte.Role}");
+
                 var demandesAValider = await _validationService.ObtenirDemandesAValider(_utilisateurConnecte.Id);
 
                 await Dispatcher.InvokeAsync(() =>
                 {
                     _demandes.Clear();
 
-                    // Debug : vérifier les données
-                    System.Diagnostics.Debug.WriteLine($"Nombre de demandes trouvées : {demandesAValider.Count}");
+                    System.Diagnostics.Debug.WriteLine($"📊 Demandes reçues du service: {demandesAValider.Count}");
 
                     foreach (var demande in demandesAValider)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Demande ID {demande.Id} - Utilisateur: {demande.Utilisateur?.NomComplet} - Type: {demande.TypeAbsence?.Nom}");
-
+                        System.Diagnostics.Debug.WriteLine($"   📝 Ajout demande ID {demande.Id} de {demande.Utilisateur?.NomComplet}");
                         var viewModel = new DemandeValidationViewModel(demande);
                         _demandes.Add(viewModel);
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"Nombre dans ObservableCollection : {_demandes.Count}");
+                    System.Diagnostics.Debug.WriteLine($"🎯 ObservableCollection final: {_demandes.Count} éléments");
                     MettreAJourStatistiques();
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Erreur dans ChargerDemandesAValider : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"💥 Erreur dans ChargerDemandesAValider : {ex.Message}");
                 await Dispatcher.InvokeAsync(() =>
                 {
                     MessageBox.Show($"Erreur lors du chargement des demandes : {ex.Message}",

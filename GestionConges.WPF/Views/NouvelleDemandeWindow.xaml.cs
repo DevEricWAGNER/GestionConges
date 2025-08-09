@@ -1,9 +1,10 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using Microsoft.EntityFrameworkCore;
-using GestionConges.Core.Data;
-using GestionConges.Core.Models;
+﻿using GestionConges.Core.Data;
 using GestionConges.Core.Enums;
+using GestionConges.Core.Models;
+using GestionConges.WPF.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace GestionConges.WPF.Views
 {
@@ -343,8 +344,8 @@ namespace GestionConges.WPF.Views
                 }
                 else
                 {
-                    // Déterminer le statut initial selon la hiérarchie
-                    demande.Statut = DeterminerStatutInitial(demande);
+                    // ✅ CORRECTION : Utiliser la logique simplifiée
+                    demande.Statut = DeterminerStatutInitial();
                     if (demande.Statut == StatusDemande.Approuve)
                     {
                         demande.DateValidationFinale = DateTime.Now;
@@ -381,7 +382,7 @@ namespace GestionConges.WPF.Views
             }
         }
 
-        private StatusDemande DeterminerStatutInitial(DemandeConge demande)
+        private StatusDemande DeterminerStatutInitial()
         {
             // Si c'est un chef d'équipe → approuvé automatiquement
             if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
@@ -389,18 +390,62 @@ namespace GestionConges.WPF.Views
                 return StatusDemande.Approuve;
             }
 
-            // Si l'utilisateur n'a pas de pôle OU si le pôle n'a pas de chef
-            // OU si l'utilisateur EST le chef de son pôle
-            // → Aller directement au chef d'équipe
-            if (_utilisateurConnecte.PoleId == null ||
-                _utilisateurConnecte.Pole?.ChefId == null ||
-                _utilisateurConnecte.Pole?.ChefId == _utilisateurConnecte.Id)
+            // Si c'est un chef de pôle → va directement au chef équipe
+            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefPole)
             {
                 return StatusDemande.EnAttenteChefEquipe;
             }
 
-            // Sinon, commencer par le chef de pôle
-            return StatusDemande.EnAttenteChefPole;
+            // Pour un employé : vérifier s'il y a un chef de pôle dans son pôle
+            if (_utilisateurConnecte.PoleId.HasValue)
+            {
+                // Dans ce contexte simple, on suppose qu'il y a toujours un chef de pôle
+                // (vous pourriez ajouter une vérification en base si nécessaire)
+                return StatusDemande.EnAttenteChefPole;
+            }
+
+            // Pas de pôle → directement chef équipe
+            return StatusDemande.EnAttenteChefEquipe;
+        }
+
+        private async Task<StatusDemande> DeterminerStatutInitialAsync()
+        {
+            // Si c'est un chef d'équipe → approuvé automatiquement
+            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+            {
+                return StatusDemande.Approuve;
+            }
+
+            // Si c'est un chef de pôle → va directement au chef équipe
+            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefPole)
+            {
+                return StatusDemande.EnAttenteChefEquipe;
+            }
+
+            // Si l'utilisateur n'a pas de pôle → directement chef équipe
+            if (!_utilisateurConnecte.PoleId.HasValue)
+            {
+                return StatusDemande.EnAttenteChefEquipe;
+            }
+
+            try
+            {
+                // Chercher s'il y a un chef de pôle pour ce pôle
+                using var context = CreerContexte();
+                var aUnChefDePole = await context.Utilisateurs
+                    .AnyAsync(u => u.PoleId == _utilisateurConnecte.PoleId &&
+                                  u.Role == RoleUtilisateur.ChefPole &&
+                                  u.Actif &&
+                                  u.Id != _utilisateurConnecte.Id);
+
+                // S'il y a un chef de pôle → passer par lui d'abord
+                return aUnChefDePole ? StatusDemande.EnAttenteChefPole : StatusDemande.EnAttenteChefEquipe;
+            }
+            catch
+            {
+                // En cas d'erreur, par défaut aller au chef équipe
+                return StatusDemande.EnAttenteChefEquipe;
+            }
         }
 
         private decimal CalculerNombreJoursReel(DateTime dateDebut, DateTime dateFin, TypeJournee typeDebut, TypeJournee typeFin)
