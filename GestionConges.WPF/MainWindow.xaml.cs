@@ -277,7 +277,7 @@ namespace GestionConges.WPF
             };
             boutonsPanel.Children.Add(btnPoles);
 
-            // 🔮 FUTURS BOUTONS (Étape 8.2)
+            // 🔮 PARAMÈTRES GLOBAUX (maintenant disponible !)
             var btnParametres = new Button
             {
                 Content = "⚙️\nParamètres Globaux",
@@ -289,9 +289,21 @@ namespace GestionConges.WPF
                 BorderThickness = new Thickness(0),
                 FontSize = 14,
                 FontWeight = FontWeights.SemiBold,
-                IsEnabled = false // Désactivé pour l'instant
+                IsEnabled = true // ✅ Maintenant activé !
             };
-            btnParametres.ToolTip = "Paramètres globaux - Prochainement disponible";
+            btnParametres.Click += (s, e) =>
+            {
+                try
+                {
+                    var parametresWindow = new Views.ParametresGlobauxWindow();
+                    parametresWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ouverture des paramètres : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
             boutonsPanel.Children.Add(btnParametres);
 
             var btnSauvegarde = new Button

@@ -1,0 +1,355 @@
+﻿<Window x:Class="GestionConges.WPF.Views.ParametresGlobauxWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Paramètres Globaux - Administration" 
+        Height="750" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titre -->
+        <TextBlock Grid.Row="0" 
+                 Text="⚙️ Paramètres Globaux"
+                 FontSize="24" FontWeight="Bold"
+                 Margin="0,0,0,20"
+                 HorizontalAlignment="Center"/>
+
+        <!-- Contenu avec onglets -->
+        <TabControl Grid.Row="1" Background="White">
+
+            <!-- Onglet Calendrier -->
+            <TabItem Header="📅 Calendrier et Jours Ouvrés">
+                <ScrollViewer Padding="20">
+                    <StackPanel>
+
+                        <!-- Section Jours Ouvrés -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Margin="0,0,0,20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="🗓️ Configuration des Jours Ouvrés" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Sélectionnez les jours travaillés dans votre organisation :" Margin="0,0,0,10"/>
+
+                                <WrapPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                    <CheckBox Name="ChkLundi" Content="Lundi" Margin="0,0,20,10" IsChecked="True"/>
+                                    <CheckBox Name="ChkMardi" Content="Mardi" Margin="0,0,20,10" IsChecked="True"/>
+                                    <CheckBox Name="ChkMercredi" Content="Mercredi" Margin="0,0,20,10" IsChecked="True"/>
+                                    <CheckBox Name="ChkJeudi" Content="Jeudi" Margin="0,0,20,10" IsChecked="True"/>
+                                    <CheckBox Name="ChkVendredi" Content="Vendredi" Margin="0,0,20,10" IsChecked="True"/>
+                                    <CheckBox Name="ChkSamedi" Content="Samedi" Margin="0,0,20,10" IsChecked="False"/>
+                                    <CheckBox Name="ChkDimanche" Content="Dimanche" Margin="0,0,20,10" IsChecked="False"/>
+                                </WrapPanel>
+
+                                <TextBlock Name="TxtJoursOuvresInfo" Text="5 jours ouvrés par semaine sélectionnés" 
+                                         FontSize="12" Foreground="Gray" FontStyle="Italic"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section Jours Fériés -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Margin="0,0,0,20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="🎉 Jours Fériés" FontSize="16" FontWeight="Bold"/>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <ComboBox Name="CmbAnnee" Width="80" Margin="0,0,10,0" 
+                                                SelectionChanged="CmbAnnee_SelectionChanged"/>
+                                        <Button Name="BtnChargerFeries" Content="🔄 Charger" 
+                                              Background="#4CAF50" Foreground="White" BorderThickness="0"
+                                              Padding="10,5" Click="BtnChargerFeries_Click"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Actions jours fériés -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                    <Button Name="BtnAjouterFerie" Content="➕ Ajouter" 
+                                          Background="#2196F3" Foreground="White" BorderThickness="0"
+                                          Padding="10,5" Margin="0,0,10,0" Click="BtnAjouterFerie_Click"/>
+                                    <Button Name="BtnSupprimerFerie" Content="🗑️ Supprimer" 
+                                          Background="#F44336" Foreground="White" BorderThickness="0"
+                                          Padding="10,5" Margin="0,0,10,0" 
+                                          IsEnabled="False" Click="BtnSupprimerFerie_Click"/>
+                                    <Button Name="BtnImporterFeries" Content="📥 Importer Fériés France" 
+                                          Background="#FF9800" Foreground="White" BorderThickness="0"
+                                          Padding="10,5" Click="BtnImporterFeries_Click"/>
+                                </StackPanel>
+
+                                <!-- Liste des jours fériés -->
+                                <DataGrid Name="DgJoursFeries" Height="200" 
+                                        AutoGenerateColumns="False"
+                                        IsReadOnly="True"
+                                        GridLinesVisibility="Horizontal"
+                                        HeadersVisibility="Column"
+                                        SelectionMode="Single"
+                                        SelectionChanged="DgJoursFeries_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="📅 Date" Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" Width="100"/>
+                                        <DataGridTextColumn Header="📝 Nom" Binding="{Binding Nom}" Width="200"/>
+                                        <DataGridTextColumn Header="🌍 Type" Binding="{Binding Type}" Width="120"/>
+                                        <DataGridCheckBoxColumn Header="✅ Actif" Binding="{Binding Actif}" Width="60"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section Calculs -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="🧮 Paramètres de Calcul" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <CheckBox Name="ChkExclureFeries" Content="Exclure les jours fériés du calcul des congés" 
+                                        Margin="0,0,0,10" IsChecked="True"/>
+                                <CheckBox Name="ChkExclureWeekends" Content="Exclure automatiquement les weekends" 
+                                        Margin="0,0,0,10" IsChecked="True"/>
+                                <CheckBox Name="ChkDemiJournees" Content="Autoriser les demi-journées de congés" 
+                                        Margin="0,0,0,15" IsChecked="True"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="Début de l'année de congés :" 
+                                             VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <ComboBox Grid.Column="1" Name="CmbDebutAnnee" VerticalAlignment="Center">
+                                        <ComboBoxItem Content="Janvier" IsSelected="True"/>
+                                        <ComboBoxItem Content="Avril"/>
+                                        <ComboBoxItem Content="Septembre"/>
+                                    </ComboBox>
+                                    <TextBlock Grid.Column="2" Text="(Période de référence pour les compteurs)" 
+                                             VerticalAlignment="Center" Margin="10,0,0,0" 
+                                             FontSize="11" Foreground="Gray" FontStyle="Italic"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet Validation -->
+            <TabItem Header="✅ Règles de Validation">
+                <ScrollViewer Padding="20">
+                    <StackPanel>
+
+                        <!-- Section Délais -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Margin="0,0,0,20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="⏱️ Délais de Validation" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Délai maximum pour validation chef de pôle :" Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox Name="TxtDelaiChefPole" Width="60" Padding="5" Text="7"/>
+                                            <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Délai maximum pour validation chef d'équipe :" Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox Name="TxtDelaiChefEquipe" Width="60" Padding="5" Text="5"/>
+                                            <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <CheckBox Name="ChkEscaladeAuto" Content="Escalade automatique si pas de réponse dans les délais" 
+                                        Margin="0,15,0,0" IsChecked="False"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section Préavis -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Margin="0,0,0,20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="📢 Préavis et Anticipation" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Préavis minimum pour les congés :" Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox Name="TxtPreavisConges" Width="60" Padding="5" Text="14"/>
+                                            <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Anticipation maximale :" Margin="0,0,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox Name="TxtAnticipationMax" Width="60" Padding="5" Text="365"/>
+                                            <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <CheckBox Name="ChkBloquerPreavis" Content="Bloquer les demandes qui ne respectent pas le préavis" 
+                                        Margin="0,15,0,10" IsChecked="False"/>
+                                <CheckBox Name="ChkAlertePrevisVacances" Content="Alerter si demandes pendant périodes de vacances scolaires" 
+                                        Margin="0,0,0,0" IsChecked="True"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section Règles par Type -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="🏷️ Règles Spécifiques par Type" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <DataGrid Name="DgReglesTypes" Height="150" 
+                                        AutoGenerateColumns="False"
+                                        GridLinesVisibility="Horizontal"
+                                        HeadersVisibility="Column"
+                                        SelectionMode="Single">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="🎨" Width="40">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="25" Height="15" Background="{Binding CouleurHex}" 
+                                                          BorderBrush="Gray" BorderThickness="1"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Nom}" Width="120" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Max/An" Binding="{Binding MaximumParAn}" Width="80"/>
+                                        <DataGridTextColumn Header="Max Consécutif" Binding="{Binding MaximumConsecutif}" Width="100"/>
+                                        <DataGridTextColumn Header="Préavis (j)" Binding="{Binding PreavisMinimum}" Width="80"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Text="💡 Double-cliquez sur une ligne pour modifier les règles spécifiques" 
+                                         FontSize="11" FontStyle="Italic" Foreground="Gray" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Onglet Notifications -->
+            <TabItem Header="📧 Notifications">
+                <ScrollViewer Padding="20">
+                    <StackPanel>
+
+                        <!-- Section SMTP -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Margin="0,0,0,20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="📬 Configuration SMTP" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <CheckBox Name="ChkActiverEmails" Content="Activer les notifications par email" 
+                                        Margin="0,0,0,15" IsChecked="False" 
+                                        Checked="ChkActiverEmails_Checked" Unchecked="ChkActiverEmails_Unchecked"/>
+
+                                <Grid Name="PanneauSMTP" IsEnabled="False">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Serveur SMTP :" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Name="TxtServeurSMTP" Padding="5" Text="smtp.gmail.com" Margin="0,0,0,10"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Port :" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="1" Grid.Column="0" Name="TxtPortSMTP" Padding="5" Text="587" Width="100" HorizontalAlignment="Left" Margin="0,0,0,10"/>
+
+                                    <CheckBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Name="ChkSSL" Content="Utiliser SSL/TLS" 
+                                            VerticalAlignment="Bottom" Margin="0,0,0,10" IsChecked="True"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Nom d'utilisateur :" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Name="TxtUtilisateurSMTP" Padding="5" Margin="0,0,0,10"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Mot de passe :" Margin="0,0,0,5"/>
+                                    <PasswordBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Name="TxtMotDePasseSMTP" Padding="5" Margin="0,0,0,10"/>
+                                </Grid>
+
+                                <Button Name="BtnTesterEmail" Content="📧 Tester la Configuration" 
+                                      Background="#4CAF50" Foreground="White" BorderThickness="0"
+                                      Padding="15,8" IsEnabled="False" Click="BtnTesterEmail_Click"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section Templates -->
+                        <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" Background="White" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="📝 Templates d'Emails" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ListBox Grid.Column="0" Name="LstTemplates" Margin="0,0,10,0" 
+                                           SelectionChanged="LstTemplates_SelectionChanged">
+                                        <ListBoxItem Content="📤 Nouvelle demande" Tag="nouvelle_demande"/>
+                                        <ListBoxItem Content="✅ Demande approuvée" Tag="demande_approuvee"/>
+                                        <ListBoxItem Content="❌ Demande refusée" Tag="demande_refusee"/>
+                                        <ListBoxItem Content="⏰ Rappel validation" Tag="rappel_validation"/>
+                                    </ListBox>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Sujet :" Margin="0,0,0,5"/>
+                                        <TextBox Name="TxtSujetTemplate" Padding="5" Margin="0,0,0,10"/>
+
+                                        <TextBlock Text="Corps du message :" Margin="0,0,0,5"/>
+                                        <TextBox Name="TxtCorpsTemplate" Height="150" 
+                                               TextWrapping="Wrap" AcceptsReturn="True" 
+                                               VerticalScrollBarVisibility="Auto" Padding="5" Margin="0,0,0,10"/>
+
+                                        <TextBlock Text="Variables disponibles: {NomUtilisateur}, {TypeConge}, {DateDebut}, {DateFin}, {NombreJours}" 
+                                                 FontSize="11" Foreground="Gray" FontStyle="Italic"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Boutons d'action -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Name="BtnSauvegarderParametres" Content="💾 Sauvegarder tous les Paramètres"
+                  Background="#4CAF50" Foreground="White" BorderThickness="0"
+                  Padding="20,10" Margin="0,0,15,0" Click="BtnSauvegarderParametres_Click"/>
+            <Button Name="BtnResetParametres" Content="🔄 Réinitialiser"
+                  Background="#FF9800" Foreground="White" BorderThickness="0"
+                  Padding="20,10" Margin="0,0,15,0" Click="BtnResetParametres_Click"/>
+            <Button Name="BtnFermer" Content="🚪 Fermer"
+                  Background="#757575" Foreground="White" BorderThickness="0"
+                  Padding="20,10" Click="BtnFermer_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
