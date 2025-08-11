@@ -302,6 +302,77 @@ namespace GestionConges.WPF.Views
             return true;
         }
 
+        private async Task EnvoyerNotificationNouvelleDemande(DemandeConge demande)
+        {
+            try
+            {
+                using var context = CreerContexte();
+                var emailService = new EmailService(context);
+
+                // Vérifier si les emails sont activés
+                if (!await emailService.EstActive())
+                {
+                    System.Diagnostics.Debug.WriteLine("📧 Emails désactivés - pas de notification envoyée");
+                    return;
+                }
+
+                // Déterminer qui doit recevoir la notification selon le statut
+                Utilisateur? validateur = null;
+
+                switch (demande.Statut)
+                {
+                    case StatusDemande.EnAttenteChefPole:
+                        // Chercher le chef de pôle de l'utilisateur
+                        validateur = await context.Utilisateurs
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefPole &&
+                                                     u.PoleId == _utilisateurConnecte.PoleId &&
+                                                     u.Actif);
+                        break;
+
+                    case StatusDemande.EnAttenteChefEquipe:
+                        // Chercher le chef d'équipe
+                        validateur = await context.Utilisateurs
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefEquipe && u.Actif);
+                        break;
+
+                    case StatusDemande.Approuve:
+                        // Pas de notification si auto-approuvée (chef d'équipe)
+                        System.Diagnostics.Debug.WriteLine("📧 Demande auto-approuvée - pas de notification envoyée");
+                        return;
+
+                    default:
+                        System.Diagnostics.Debug.WriteLine($"📧 Statut {demande.Statut} - pas de notification");
+                        return;
+                }
+
+                if (validateur != null && !string.IsNullOrEmpty(validateur.Email))
+                {
+                    System.Diagnostics.Debug.WriteLine($"📧 Envoi notification à {validateur.NomComplet} ({validateur.Email})");
+
+                    var success = await emailService.EnvoyerNotificationNouvelleDemande(demande, validateur);
+
+                    if (success)
+                    {
+                        System.Diagnostics.Debug.WriteLine("✅ Notification envoyée avec succès");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("❌ Échec envoi notification");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Aucun validateur trouvé ou email manquant pour le statut {demande.Statut}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"💥 Erreur envoi notification : {ex.Message}");
+                // Ne pas faire échouer la demande pour un problème d'email
+            }
+        }
+
+
         private async Task SauvegarderDemande(StatusDemande statut)
         {
             try
@@ -344,7 +415,6 @@ namespace GestionConges.WPF.Views
                 }
                 else
                 {
-                    // ✅ CORRECTION : Utiliser la logique simplifiée
                     demande.Statut = DeterminerStatutInitial();
                     if (demande.Statut == StatusDemande.Approuve)
                     {
@@ -352,7 +422,24 @@ namespace GestionConges.WPF.Views
                     }
                 }
 
+                // Sauvegarder d'abord la demande
                 await context.SaveChangesAsync();
+
+                // ✅ NOUVEAU : Envoyer notification email si ce n'est pas un brouillon
+                if (statut != StatusDemande.Brouillon)
+                {
+                    // Recharger la demande avec ses relations pour l'email
+                    var demandeComplete = await context.DemandesConges
+                        .Include(d => d.Utilisateur)
+                            .ThenInclude(u => u.Pole)
+                        .Include(d => d.TypeAbsence)
+                        .FirstOrDefaultAsync(d => d.Id == demande.Id);
+
+                    if (demandeComplete != null)
+                    {
+                        await EnvoyerNotificationNouvelleDemande(demandeComplete);
+                    }
+                }
 
                 DemandeCreee = true;
 
@@ -367,7 +454,7 @@ namespace GestionConges.WPF.Views
                 }
                 else
                 {
-                    message = "Demande soumise avec succès ! Elle sera examinée par votre hiérarchie.";
+                    message = "Demande soumise avec succès ! Elle sera examinée par votre hiérarchie.\n\n📧 Une notification a été envoyée au validateur.";
                 }
 
                 MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);

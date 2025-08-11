@@ -294,6 +294,96 @@ namespace GestionConges.WPF.Views
             }
         }
 
+        private void BtnPrevisualiser_Click(object sender, RoutedEventArgs e)
+        {
+            var previewWindow = new PreviewTemplateWindow(TxtSujetTemplate.Text, TxtCorpsTemplate.Text);
+            previewWindow.ShowDialog();
+        }
+
+        private async void BtnTesterTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!await EstEmailActive())
+                {
+                    MessageBox.Show("Les emails ne sont pas activés. Activez-les d'abord et configurez SMTP.",
+                                  "Email non configuré", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var utilisateurConnecte = App.UtilisateurConnecte;
+                if (utilisateurConnecte?.Email == null)
+                {
+                    MessageBox.Show("Votre compte n'a pas d'adresse email configurée.",
+                                  "Email manquant", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                using var context = CreerContexte();
+                var emailService = new EmailService(context);
+
+                // Remplacer les variables par des valeurs de test
+                var sujetTest = RemplacerVariablesTest(TxtSujetTemplate.Text);
+                var corpsTest = RemplacerVariablesTest(TxtCorpsTemplate.Text);
+
+                var success = await emailService.EnvoyerEmailPersonnalise(
+                    utilisateurConnecte.Email,
+                    "[TEST] " + sujetTest,
+                    corpsTest + "\n\n--- CECI EST UN EMAIL DE TEST ---");
+
+                if (success)
+                {
+                    MessageBox.Show("✅ Email de test envoyé avec succès !\n\nVérifiez votre boîte de réception.", "Test réussi",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("❌ Échec de l'envoi de l'email de test.", "Test échoué",
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du test : {ex.Message}", "Erreur",
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnResetTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            if (LstTemplates.SelectedItem is ListBoxItem item)
+            {
+                var result = MessageBox.Show("Réinitialiser ce template aux valeurs par défaut ?",
+                                           "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    var template = item.Tag?.ToString();
+                    ChargerTemplate(template);
+                }
+            }
+        }
+
+        private async Task<bool> EstEmailActive()
+        {
+            using var context = CreerContexte();
+            var parametresService = new ParametresService(context);
+            return await parametresService.ObtenirParametre<bool>("EmailActif", false);
+        }
+
+        private string RemplacerVariablesTest(string template)
+        {
+            return template
+                .Replace("{NomUtilisateur}", "Jean Dupont")
+                .Replace("{TypeConge}", "Congés Payés")
+                .Replace("{DateDebut}", DateTime.Today.AddDays(7).ToString("dd/MM/yyyy"))
+                .Replace("{DateFin}", DateTime.Today.AddDays(10).ToString("dd/MM/yyyy"))
+                .Replace("{NombreJours}", "3")
+                .Replace("{MotifRefus}", "Planning trop chargé")
+                .Replace("{NomValidateur}", App.UtilisateurConnecte?.NomComplet ?? "Manager")
+                .Replace("{ListeDemandes}", "• Jean Dupont : Congés Payés du 15/01/2025 au 18/01/2025\n• Marie Martin : RTT du 20/01/2025 au 20/01/2025")
+                .Replace("{NombredemAdes}", "2");
+        }
+
         private void DgJoursFeries_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             BtnSupprimerFerie.IsEnabled = DgJoursFeries.SelectedItem != null;
@@ -400,6 +490,8 @@ namespace GestionConges.WPF.Views
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("🔍 Début test configuration email...");
+
                 if (string.IsNullOrWhiteSpace(TxtUtilisateurSMTP.Text) ||
                     string.IsNullOrWhiteSpace(TxtMotDePasseSMTP.Password))
                 {
@@ -408,42 +500,81 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                var client = new SmtpClient(TxtServeurSMTP.Text, int.Parse(TxtPortSMTP.Text))
+                // Validation des champs
+                if (string.IsNullOrWhiteSpace(TxtServeurSMTP.Text))
                 {
-                    Credentials = new NetworkCredential(TxtUtilisateurSMTP.Text, TxtMotDePasseSMTP.Password),
-                    EnableSsl = ChkSSL.IsChecked == true
-                };
+                    MessageBox.Show("Veuillez remplir le serveur SMTP.", "Validation",
+                                  MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
-                var message = new MailMessage
+                if (!int.TryParse(TxtPortSMTP.Text, out int port) || port <= 0)
                 {
-                    From = new MailAddress(TxtUtilisateurSMTP.Text),
-                    Subject = "Test de configuration SMTP - Gestion des Congés",
-                    Body = $"Ceci est un email de test envoyé le {DateTime.Now:dd/MM/yyyy HH:mm} pour vérifier la configuration SMTP.",
-                    IsBodyHtml = false
-                };
+                    MessageBox.Show("Le port SMTP doit être un nombre valide.", "Validation",
+                                  MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
-                message.To.Add(TxtUtilisateurSMTP.Text);
+                System.Diagnostics.Debug.WriteLine($"📧 Configuration: {TxtServeurSMTP.Text}:{port}, User: {TxtUtilisateurSMTP.Text}, SSL: {ChkSSL.IsChecked}");
 
-                await client.SendMailAsync(message);
+                // ✅ AMÉLIORATION : Utiliser le service d'email
+                using var context = CreerContexte();
+                var parametresService = new ParametresService(context);
 
-                MessageBox.Show("Email de test envoyé avec succès !", "Succès",
-                              MessageBoxButton.OK, MessageBoxImage.Information);
+                // Sauvegarder temporairement la config pour le test
+                await parametresService.SauvegarderParametre("ServeurSMTP", TxtServeurSMTP.Text, "Email");
+                await parametresService.SauvegarderParametre("PortSMTP", TxtPortSMTP.Text, "Email");
+                await parametresService.SauvegarderParametre("UtilisateurSMTP", TxtUtilisateurSMTP.Text, "Email");
+                await parametresService.SauvegarderParametre("MotDePasseSMTP", TxtMotDePasseSMTP.Password, "Email");
+                await parametresService.SauvegarderParametre("SSLSMTP", (ChkSSL.IsChecked == true).ToString(), "Email");
+                await parametresService.SauvegarderParametre("EmailActif", "true", "Email");
+
+                System.Diagnostics.Debug.WriteLine("💾 Configuration sauvegardée temporairement");
+
+                var emailService = new EmailService(context);
+                var success = await emailService.TesterConfiguration();
+
+                System.Diagnostics.Debug.WriteLine($"📊 Résultat test: {success}");
+
+                if (success)
+                {
+                    MessageBox.Show("✅ Email de test envoyé avec succès !\n\n" +
+                                  $"📧 Destinataire: {TxtUtilisateurSMTP.Text}\n" +
+                                  "📨 Vérifiez votre boîte de réception (et les spams).",
+                                  "Test réussi",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("❌ Échec de l'envoi de l'email de test.\n\n" +
+                                  "Vérifications :\n" +
+                                  "• Serveur SMTP correct\n" +
+                                  "• Identifiants valides\n" +
+                                  "• Port et SSL corrects\n" +
+                                  "• Connexion Internet active",
+                                  "Test échoué",
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'envoi de l'email de test :\n{ex.Message}",
+                System.Diagnostics.Debug.WriteLine($"💥 Erreur test email: {ex.Message}");
+                MessageBox.Show($"Erreur lors de l'envoi de l'email de test :\n\n{ex.Message}\n\n" +
+                              "Vérifiez vos paramètres SMTP.",
                               "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void LstTemplates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Charger le template sélectionné
-            if (LstTemplates.SelectedItem is ListBoxItem item)
+            // Charger le template sélectionné depuis la base ou par défaut
+            _ = Task.Run(async () =>
             {
-                var template = item.Tag?.ToString();
-                ChargerTemplate(template);
-            }
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await ChargerTemplatesEmails();
+                });
+            });
         }
 
         private void ChargerTemplate(string? template)
@@ -479,6 +610,7 @@ namespace GestionConges.WPF.Views
             try
             {
                 await SauvegarderTousLesParametres();
+                await SauvegarderTemplatesEmails(); // ✅ NOUVEAU
                 MessageBox.Show("Tous les paramètres ont été sauvegardés avec succès !", "Succès",
                               MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -542,6 +674,51 @@ namespace GestionConges.WPF.Views
 
             // Vider le cache pour forcer le rechargement
             parametresService.ViderCache();
+        }
+
+        private async Task SauvegarderTemplatesEmails()
+        {
+            using var context = CreerContexte();
+            var parametresService = new ParametresService(context);
+
+            // Sauvegarder les templates d'emails personnalisés
+            if (LstTemplates.SelectedItem is ListBoxItem item && item.Tag != null)
+            {
+                var templateType = item.Tag.ToString();
+                var clesujet = $"EmailTemplate_{templateType}_Sujet";
+                var cleCorps = $"EmailTemplate_{templateType}_Corps";
+
+                await parametresService.SauvegarderParametre(clesujet, TxtSujetTemplate.Text, "Email");
+                await parametresService.SauvegarderParametre(cleCorps, TxtCorpsTemplate.Text, "Email");
+            }
+        }
+
+        private async Task ChargerTemplatesEmails()
+        {
+            if (LstTemplates.SelectedItem is ListBoxItem item && item.Tag != null)
+            {
+                using var context = CreerContexte();
+                var parametresService = new ParametresService(context);
+
+                var templateType = item.Tag.ToString();
+                var clesujet = $"EmailTemplate_{templateType}_Sujet";
+                var cleCorps = $"EmailTemplate_{templateType}_Corps";
+
+                // Charger depuis la base ou utiliser les valeurs par défaut
+                var sujetPersonnalise = await parametresService.ObtenirParametre(clesujet);
+                var corpsPersonnalise = await parametresService.ObtenirParametre(cleCorps);
+
+                if (!string.IsNullOrEmpty(sujetPersonnalise) && !string.IsNullOrEmpty(corpsPersonnalise))
+                {
+                    TxtSujetTemplate.Text = sujetPersonnalise;
+                    TxtCorpsTemplate.Text = corpsPersonnalise;
+                }
+                else
+                {
+                    // Utiliser les templates par défaut
+                    ChargerTemplate(templateType);
+                }
+            }
         }
 
         private async void BtnResetParametres_Click(object sender, RoutedEventArgs e)

@@ -55,6 +55,7 @@ namespace GestionConges.WPF.Services
                 var demande = await _context.DemandesConges
                     .Include(d => d.Utilisateur)
                         .ThenInclude(u => u.Pole)
+                    .Include(d => d.TypeAbsence)
                     .Include(d => d.Validations)
                     .FirstOrDefaultAsync(d => d.Id == demandeId);
 
@@ -79,6 +80,8 @@ namespace GestionConges.WPF.Services
                 _context.ValidationsDemanades.Add(validation);
 
                 // Mettre à jour le statut de la demande
+                var ancienStatut = demande.Statut;
+
                 if (approuve)
                 {
                     demande.Statut = DeterminerProchainStatut(demande, true);
@@ -95,11 +98,63 @@ namespace GestionConges.WPF.Services
 
                 demande.DateModification = DateTime.Now;
                 await _context.SaveChangesAsync();
+
+                // ✅ NOUVEAU : Envoyer notifications email
+                await EnvoyerNotificationsValidation(demande, validateur, approuve, commentaire, ancienStatut);
+
                 return true;
             }
             catch
             {
                 return false;
+            }
+        }
+
+        private async Task EnvoyerNotificationsValidation(DemandeConge demande, Utilisateur validateur, bool approuve, string? commentaire, StatusDemande ancienStatut)
+        {
+            try
+            {
+                var emailService = new EmailService(_context);
+
+                // Vérifier si les emails sont activés
+                if (!await emailService.EstActive())
+                {
+                    System.Diagnostics.Debug.WriteLine("📧 Emails désactivés - pas de notification envoyée");
+                    return;
+                }
+
+                if (approuve)
+                {
+                    // Si complètement approuvée → notifier le demandeur
+                    if (demande.Statut == StatusDemande.Approuve)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"📧 Envoi notification approbation à {demande.Utilisateur.NomComplet}");
+                        await emailService.EnvoyerNotificationDemandeApprouvee(demande);
+                    }
+                    // Sinon, si passe au niveau suivant → notifier le prochain validateur
+                    else if (demande.Statut == StatusDemande.EnAttenteChefEquipe && ancienStatut == StatusDemande.EnAttenteChefPole)
+                    {
+                        var prochainValidateur = await _context.Utilisateurs
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefEquipe && u.Actif);
+
+                        if (prochainValidateur?.Email != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"📧 Envoi notification escalade à {prochainValidateur.NomComplet}");
+                            await emailService.EnvoyerNotificationNouvelleDemande(demande, prochainValidateur);
+                        }
+                    }
+                }
+                else
+                {
+                    // Demande refusée → notifier le demandeur
+                    System.Diagnostics.Debug.WriteLine($"📧 Envoi notification refus à {demande.Utilisateur.NomComplet}");
+                    await emailService.EnvoyerNotificationDemandeRefusee(demande, commentaire ?? "Aucun motif spécifié");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"💥 Erreur envoi notifications validation : {ex.Message}");
+                // Ne pas faire échouer la validation pour un problème d'email
             }
         }
 
