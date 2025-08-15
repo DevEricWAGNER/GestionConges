@@ -159,36 +159,22 @@ namespace GestionConges.WPF.Controls
         {
             if (_demandeSelectionnee == null) return;
 
-            var commentaire = TxtCommentaireRapide?.Text?.Trim();
-            if (string.IsNullOrEmpty(commentaire))
+            // ✅ NOUVELLE MÉTHODE : Utiliser la fenêtre personnalisée
+            try
             {
-                var inputResult = Microsoft.VisualBasic.Interaction.InputBox(
-                    "Veuillez indiquer le motif du refus :",
-                    "Motif de refus requis",
-                    "");
+                var motifRefusWindow = new MotifRefusWindow(_demandeSelectionnee.Demande);
+                var result = motifRefusWindow.ShowDialog();
 
-                if (string.IsNullOrWhiteSpace(inputResult))
+                if (result == true && !string.IsNullOrWhiteSpace(motifRefusWindow.MotifRefus))
                 {
-                    MessageBox.Show("Un motif de refus est obligatoire.", "Validation",
-                                  MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    await ValiderDemande(false, motifRefusWindow.MotifRefus);
                 }
-                commentaire = inputResult.Trim();
+                // Si l'utilisateur annule, on ne fait rien
             }
-
-            var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir REFUSER cette demande ?\n\n" +
-                $"Demandeur : {_demandeSelectionnee.Demande.Utilisateur.NomComplet}\n" +
-                $"Type : {_demandeSelectionnee.Demande.TypeAbsence.Nom}\n" +
-                $"Période : du {_demandeSelectionnee.Demande.DateDebut:dd/MM/yyyy} au {_demandeSelectionnee.Demande.DateFin:dd/MM/yyyy}\n\n" +
-                $"Motif : {commentaire}",
-                "Confirmer le refus",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
+            catch (Exception ex)
             {
-                await ValiderDemande(false, commentaire);
+                MessageBox.Show($"Erreur lors de l'ouverture de la fenêtre de refus : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
