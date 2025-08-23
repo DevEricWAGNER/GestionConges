@@ -3,37 +3,126 @@ using System.Windows.Input;
 using GestionConges.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using GestionConges.Core.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace GestionConges.WPF.Views
 {
     public partial class LoginWindow : Window
     {
+        public string TitreEntreprise { get; set; } = "";
+        private bool _isFirstSetup = false;
+
         public LoginWindow()
         {
             InitializeComponent();
+
+            // Récupérer le nom de l'entreprise depuis appsettings.json
+            var configuration = App.GetService<IConfiguration>();
+            var nomEntreprise = configuration["AppSettings:NomEntreprise"];
+            TitreEntreprise = string.IsNullOrEmpty(nomEntreprise) ? "Gestion Congés" : nomEntreprise;
+
+            this.DataContext = this;
+
+            // Vérifier si c'est la première installation
+            CheckFirstSetup();
 
             // Focus sur le champ login au démarrage
             Loaded += (s, e) => TxtLogin.Focus();
         }
 
-        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
+        private async void CheckFirstSetup()
         {
-            await TentativeConnexion();
-        }
-
-        private void TxtLogin_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
+            try
             {
-                TxtPassword.Focus();
+                var context = App.GetService<GestionCongesContext>();
+                var hasUsers = await context.Utilisateurs.AnyAsync();
+
+                if (!hasUsers)
+                {
+                    _isFirstSetup = true;
+                    ConfigurerModeInscription();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la vérification de la base de données : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private async void TxtPassword_KeyDown(object sender, KeyEventArgs e)
+        private void ConfigurerModeInscription()
         {
-            if (e.Key == Key.Enter)
+            Title = "Première Installation - JungLogistique";
+
+            // Modifier les textes avec les noms définis
+            TxtTitreFormulaire.Text = "Configuration Initiale";
+            TxtSousTitreFormulaire.Text = "Créez le compte administrateur principal";
+            BtnLogin.Content = "CRÉER LE COMPTE ADMINISTRATEUR";
+
+            // Changer les tooltips
+            TxtLogin.ToolTip = "Choisissez votre nom d'utilisateur administrateur";
+            TxtPassword.ToolTip = "Créez un mot de passe sécurisé (min. 8 caractères)";
+        }
+
+        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isFirstSetup)
+            {
+                await CreerPremierAdministrateur();
+            }
+            else
             {
                 await TentativeConnexion();
+            }
+        }
+
+        private async Task CreerPremierAdministrateur()
+        {
+            try
+            {
+                // Validation renforcée pour le premier admin
+                if (string.IsNullOrWhiteSpace(TxtLogin.Text))
+                {
+                    AfficherErreur("Veuillez saisir un nom d'utilisateur.");
+                    TxtLogin.Focus();
+                    return;
+                }
+
+                if (TxtLogin.Text.Length < 3)
+                {
+                    AfficherErreur("Le nom d'utilisateur doit contenir au moins 3 caractères.");
+                    TxtLogin.Focus();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(TxtPassword.Password))
+                {
+                    AfficherErreur("Veuillez créer un mot de passe.");
+                    TxtPassword.Focus();
+                    return;
+                }
+
+                if (TxtPassword.Password.Length < 8)
+                {
+                    AfficherErreur("Le mot de passe doit contenir au moins 8 caractères.");
+                    TxtPassword.Focus();
+                    return;
+                }
+
+                // Demander des informations supplémentaires
+                var detailsWindow = new PremierAdminWindow(TxtLogin.Text, TxtPassword.Password);
+                var result = detailsWindow.ShowDialog();
+
+                if (result == true && detailsWindow.AdminCree != null)
+                {
+                    App.UtilisateurConnecte = detailsWindow.AdminCree;
+                    DialogResult = true;
+                    Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                AfficherErreur($"Erreur lors de la création du compte : {ex.Message}");
             }
         }
 
@@ -96,6 +185,34 @@ namespace GestionConges.WPF.Views
             }
         }
 
+        private void TxtLogin_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                TxtPassword.Focus();
+            }
+        }
+
+        private async void TxtPassword_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                if (_isFirstSetup)
+                {
+                    await CreerPremierAdministrateur();
+                }
+                else
+                {
+                    await TentativeConnexion();
+                }
+            }
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
         private void AfficherErreur(string message)
         {
             TxtError.Text = message;
@@ -113,71 +230,6 @@ namespace GestionConges.WPF.Views
             BtnLogin.IsEnabled = !afficher;
             TxtLogin.IsEnabled = !afficher;
             TxtPassword.IsEnabled = !afficher;
-        }
-
-        // Méthodes de debug (garder pour l'instant)
-        private async void BtnDebug_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var context = App.GetService<GestionCongesContext>();
-                var utilisateurs = await context.Utilisateurs.ToListAsync();
-
-                var message = $"🔍 UTILISATEURS DANS LA BASE:\n\n";
-                message += $"Total: {utilisateurs.Count}\n\n";
-
-                foreach (var user in utilisateurs)
-                {
-                    message += $"ID: {user.Id}\n";
-                    message += $"Login: {user.Login}\n";
-                    message += $"Email: {user.Email}\n";
-                    message += $"Actif: {user.Actif}\n";
-                    message += $"Hash: {user.MotDePasseHash.Substring(0, Math.Min(20, user.MotDePasseHash.Length))}...\n\n";
-                }
-
-                MessageBox.Show(message, "Debug Utilisateurs");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur debug: {ex.Message}", "Erreur Debug");
-            }
-        }
-
-        private async void BtnCreerAdmin_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var context = App.GetService<GestionCongesContext>();
-
-                // Supprimer l'ancien admin
-                var ancienAdmin = await context.Utilisateurs.FirstOrDefaultAsync(u => u.Login == "admin");
-                if (ancienAdmin != null)
-                {
-                    context.Utilisateurs.Remove(ancienAdmin);
-                }
-
-                // Créer nouvel admin avec bon hash
-                var admin = new Utilisateur
-                {
-                    Nom = "Admin",
-                    Prenom = "Super",
-                    Email = "admin@entreprise.com",
-                    Login = "admin",
-                    MotDePasseHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                    Role = GestionConges.Core.Enums.RoleUtilisateur.ChefEquipe,
-                    Actif = true,
-                    DateCreation = DateTime.Now
-                };
-
-                context.Utilisateurs.Add(admin);
-                await context.SaveChangesAsync();
-
-                MessageBox.Show("✅ Admin recréé avec succès !\nLogin: admin\nMot de passe: admin123", "Succès");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur création admin: {ex.Message}", "Erreur");
-            }
         }
     }
 }

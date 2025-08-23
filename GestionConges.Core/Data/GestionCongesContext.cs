@@ -139,23 +139,6 @@ namespace GestionConges.Core.Data
                 new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", Actif = true, DateCreation = seedDate }
             );
 
-            // Utilisateur admin par défaut (GARDER EXISTANT)
-            modelBuilder.Entity<Utilisateur>().HasData(
-                new Utilisateur
-                {
-                    Id = 1,
-                    Nom = "Admin",
-                    Prenom = "Super",
-                    Email = "admin@entreprise.com",
-                    Login = "admin",
-                    MotDePasseHash = "$2a$11$rBV2HDeWlL.rsozGbz2gauO9H8sAzM7Ke.K5nCS5JoTa/4EK8TA4K", // BCrypt de "admin123"
-                    Role = RoleUtilisateur.ChefEquipe,
-                    PoleId = null,
-                    Actif = true,
-                    DateCreation = seedDate
-                }
-            );
-
             // ✅ NOUVEAUX PARAMÈTRES PAR DÉFAUT
             modelBuilder.Entity<ParametreGlobal>().HasData(
                 // Calendrier

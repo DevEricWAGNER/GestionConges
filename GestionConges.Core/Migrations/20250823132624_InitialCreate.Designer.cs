@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestionConges.Core.Migrations
 {
     [DbContext(typeof(GestionCongesContext))]
-    [Migration("20250809084936_AjoutParametresGlobaux")]
-    partial class AjoutParametresGlobaux
+    [Migration("20250823132624_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -665,20 +665,6 @@ namespace GestionConges.Core.Migrations
                     b.HasIndex("PoleId");
 
                     b.ToTable("Utilisateurs");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Actif = true,
-                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "admin@entreprise.com",
-                            Login = "admin",
-                            MotDePasseHash = "$2a$11$rBV2HDeWlL.rsozGbz2gauO9H8sAzM7Ke.K5nCS5JoTa/4EK8TA4K",
-                            Nom = "Admin",
-                            Prenom = "Super",
-                            Role = 2
-                        });
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.ValidationDemande", b =>

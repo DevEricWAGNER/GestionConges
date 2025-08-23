@@ -1,130 +1,234 @@
 ﻿<Window x:Class="GestionConges.WPF.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Connexion - Gestion des Congés" 
-        Height="600" Width="400"
+        Title="Connexion - JungLogistique" 
+        Height="700" Width="1000"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="#F5F5F5">
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Border CornerRadius="16" Background="{StaticResource Surface}"
+            BorderBrush="{StaticResource Gray200}" BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Header avec logo/titre -->
-        <Border Grid.Row="0" Background="#2196F3" Padding="20">
-            <StackPanel HorizontalAlignment="Center">
-                <TextBlock Text="📅" FontSize="40" HorizontalAlignment="Center" Foreground="White"/>
-                <TextBlock Text="Gestion des Congés" 
-                         FontSize="24" FontWeight="Bold" 
-                         Foreground="White" 
-                         HorizontalAlignment="Center" 
-                         Margin="0,10,0,0"/>
-                <TextBlock Text="Équipe Projets" 
-                         FontSize="14" 
-                         Foreground="White" 
-                         HorizontalAlignment="Center" 
-                         Opacity="0.8"/>
-            </StackPanel>
-        </Border>
+            <!-- Section gauche - Branding -->
+            <Border Grid.Column="0" Background="{StaticResource Primary}" 
+                    CornerRadius="16,0,0,16">
+                <Grid>
+                    <Canvas>
+                        <!-- Formes décoratives -->
+                        <Ellipse Width="200" Height="200" Fill="White" Opacity="0.1" 
+                               Canvas.Left="-50" Canvas.Top="-50"/>
+                        <Ellipse Width="150" Height="150" Fill="White" Opacity="0.1" 
+                               Canvas.Right="-30" Canvas.Bottom="-30"/>
+                        <Ellipse Width="100" Height="100" Fill="White" Opacity="0.2" 
+                               Canvas.Left="450" Canvas.Top="100"/>
+                    </Canvas>
 
-        <!-- Formulaire de connexion -->
-        <StackPanel Grid.Row="1" Margin="40" VerticalAlignment="Center">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                              Margin="60">
+                        <!-- Logo -->
+                        <Border Background="White" Width="80" Height="80" 
+                              CornerRadius="20" Margin="0,0,0,32">
+                            <TextBlock Text="📅" FontSize="40" 
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Border>
 
-            <!-- Titre -->
-            <TextBlock Text="Connexion" 
-                     FontSize="20" FontWeight="SemiBold" 
-                     HorizontalAlignment="Center" 
-                     Margin="0,0,0,30"/>
+                        <!-- Titre -->
+                        <TextBlock Text="{Binding TitreEntreprise}" 
+                                 FontSize="36" FontWeight="Bold" 
+                                 Foreground="White" 
+                                 HorizontalAlignment="Center" 
+                                 Margin="0,0,0,8"/>
 
-            <!-- Login -->
-            <StackPanel Margin="0,0,0,20">
-                <TextBlock Text="Nom d'utilisateur" FontSize="12" Foreground="Gray" Margin="0,0,0,5"/>
-                <TextBox Name="TxtLogin"
-                       FontSize="16"
-                       Padding="8"
-                       BorderBrush="#CCCCCC"
-                       BorderThickness="1"
-                       KeyDown="TxtLogin_KeyDown"/>
-            </StackPanel>
+                        <TextBlock Text="Gestion des Congés" 
+                                 FontSize="18" FontWeight="Medium"
+                                 Foreground="White" 
+                                 Opacity="0.9"
+                                 HorizontalAlignment="Center" 
+                                 Margin="0,0,0,40"/>
 
-            <!-- Mot de passe -->
-            <StackPanel Margin="0,0,0,20">
-                <TextBlock Text="Mot de passe" FontSize="12" Foreground="Gray" Margin="0,0,0,5"/>
-                <PasswordBox Name="TxtPassword"
-                           FontSize="16"
-                           Padding="8"
-                           BorderBrush="#CCCCCC"
-                           BorderThickness="1"
-                           KeyDown="TxtPassword_KeyDown"/>
-            </StackPanel>
+                        <Border CornerRadius="12" Padding="24" 
+                                Margin="0,0,0,40">
+                            <Border.Background>
+                                <SolidColorBrush Color="White" Opacity="0.15"/>
+                            </Border.Background>
+                            <StackPanel>
+                                <TextBlock Text="Simplifiez la gestion de vos congés" 
+                                     FontSize="16" FontWeight="SemiBold"
+                                     Foreground="White" 
+                                     HorizontalAlignment="Center"
+                                     Margin="0,0,0,12"/>
+                                <StackPanel>
+                                    <TextBlock Text="• Demandes en ligne rapides" 
+                                         FontSize="14" Foreground="White" 
+                                         Margin="0,4"/>
+                                    <TextBlock Text="• Validation hiérarchique automatique" 
+                                         FontSize="14" Foreground="White" 
+                                         Margin="0,4"/>
+                                    <TextBlock Text="• Calendrier équipe en temps réel" 
+                                         FontSize="14" Foreground="White" 
+                                         Margin="0,4"/>
+                                    <TextBlock Text="• Notifications par email" 
+                                         FontSize="14" Foreground="White" 
+                                         Margin="0,4"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
-            <!-- Message d'erreur -->
-            <Border Name="ErrorPanel"
-                  Background="#FFEBEE" 
-                  BorderBrush="#F44336" 
-                  BorderThickness="1" 
-                  CornerRadius="4" 
-                  Padding="10"
-                  Margin="0,0,0,20"
-                  Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⚠️" 
-                             Foreground="#F44336" 
-                             VerticalAlignment="Center" 
-                             Margin="0,0,10,0"
-                             FontSize="16"/>
-                    <TextBlock Name="TxtError" 
-                             Foreground="#F44336" 
-                             TextWrapping="Wrap" 
-                             VerticalAlignment="Center"/>
-                </StackPanel>
+                        <!-- Version -->
+                        <TextBlock Text="Version 1.0 - Développé par WebWAGNER" 
+                                 FontSize="12" Foreground="White" 
+                                 Opacity="0.7" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
             </Border>
 
-            <!-- Bouton de connexion -->
-            <Button Name="BtnLogin"
-                  Content="SE CONNECTER" 
-                  Background="#2196F3"
-                  Foreground="White"
-                  BorderThickness="0"
-                  Height="45"
-                  FontSize="14"
-                  FontWeight="SemiBold"
-                  Margin="0,0,0,20"
-                  Click="BtnLogin_Click"/>
+            <!-- Section droite - Formulaire -->
+            <Grid Grid.Column="1" Margin="60">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Loading indicator -->
-            <StackPanel Name="LoadingPanel"
-                      Orientation="Horizontal" 
-                      HorizontalAlignment="Center" 
-                      Visibility="Collapsed"
-                      Margin="0,0,0,20">
-                <ProgressBar IsIndeterminate="True" Width="30" Height="30"/>
-                <TextBlock Text="Connexion en cours..." 
-                         Margin="15,0,0,0" 
-                         VerticalAlignment="Center"
-                         Foreground="Gray"/>
-            </StackPanel>
+                <!-- Header formulaire -->
+                <StackPanel Grid.Row="0" Margin="0,40,0,0">
+                    <TextBlock Name="TxtTitreFormulaire" 
+                             Text="Connexion" 
+                             FontSize="32" FontWeight="Bold" 
+                             Foreground="{StaticResource TextPrimary}"
+                             HorizontalAlignment="Center"
+                             Margin="0,0,0,8"/>
 
-            <!-- Version -->
-            <TextBlock Text="Version 1.0.0 - Équipe Projets" 
-                     FontSize="10" 
-                     HorizontalAlignment="Center" 
-                     Foreground="Gray"/>
+                    <TextBlock Name="TxtSousTitreFormulaire" 
+                             Text="Accédez à votre espace personnel" 
+                             FontSize="16" 
+                             Foreground="{StaticResource TextSecondary}"
+                             HorizontalAlignment="Center"
+                             Margin="0,0,0,40"/>
+                </StackPanel>
 
+                <!-- Formulaire -->
+                <StackPanel Grid.Row="1" VerticalAlignment="Center">
 
-            <!-- Bouton DEBUG temporaire -->
-            <Button Name="BtnCreerAdmin"
-                Content="🔧 RECRÉER ADMIN avec bon mot de passe" 
-                Background="Green"
-                Foreground="White"
-                BorderThickness="0"
-                Height="35"
-                FontSize="11"
-                Margin="0,5,0,0"
-                Click="BtnCreerAdmin_Click"/>
-        </StackPanel>
-    </Grid>
+                    <!-- Champ Login -->
+                    <StackPanel Margin="0,0,0,24">
+                        <TextBlock Text="Nom d'utilisateur" 
+                                 FontSize="14" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextPrimary}" 
+                                 Margin="0,0,0,8"/>
+                        <Border Background="{StaticResource Surface}" 
+                              BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                              CornerRadius="8" Padding="16,14">
+                            <Grid>
+                                <TextBlock Text="👤" FontSize="16" 
+                                         Foreground="{StaticResource Gray400}"
+                                         VerticalAlignment="Center" 
+                                         HorizontalAlignment="Left"/>
+                                <TextBox Name="TxtLogin"
+                                       FontSize="16" Background="Transparent"
+                                       BorderThickness="0" Padding="24,0,0,0"
+                                       VerticalContentAlignment="Center"
+                                       Foreground="{StaticResource TextPrimary}"
+                                       KeyDown="TxtLogin_KeyDown"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Champ Mot de passe -->
+                    <StackPanel Margin="0,0,0,32">
+                        <TextBlock Text="Mot de passe" 
+                                 FontSize="14" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextPrimary}" 
+                                 Margin="0,0,0,8"/>
+                        <Border Background="{StaticResource Surface}" 
+                              BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                              CornerRadius="8" Padding="16,14">
+                            <Grid>
+                                <TextBlock Text="🔒" FontSize="16" 
+                                         Foreground="{StaticResource Gray400}"
+                                         VerticalAlignment="Center" 
+                                         HorizontalAlignment="Left"/>
+                                <PasswordBox Name="TxtPassword"
+                                           FontSize="16" Background="Transparent"
+                                           BorderThickness="0" Padding="24,0,0,0"
+                                           VerticalContentAlignment="Center"
+                                           Foreground="{StaticResource TextPrimary}"
+                                           KeyDown="TxtPassword_KeyDown"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Message d'erreur -->
+                    <Border Name="ErrorPanel"
+                          Background="{StaticResource Surface}" 
+                          BorderBrush="{StaticResource Danger}" 
+                          BorderThickness="1" 
+                          CornerRadius="8" 
+                          Padding="16"
+                          Margin="0,0,0,24"
+                          Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="{StaticResource Danger}" 
+                                  Width="24" Height="24" CornerRadius="12" 
+                                  Margin="0,0,12,0">
+                                <TextBlock Text="!" 
+                                         Foreground="White" FontWeight="Bold"
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Name="TxtError" 
+                                     Foreground="{StaticResource Danger}" 
+                                     FontWeight="SemiBold"
+                                     TextWrapping="Wrap" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Bouton connexion -->
+                    <Button Name="BtnLogin"
+                          Content="SE CONNECTER" 
+                          Style="{StaticResource MaterialDesignRaisedButton}"
+                          Height="56" FontSize="16"
+                          Margin="0,0,0,24"
+                          Click="BtnLogin_Click"/>
+
+                    <!-- Loading indicator -->
+                    <StackPanel Name="LoadingPanel"
+                              Orientation="Horizontal" 
+                              HorizontalAlignment="Center" 
+                              Visibility="Collapsed"
+                              Margin="0,0,0,24">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                   Margin="0,0,16,0"/>
+                        <TextBlock Text="Connexion en cours..." 
+                                 FontSize="14"
+                                 VerticalAlignment="Center"
+                                 Foreground="{StaticResource TextSecondary}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- Bouton fermer -->
+            <Button Grid.Column="1" Content="✕" 
+                  Width="32" Height="32" 
+                  Background="Transparent" 
+                  BorderThickness="0" 
+                  Foreground="{StaticResource Gray400}"
+                  HorizontalAlignment="Right" 
+                  VerticalAlignment="Top"
+                  Margin="0,16,16,0"
+                  FontSize="16"
+                  Click="BtnClose_Click"/>
+        </Grid>
+    </Border>
 </Window>
