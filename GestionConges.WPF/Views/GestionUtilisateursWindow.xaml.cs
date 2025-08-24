@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace GestionConges.WPF.Views
 {
@@ -382,8 +383,7 @@ namespace GestionConges.WPF.Views
             }
 
             // Masquer le champ mot de passe pour modification
-            LblMotDePasse.Visibility = Visibility.Collapsed;
-            TxtMotDePasse.Visibility = Visibility.Collapsed;
+            StackMotDePasse.Visibility = Visibility.Collapsed;
 
             // Informations supplémentaires
             var infos = $"Créé le : {utilisateur.DateCreation:dd/MM/yyyy HH:mm}\n";
@@ -462,7 +462,7 @@ namespace GestionConges.WPF.Views
             _modeEdition = false;
         }
 
-        private async void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
+        private void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
         {
             _utilisateurSelectionne = null;
             DgUtilisateurs.SelectedItem = null;
@@ -473,12 +473,11 @@ namespace GestionConges.WPF.Views
             if (_societes.Count > 0)
             {
                 CmbSociete.SelectedIndex = 0;
-                await ChargerEquipesPourSociete(_societes[0].Id);
+                ChargerEquipesPourSociete(_societes[0].Id);
             }
 
             // Afficher le champ mot de passe pour nouveau
-            LblMotDePasse.Visibility = Visibility.Visible;
-            TxtMotDePasse.Visibility = Visibility.Visible;
+            StackMotDePasse.Visibility = Visibility.Visible;
 
             ActiverFormulaire();
             TxtNom.Focus();
@@ -999,6 +998,36 @@ namespace GestionConges.WPF.Views
                               "Information", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+
+        #region Window Controls
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                BtnMaximize_Click(sender, e);
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void BtnMaximize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+
+            BtnMaximize.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+        }
+
+        #endregion
 
         protected override void OnClosed(EventArgs e)
         {
