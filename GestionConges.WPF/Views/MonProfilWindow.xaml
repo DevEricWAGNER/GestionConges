@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mon Profil - Gestion des Congés" 
-        Height="600" Width="800"
+        Height="650" Width="850"
         WindowStartupLocation="CenterScreen"
         Background="#F5F5F5">
 
@@ -15,7 +15,7 @@
 
         <!-- Titre -->
         <TextBlock Grid.Row="0" 
-                 Text="👤 Mon Profil"
+                 Text="Mon Profil"
                  FontSize="24" FontWeight="Bold"
                  Margin="0,0,0,20"
                  HorizontalAlignment="Center"/>
@@ -24,14 +24,14 @@
         <TabControl Grid.Row="1">
 
             <!-- Onglet Informations personnelles -->
-            <TabItem Header="📋 Informations personnelles">
+            <TabItem Header="Informations personnelles">
                 <ScrollViewer Padding="20">
                     <StackPanel>
 
                         <!-- Section Identité -->
                         <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,20" Background="White">
                             <StackPanel>
-                                <TextBlock Text="🆔 Identité" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                                <TextBlock Text="Identité" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -57,18 +57,14 @@
                                     <!-- Email -->
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Email :" FontWeight="SemiBold" Margin="0,0,0,5"/>
                                     <TextBox Grid.Row="3" Grid.Column="0" Name="TxtEmail" Padding="8" IsEnabled="False"/>
-
-                                    <!-- Login -->
-                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Login :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                    <TextBox Grid.Row="3" Grid.Column="2" Name="TxtLogin" Padding="8" IsEnabled="False"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
-                        <!-- Section Fonction -->
+                        <!-- Section Organisation -->
                         <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,20" Background="White">
                             <StackPanel>
-                                <TextBlock Text="🏢 Fonction" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                                <TextBlock Text="Organisation" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -76,26 +72,57 @@
                                         <ColumnDefinition Width="20"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
                                     <!-- Rôle -->
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Rôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                        <TextBox Name="TxtRole" Padding="8" IsEnabled="False"/>
-                                    </StackPanel>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Rôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="1" Grid.Column="0" Name="TxtRole" Padding="8" Margin="0,0,0,15" IsEnabled="False"/>
+
+                                    <!-- Société -->
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Société :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="1" Grid.Column="2" Name="TxtSociete" Padding="8" Margin="0,0,0,15" IsEnabled="False"/>
+
+                                    <!-- Équipe -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Équipe :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="3" Grid.Column="0" Name="TxtEquipe" Padding="8" Margin="0,0,0,15" IsEnabled="False"/>
 
                                     <!-- Pôle -->
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Pôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                        <TextBox Name="TxtPole" Padding="8" IsEnabled="False"/>
-                                    </StackPanel>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Pôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                    <TextBox Grid.Row="3" Grid.Column="2" Name="TxtPole" Padding="8" Margin="0,0,0,15" IsEnabled="False"/>
                                 </Grid>
+
+                                <!-- Section Sociétés secondaires -->
+                                <TextBlock Text="Sociétés secondaires :" FontWeight="SemiBold" Margin="0,10,0,5"/>
+                                <ListBox Name="LstSocietesSecondaires" 
+                                       Height="80" 
+                                       BorderBrush="#CCCCCC" 
+                                       BorderThickness="1" 
+                                       IsEnabled="False">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Societe.Nom}"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <TextBlock Text="Aucune société secondaire" Name="TxtAucuneSocieteSecondaire"
+                                         FontStyle="Italic" Foreground="Gray" Margin="0,5,0,0"
+                                         Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Section Informations compte -->
                         <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Background="White">
                             <StackPanel>
-                                <TextBlock Text="📊 Informations du compte" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                                <TextBlock Text="Informations du compte" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -130,7 +157,7 @@
             </TabItem>
 
             <!-- Onglet Mot de passe -->
-            <TabItem Header="🔒 Changer le mot de passe">
+            <TabItem Header="Changer le mot de passe">
                 <StackPanel Margin="50" VerticalAlignment="Center" MaxWidth="400">
 
                     <TextBlock Text="Modification du mot de passe" 
@@ -159,22 +186,15 @@
                           Padding="10"
                           Margin="0,0,0,20"
                           Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚠️" 
-                                     Foreground="#F44336" 
-                                     VerticalAlignment="Center" 
-                                     Margin="0,0,10,0"
-                                     FontSize="16"/>
-                            <TextBlock Name="TxtErrorPassword" 
-                                     Foreground="#F44336" 
-                                     TextWrapping="Wrap" 
-                                     VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <TextBlock Name="TxtErrorPassword" 
+                                 Foreground="#F44336" 
+                                 TextWrapping="Wrap" 
+                                 VerticalAlignment="Center"/>
                     </Border>
 
                     <!-- Bouton changer mot de passe -->
                     <Button Name="BtnChangerMotDePasse" 
-                          Content="🔄 Changer le mot de passe"
+                          Content="Changer le mot de passe"
                           Background="#2196F3" Foreground="White" BorderThickness="0"
                           Height="45" FontSize="14" FontWeight="SemiBold"
                           Click="BtnChangerMotDePasse_Click"/>
@@ -183,7 +203,7 @@
                     <Border Background="#E8F5E8" BorderBrush="#4CAF50" BorderThickness="1" 
                           CornerRadius="4" Padding="10" Margin="0,20,0,0">
                         <StackPanel>
-                            <TextBlock Text="💡 Conseils pour un mot de passe sécurisé :" 
+                            <TextBlock Text="Conseils pour un mot de passe sécurisé :" 
                                      FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBlock Text="• Au moins 8 caractères" FontSize="12" Margin="5,0,0,2"/>
                             <TextBlock Text="• Mélange de lettres, chiffres et symboles" FontSize="12" Margin="5,0,0,2"/>
@@ -196,7 +216,7 @@
             </TabItem>
 
             <!-- Onglet Préférences -->
-            <TabItem Header="⚙️ Préférences">
+            <TabItem Header="Préférences">
                 <ScrollViewer Padding="30">
                     <StackPanel>
 
@@ -208,7 +228,7 @@
                         <!-- Section Notifications -->
                         <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,20" Background="White">
                             <StackPanel>
-                                <TextBlock Text="🔔 Notifications" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                                <TextBlock Text="Notifications" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
 
                                 <CheckBox Name="ChkNotificationEmail" 
                                         Content="Recevoir les notifications par email" 
@@ -228,7 +248,7 @@
                         <!-- Section Interface -->
                         <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="15" Margin="0,0,0,20" Background="White">
                             <StackPanel>
-                                <TextBlock Text="🎨 Interface" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                                <TextBlock Text="Interface" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <TextBlock Text="Format de date :" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -248,12 +268,12 @@
                         <!-- Boutons préférences -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
                             <Button Name="BtnSauvegarderPreferences" 
-                                  Content="💾 Sauvegarder les préférences"
+                                  Content="Sauvegarder les préférences"
                                   Background="#4CAF50" Foreground="White" BorderThickness="0"
                                   Padding="20,10" Margin="0,0,10,0"
                                   Click="BtnSauvegarderPreferences_Click"/>
                             <Button Name="BtnResetPreferences" 
-                                  Content="🔄 Réinitialiser"
+                                  Content="Réinitialiser"
                                   Background="#757575" Foreground="White" BorderThickness="0"
                                   Padding="20,10"
                                   Click="BtnResetPreferences_Click"/>
@@ -267,7 +287,7 @@
 
         <!-- Boutons fermer -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Name="BtnFermer" Content="🚪 Fermer"
+            <Button Name="BtnFermer" Content="Fermer"
                   Background="#757575" Foreground="White" BorderThickness="0"
                   Padding="20,10"
                   Click="BtnFermer_Click"/>

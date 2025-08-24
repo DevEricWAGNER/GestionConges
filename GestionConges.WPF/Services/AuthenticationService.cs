@@ -27,7 +27,7 @@ namespace GestionConges.WPF.Services
             // Recherche de l'utilisateur
             var utilisateur = await _context.Utilisateurs
                 .Include(u => u.Pole)
-                .FirstOrDefaultAsync(u => u.Login == login && u.Actif);
+                .FirstOrDefaultAsync(u => u.Email == login && u.Actif);
 
             if (utilisateur == null)
                 return null;

@@ -8,6 +8,7 @@ namespace GestionConges.WPF.Views
 {
     public partial class MonProfilWindow : Window
     {
+        private readonly GestionCongesContext _context;
         private readonly Utilisateur _utilisateurConnecte;
         private readonly PreferencesUtilisateurService _preferencesService;
 
@@ -15,30 +16,24 @@ namespace GestionConges.WPF.Views
         {
             InitializeComponent();
 
+            _context = App.GetService<GestionCongesContext>();
             _utilisateurConnecte = App.UtilisateurConnecte ?? throw new InvalidOperationException("Aucun utilisateur connecté");
             _preferencesService = new PreferencesUtilisateurService();
 
             ChargerDonneesProfil();
         }
 
-        private GestionCongesContext CreerContexte()
-        {
-            var connectionString = "Server=(localdb)\\mssqllocaldb;Database=GestionCongesDB;Trusted_Connection=true;MultipleActiveResultSets=true";
-            var options = new DbContextOptionsBuilder<GestionCongesContext>()
-                .UseSqlServer(connectionString)
-                .Options;
-            return new GestionCongesContext(options);
-        }
-
         private async void ChargerDonneesProfil()
         {
             try
             {
-                using var context = CreerContexte();
-
-                // Recharger l'utilisateur avec ses relations
-                var utilisateur = await context.Utilisateurs
+                // Recharger l'utilisateur avec toutes ses relations
+                var utilisateur = await _context.Utilisateurs
+                    .Include(u => u.Societe)
+                    .Include(u => u.Equipe)
                     .Include(u => u.Pole)
+                    .Include(u => u.SocietesSecondaires)
+                        .ThenInclude(ss => ss.Societe)
                     .FirstOrDefaultAsync(u => u.Id == _utilisateurConnecte.Id);
 
                 if (utilisateur != null)
@@ -47,18 +42,36 @@ namespace GestionConges.WPF.Views
                     TxtNom.Text = utilisateur.Nom;
                     TxtPrenom.Text = utilisateur.Prenom;
                     TxtEmail.Text = utilisateur.Email;
-                    TxtLogin.Text = utilisateur.Login;
 
-                    // Remplir les informations fonction
+                    // Remplir les informations organisation
                     TxtRole.Text = utilisateur.RoleLibelle;
+                    TxtSociete.Text = utilisateur.Societe?.Nom ?? "Non définie";
+                    TxtEquipe.Text = utilisateur.Equipe?.Nom ?? "Non définie";
                     TxtPole.Text = utilisateur.Pole?.Nom ?? "Aucun pôle assigné";
+
+                    // Charger les sociétés secondaires
+                    var societesSecondaires = utilisateur.SocietesSecondaires
+                        .Where(ss => ss.Actif)
+                        .ToList();
+
+                    if (societesSecondaires.Any())
+                    {
+                        LstSocietesSecondaires.ItemsSource = societesSecondaires;
+                        TxtAucuneSocieteSecondaire.Visibility = Visibility.Collapsed;
+                        LstSocietesSecondaires.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        TxtAucuneSocieteSecondaire.Visibility = Visibility.Visible;
+                        LstSocietesSecondaires.Visibility = Visibility.Collapsed;
+                    }
 
                     // Remplir les informations compte
                     TxtDateCreation.Text = utilisateur.DateCreation.ToString("dd/MM/yyyy HH:mm");
                     TxtDerniereConnexion.Text = utilisateur.DerniereConnexion?.ToString("dd/MM/yyyy HH:mm") ?? "Jamais";
-                    TxtStatut.Text = utilisateur.Actif ? "✅ Actif" : "❌ Inactif";
+                    TxtStatut.Text = utilisateur.Actif ? "Actif" : "Inactif";
 
-                    // Charger les préférences (pour l'instant valeurs par défaut)
+                    // Charger les préférences
                     ChargerPreferences();
                 }
                 else
@@ -114,9 +127,9 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                if (TxtNouveauMotDePasse.Password.Length < 6)
+                if (TxtNouveauMotDePasse.Password.Length < 8)
                 {
-                    AfficherErreurMotDePasse("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+                    AfficherErreurMotDePasse("Le nouveau mot de passe doit contenir au moins 8 caractères.");
                     TxtNouveauMotDePasse.Focus();
                     return;
                 }
@@ -128,8 +141,7 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                using var context = CreerContexte();
-                var utilisateur = context.Utilisateurs.Find(_utilisateurConnecte.Id);
+                var utilisateur = await _context.Utilisateurs.FindAsync(_utilisateurConnecte.Id);
 
                 if (utilisateur == null)
                 {
@@ -147,7 +159,7 @@ namespace GestionConges.WPF.Views
 
                 // Changer le mot de passe
                 utilisateur.MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(TxtNouveauMotDePasse.Password);
-                await context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 // Vider les champs
                 TxtMotDePasseActuel.Clear();
@@ -221,6 +233,12 @@ namespace GestionConges.WPF.Views
         private void MasquerErreurMotDePasse()
         {
             ErrorPanelPassword.Visibility = Visibility.Collapsed;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _context?.Dispose();
+            base.OnClosed(e);
         }
     }
 }

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Configuration du Compte Administrateur" 
-        Height="700" Width="500"
+        Height="800" Width="550"
         WindowStartupLocation="CenterOwner"
         Background="#F5F5F5"
         ResizeMode="NoResize">
@@ -19,14 +19,9 @@
                 Padding="20" Margin="0,0,0,20" CornerRadius="8">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
-                    <TextBlock Text="🎉" FontSize="32" Margin="0,0,15,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Bienvenue !" 
-                                 FontSize="24" FontWeight="Bold" 
-                                 Foreground="#2E7D32"/>
-                        <TextBlock Text="Configuration du premier administrateur" 
-                                 FontSize="14" Foreground="Gray"/>
-                    </StackPanel>
+                    <TextBlock Text="Bienvenue !" 
+                             FontSize="24" FontWeight="Bold" 
+                             Foreground="#2E7D32"/>
                 </StackPanel>
 
                 <TextBlock TextWrapping="Wrap" HorizontalAlignment="Center" 
@@ -45,7 +40,7 @@
                 <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" 
                         Margin="0,0,0,15" Background="White" CornerRadius="8">
                     <StackPanel>
-                        <TextBlock Text="👤 Informations personnelles" 
+                        <TextBlock Text="Informations personnelles" 
                                  FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
 
                         <Grid>
@@ -65,11 +60,6 @@
                                 <TextBox Name="TxtPrenom" Padding="10" FontSize="14" MaxLength="50"/>
                             </StackPanel>
                         </Grid>
-
-                        <TextBlock Text="Email :" FontWeight="SemiBold" Margin="0,15,0,5"/>
-                        <TextBox Name="TxtEmail" Padding="10" FontSize="14" MaxLength="200"/>
-                        <TextBlock Text="Cet email servira pour les notifications et la récupération de mot de passe" 
-                                 FontSize="11" Foreground="Gray" Margin="0,5,0,0"/>
                     </StackPanel>
                 </Border>
 
@@ -77,38 +67,44 @@
                 <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" 
                         Margin="0,0,0,15" Background="White" CornerRadius="8">
                     <StackPanel>
-                        <TextBlock Text="🔐 Informations de connexion" 
+                        <TextBlock Text="Informations de connexion" 
                                  FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
 
-                        <TextBlock Text="Nom d'utilisateur :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                        <TextBox Name="TxtLogin" Padding="10" FontSize="14" IsReadOnly="True" 
-                               Background="#F0F0F0"/>
-                        <TextBlock Text="Ce nom sera utilisé pour vous connecter à l'application" 
-                                 FontSize="11" Foreground="Gray" Margin="0,5,0,15"/>
+                        <TextBlock Text="Email :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox Name="TxtEmail" Padding="10" FontSize="14" MaxLength="200" IsReadOnly="True"
+                                 Background="#F0F0F0"/>
+                        <TextBlock 
+                                 FontSize="11" Foreground="Gray" Margin="0,5,0,15"><Run Text="Cet email servira pour "/><Run Language="fr-fr" Text="la connexion, "/><Run Text="les notifications et la récupération de mot de passe"/></TextBlock>
 
                         <TextBlock Text="Mot de passe :" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <PasswordBox Name="TxtMotDePasse" Padding="10" FontSize="14" IsEnabled="False" 
                                    Background="#F0F0F0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                            <TextBlock Text="✅" FontSize="12" Foreground="Green" Margin="0,0,5,0"/>
                             <TextBlock Text="Mot de passe valide (8+ caractères)" 
                                      FontSize="11" Foreground="Gray"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <!-- Section Pôle -->
+                <!-- Section Organisation -->
                 <Border BorderBrush="#DDDDDD" BorderThickness="1" Padding="20" 
                         Margin="0,0,0,15" Background="White" CornerRadius="8">
                     <StackPanel>
-                        <TextBlock Text="🏢 Organisation" 
+                        <TextBlock Text="Organisation" 
                                  FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
 
-                        <TextBlock Text="Pôle de rattachement (optionnel) :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                        <ComboBox Name="CmbPole" Padding="10" FontSize="14">
-                            <ComboBoxItem Content="Aucun pôle spécifique" IsSelected="True"/>
-                        </ComboBox>
-                        <TextBlock Text="En tant qu'administrateur, vous pourrez gérer tous les pôles" 
+                        <TextBlock Text="Société :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox Name="CmbSociete" Padding="10" FontSize="14"
+                                SelectionChanged="CmbSociete_SelectionChanged"/>
+
+                        <TextBlock Text="Équipe :" FontWeight="SemiBold" Margin="0,15,0,5"/>
+                        <ComboBox Name="CmbEquipe" Padding="10" FontSize="14"
+                                SelectionChanged="CmbEquipe_SelectionChanged"/>
+
+                        <TextBlock Text="Pôle (optionnel) :" FontWeight="SemiBold" Margin="0,15,0,5"/>
+                        <ComboBox Name="CmbPole" Padding="10" FontSize="14"/>
+
+                        <TextBlock Text="En tant qu'administrateur, vous pourrez gérer toutes les structures" 
                                  FontSize="11" Foreground="Gray" Margin="0,5,0,0"/>
                     </StackPanel>
                 </Border>
@@ -117,13 +113,11 @@
                 <Border Background="#E8F5E8" BorderBrush="#4CAF50" BorderThickness="2" 
                         CornerRadius="8" Padding="15">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="ℹ️" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Text="Informations importantes" FontWeight="Bold" FontSize="14" 
-                                     Foreground="#2E7D32"/>
-                        </StackPanel>
+                        <TextBlock Text="Informations importantes" FontWeight="Bold" FontSize="14" 
+                                 Foreground="#2E7D32" Margin="0,0,0,10"/>
                         <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#1B5E20">
                             • Vous serez créé avec le rôle "Chef d'Équipe" (administrateur complet)<LineBreak/>
+                            • Vous aurez des droits de validation sur toutes les sociétés<LineBreak/>
                             • Vous pourrez créer d'autres utilisateurs et gérer l'application<LineBreak/>
                             • Ces informations pourront être modifiées plus tard dans votre profil<LineBreak/>
                             • Conservez précieusement vos identifiants de connexion
@@ -138,13 +132,13 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" 
                   Margin="0,20,0,0">
             <Button Name="BtnCreer" 
-                  Content="🎯 Créer le Compte Administrateur"
+                  Content="Créer le Compte Administrateur"
                   Background="#4CAF50" Foreground="White" BorderThickness="0"
                   Padding="25,12" Margin="0,0,15,0" FontSize="14" FontWeight="SemiBold"
                   Click="BtnCreer_Click"/>
 
             <Button Name="BtnAnnuler" 
-                  Content="❌ Annuler"
+                  Content="Annuler"
                   Background="#757575" Foreground="White" BorderThickness="0"
                   Padding="25,12" FontSize="14" FontWeight="SemiBold"
                   Click="BtnAnnuler_Click"/>

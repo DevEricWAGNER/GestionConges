@@ -50,6 +50,38 @@ namespace GestionConges.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Poles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Poles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Societes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Societes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TypesAbsences",
                 columns: table => new
                 {
@@ -66,6 +98,29 @@ namespace GestionConges.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TypesAbsences", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Equipes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    SocieteId = table.Column<int>(type: "int", nullable: false),
+                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Equipes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Equipes_Societes_SocieteId",
+                        column: x => x.SocieteId,
+                        principalTable: "Societes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -93,6 +148,101 @@ namespace GestionConges.Core.Migrations
                         principalTable: "TypesAbsences",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EquipePole",
+                columns: table => new
+                {
+                    EquipesId = table.Column<int>(type: "int", nullable: false),
+                    PolesId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EquipePole", x => new { x.EquipesId, x.PolesId });
+                    table.ForeignKey(
+                        name: "FK_EquipePole_Equipes_EquipesId",
+                        column: x => x.EquipesId,
+                        principalTable: "Equipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EquipePole_Poles_PolesId",
+                        column: x => x.PolesId,
+                        principalTable: "Poles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EquipesPoles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EquipeId = table.Column<int>(type: "int", nullable: false),
+                    PoleId = table.Column<int>(type: "int", nullable: false),
+                    DateAffectation = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EquipesPoles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EquipesPoles_Equipes_EquipeId",
+                        column: x => x.EquipeId,
+                        principalTable: "Equipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EquipesPoles_Poles_PoleId",
+                        column: x => x.PoleId,
+                        principalTable: "Poles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Utilisateurs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Prenom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    MotDePasseHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    Admin = table.Column<bool>(type: "bit", nullable: false),
+                    SocieteId = table.Column<int>(type: "int", nullable: false),
+                    EquipeId = table.Column<int>(type: "int", nullable: false),
+                    PoleId = table.Column<int>(type: "int", nullable: true),
+                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DerniereConnexion = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Utilisateurs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Utilisateurs_Equipes_EquipeId",
+                        column: x => x.EquipeId,
+                        principalTable: "Equipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Utilisateurs_Poles_PoleId",
+                        column: x => x.PoleId,
+                        principalTable: "Poles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Utilisateurs_Societes_SocieteId",
+                        column: x => x.SocieteId,
+                        principalTable: "Societes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -124,51 +274,73 @@ namespace GestionConges.Core.Migrations
                         principalTable: "TypesAbsences",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Poles",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Actif = table.Column<bool>(type: "bit", nullable: false),
-                    ChefId = table.Column<int>(type: "int", nullable: true),
-                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Poles", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Utilisateurs",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Prenom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Login = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    MotDePasseHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false),
-                    Actif = table.Column<bool>(type: "bit", nullable: false),
-                    PoleId = table.Column<int>(type: "int", nullable: true),
-                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DerniereConnexion = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Utilisateurs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Utilisateurs_Poles_PoleId",
-                        column: x => x.PoleId,
-                        principalTable: "Poles",
+                        name: "FK_DemandesConges_Utilisateurs_UtilisateurId",
+                        column: x => x.UtilisateurId,
+                        principalTable: "Utilisateurs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UtilisateursSocietesSecondaires",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UtilisateurId = table.Column<int>(type: "int", nullable: false),
+                    SocieteId = table.Column<int>(type: "int", nullable: false),
+                    DateAffectation = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    Commentaire = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UtilisateursSocietesSecondaires", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UtilisateursSocietesSecondaires_Societes_SocieteId",
+                        column: x => x.SocieteId,
+                        principalTable: "Societes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UtilisateursSocietesSecondaires_Utilisateurs_UtilisateurId",
+                        column: x => x.UtilisateurId,
+                        principalTable: "Utilisateurs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ValidateursSocietes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ValidateurId = table.Column<int>(type: "int", nullable: false),
+                    SocieteId = table.Column<int>(type: "int", nullable: false),
+                    NiveauValidation = table.Column<int>(type: "int", nullable: false),
+                    DateAffectation = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Actif = table.Column<bool>(type: "bit", nullable: false),
+                    Commentaire = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ValidateursSocietes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ValidateursSocietes_Societes_SocieteId",
+                        column: x => x.SocieteId,
+                        principalTable: "Societes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ValidateursSocietes_Utilisateurs_ValidateurId",
+                        column: x => x.ValidateurId,
+                        principalTable: "Utilisateurs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -242,13 +414,23 @@ namespace GestionConges.Core.Migrations
 
             migrationBuilder.InsertData(
                 table: "Poles",
-                columns: new[] { "Id", "Actif", "ChefId", "DateCreation", "Description", "Nom" },
+                columns: new[] { "Id", "Actif", "DateCreation", "Description", "Nom" },
                 values: new object[,]
                 {
-                    { 1, true, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe de développement logiciel", "Développement" },
-                    { 2, true, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe infrastructure et réseaux", "Réseaux" },
-                    { 3, true, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe Reflex", "Reflex" },
-                    { 4, true, null, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe logistique et support", "Logistique" }
+                    { 1, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe de développement logiciel", "Développement" },
+                    { 2, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe infrastructure et réseaux", "Réseaux" },
+                    { 3, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe Reflex", "Reflex" },
+                    { 4, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe logistique et support", "Logistique" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Societes",
+                columns: new[] { "Id", "Actif", "DateCreation", "Description", "Nom" },
+                values: new object[,]
+                {
+                    { 1, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Siège principal de l'entreprise", "Siège Social" },
+                    { 2, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Site de Dambach", "Dambach" },
+                    { 3, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Site de Kronembourg", "Kronembourg" }
                 });
 
             migrationBuilder.InsertData(
@@ -263,6 +445,30 @@ namespace GestionConges.Core.Migrations
                     { 5, true, "#9b59b6", new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), null, true, "Formation", 5 }
                 });
 
+            migrationBuilder.InsertData(
+                table: "Equipes",
+                columns: new[] { "Id", "Actif", "DateCreation", "Description", "Nom", "SocieteId" },
+                values: new object[,]
+                {
+                    { 1, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Direction générale", "Direction", 1 },
+                    { 2, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe projets", "Projets", 1 },
+                    { 3, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe commerciale", "Commercial", 1 },
+                    { 4, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe transport Dambach", "Transport", 2 },
+                    { 5, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe logistique Dambach", "Logistique", 2 },
+                    { 6, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), "Équipe production Kronembourg", "Production", 3 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "EquipesPoles",
+                columns: new[] { "Id", "Actif", "DateAffectation", "DateFin", "EquipeId", "PoleId" },
+                values: new object[,]
+                {
+                    { 1, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), null, 2, 1 },
+                    { 2, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), null, 2, 2 },
+                    { 3, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), null, 2, 3 },
+                    { 4, true, new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified), null, 5, 4 }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_DemandesConges_TypeAbsenceId",
                 table: "DemandesConges",
@@ -272,6 +478,28 @@ namespace GestionConges.Core.Migrations
                 name: "IX_DemandesConges_UtilisateurId",
                 table: "DemandesConges",
                 column: "UtilisateurId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EquipePole_PolesId",
+                table: "EquipePole",
+                column: "PolesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Equipes_SocieteId_Nom",
+                table: "Equipes",
+                columns: new[] { "SocieteId", "Nom" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EquipesPoles_EquipeId_PoleId",
+                table: "EquipesPoles",
+                columns: new[] { "EquipeId", "PoleId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EquipesPoles_PoleId",
+                table: "EquipesPoles",
+                column: "PoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_JoursFeries_Date",
@@ -295,14 +523,21 @@ namespace GestionConges.Core.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Poles_ChefId",
+                name: "IX_Poles_Nom",
                 table: "Poles",
-                column: "ChefId");
+                column: "Nom",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReglesTypesAbsences_TypeAbsenceId",
                 table: "ReglesTypesAbsences",
                 column: "TypeAbsenceId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Societes_Nom",
+                table: "Societes",
+                column: "Nom",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -312,15 +547,41 @@ namespace GestionConges.Core.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Utilisateurs_Login",
+                name: "IX_Utilisateurs_EquipeId",
                 table: "Utilisateurs",
-                column: "Login",
-                unique: true);
+                column: "EquipeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Utilisateurs_PoleId",
                 table: "Utilisateurs",
                 column: "PoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Utilisateurs_SocieteId",
+                table: "Utilisateurs",
+                column: "SocieteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UtilisateursSocietesSecondaires_SocieteId",
+                table: "UtilisateursSocietesSecondaires",
+                column: "SocieteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UtilisateursSocietesSecondaires_UtilisateurId_SocieteId",
+                table: "UtilisateursSocietesSecondaires",
+                columns: new[] { "UtilisateurId", "SocieteId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ValidateursSocietes_SocieteId",
+                table: "ValidateursSocietes",
+                column: "SocieteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ValidateursSocietes_ValidateurId_SocieteId_NiveauValidation",
+                table: "ValidateursSocietes",
+                columns: new[] { "ValidateurId", "SocieteId", "NiveauValidation" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ValidationsDemanades_DemandeId",
@@ -331,30 +592,16 @@ namespace GestionConges.Core.Migrations
                 name: "IX_ValidationsDemanades_ValidateurId",
                 table: "ValidationsDemanades",
                 column: "ValidateurId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DemandesConges_Utilisateurs_UtilisateurId",
-                table: "DemandesConges",
-                column: "UtilisateurId",
-                principalTable: "Utilisateurs",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Poles_Utilisateurs_ChefId",
-                table: "Poles",
-                column: "ChefId",
-                principalTable: "Utilisateurs",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Poles_Utilisateurs_ChefId",
-                table: "Poles");
+            migrationBuilder.DropTable(
+                name: "EquipePole");
+
+            migrationBuilder.DropTable(
+                name: "EquipesPoles");
 
             migrationBuilder.DropTable(
                 name: "JoursFeries");
@@ -364,6 +611,12 @@ namespace GestionConges.Core.Migrations
 
             migrationBuilder.DropTable(
                 name: "ReglesTypesAbsences");
+
+            migrationBuilder.DropTable(
+                name: "UtilisateursSocietesSecondaires");
+
+            migrationBuilder.DropTable(
+                name: "ValidateursSocietes");
 
             migrationBuilder.DropTable(
                 name: "ValidationsDemanades");
@@ -378,7 +631,13 @@ namespace GestionConges.Core.Migrations
                 name: "Utilisateurs");
 
             migrationBuilder.DropTable(
+                name: "Equipes");
+
+            migrationBuilder.DropTable(
                 name: "Poles");
+
+            migrationBuilder.DropTable(
+                name: "Societes");
         }
     }
 }

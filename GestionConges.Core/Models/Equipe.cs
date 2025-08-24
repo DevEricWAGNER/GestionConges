@@ -2,7 +2,7 @@
 
 namespace GestionConges.Core.Models
 {
-    public class Pole
+    public class Equipe
     {
         [Key]
         public int Id { get; set; }
@@ -15,11 +15,16 @@ namespace GestionConges.Core.Models
 
         public bool Actif { get; set; } = true;
 
-        // Relations - Un pôle peut être rattaché à plusieurs équipes
-        public virtual ICollection<Equipe> Equipes { get; set; } = new List<Equipe>();
+        // Relations
+        [Required]
+        public int SocieteId { get; set; }
+        public virtual Societe Societe { get; set; } = null!;
 
-        // Navigation - Employés du pôle
+        // Navigation - Employés de l'équipe
         public virtual ICollection<Utilisateur> Employes { get; set; } = new List<Utilisateur>();
+
+        // Navigation - Pôles rattachés à cette équipe
+        public virtual ICollection<Pole> Poles { get; set; } = new List<Pole>();
 
         public DateTime DateCreation { get; set; } = DateTime.Now;
     }

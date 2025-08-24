@@ -122,7 +122,7 @@
 
                     <!-- Champ Login -->
                     <StackPanel Margin="0,0,0,24">
-                        <TextBlock Text="Nom d'utilisateur" 
+                        <TextBlock Text="Adresse Mail" 
                                  FontSize="14" FontWeight="SemiBold"
                                  Foreground="{StaticResource TextPrimary}" 
                                  Margin="0,0,0,8"/>

@@ -12,7 +12,12 @@ namespace GestionConges.Core.Data
 
         // DbSets
         public DbSet<Utilisateur> Utilisateurs { get; set; }
+        public DbSet<Societe> Societes { get; set; }
+        public DbSet<Equipe> Equipes { get; set; }
         public DbSet<Pole> Poles { get; set; }
+        public DbSet<EquipePole> EquipesPoles { get; set; }
+        public DbSet<UtilisateurSocieteSecondaire> UtilisateursSocietesSecondaires { get; set; }
+        public DbSet<ValidateurSociete> ValidateursSocietes { get; set; }
         public DbSet<TypeAbsence> TypesAbsences { get; set; }
         public DbSet<DemandeConge> DemandesConges { get; set; }
         public DbSet<ValidationDemande> ValidationsDemanades { get; set; }
@@ -25,12 +30,62 @@ namespace GestionConges.Core.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configuration Societe
+            modelBuilder.Entity<Societe>(entity =>
+            {
+                entity.HasIndex(e => e.Nom).IsUnique();
+            });
+
+            // Configuration Equipe
+            modelBuilder.Entity<Equipe>(entity =>
+            {
+                entity.HasIndex(e => new { e.SocieteId, e.Nom }).IsUnique();
+
+                entity.HasOne(e => e.Societe)
+                      .WithMany(s => s.Equipes)
+                      .HasForeignKey(e => e.SocieteId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuration Pole
+            modelBuilder.Entity<Pole>(entity =>
+            {
+                entity.HasIndex(e => e.Nom).IsUnique();
+            });
+
+            // Configuration EquipePole (relation many-to-many)
+            modelBuilder.Entity<EquipePole>(entity =>
+            {
+                entity.HasIndex(e => new { e.EquipeId, e.PoleId }).IsUnique();
+
+                entity.HasOne(ep => ep.Equipe)
+                      .WithMany()
+                      .HasForeignKey(ep => ep.EquipeId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ep => ep.Pole)
+                      .WithMany()
+                      .HasForeignKey(ep => ep.PoleId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
             // Configuration Utilisateur
             modelBuilder.Entity<Utilisateur>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
-                entity.HasIndex(e => e.Login).IsUnique();
 
+                // Relations principales (obligatoires)
+                entity.HasOne(u => u.Societe)
+                      .WithMany(s => s.EmployesPrincipaux)
+                      .HasForeignKey(u => u.SocieteId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(u => u.Equipe)
+                      .WithMany(e => e.Employes)
+                      .HasForeignKey(u => u.EquipeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Pôle optionnel
                 entity.HasOne(u => u.Pole)
                       .WithMany(p => p.Employes)
                       .HasForeignKey(u => u.PoleId)
@@ -40,13 +95,36 @@ namespace GestionConges.Core.Data
                       .HasConversion<int>();
             });
 
-            // Configuration Pole
-            modelBuilder.Entity<Pole>(entity =>
+            // Configuration UtilisateurSocieteSecondaire
+            modelBuilder.Entity<UtilisateurSocieteSecondaire>(entity =>
             {
-                entity.HasOne(p => p.Chef)
-                      .WithMany()
-                      .HasForeignKey(p => p.ChefId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(e => new { e.UtilisateurId, e.SocieteId }).IsUnique();
+
+                entity.HasOne(uss => uss.Utilisateur)
+                      .WithMany(u => u.SocietesSecondaires)
+                      .HasForeignKey(uss => uss.UtilisateurId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(uss => uss.Societe)
+                      .WithMany(s => s.UtilisateursSecondaires)
+                      .HasForeignKey(uss => uss.SocieteId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuration ValidateurSociete
+            modelBuilder.Entity<ValidateurSociete>(entity =>
+            {
+                entity.HasIndex(e => new { e.ValidateurId, e.SocieteId, e.NiveauValidation }).IsUnique();
+
+                entity.HasOne(vs => vs.Validateur)
+                      .WithMany(u => u.SocietesValidation)
+                      .HasForeignKey(vs => vs.ValidateurId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(vs => vs.Societe)
+                      .WithMany(s => s.Validateurs)
+                      .HasForeignKey(vs => vs.SocieteId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configuration DemandeConge
@@ -89,6 +167,7 @@ namespace GestionConges.Core.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // Configuration JourFerie
             modelBuilder.Entity<JourFerie>(entity =>
             {
                 entity.HasIndex(e => e.Date);
@@ -113,16 +192,56 @@ namespace GestionConges.Core.Data
                 entity.HasIndex(e => e.TypeAbsenceId).IsUnique();
             });
 
-
             // Données de seed
             SeedData(modelBuilder);
         }
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            var seedDate = new DateTime(2025, 1, 1, 12, 0, 0); // ✅ Date fixe au lieu de DateTime.Now
+            var seedDate = new DateTime(2025, 1, 1, 12, 0, 0); // Date fixe au lieu de DateTime.Now
 
-            // Types d'absences par défaut (GARDER EXISTANT)
+            // ===== SOCIÉTÉS DE DÉMONSTRATION =====
+            modelBuilder.Entity<Societe>().HasData(
+                new Societe { Id = 1, Nom = "Siège Social", Description = "Siège principal de l'entreprise", Actif = true, DateCreation = seedDate },
+                new Societe { Id = 2, Nom = "Dambach", Description = "Site de Dambach", Actif = true, DateCreation = seedDate },
+                new Societe { Id = 3, Nom = "Kronembourg", Description = "Site de Kronembourg", Actif = true, DateCreation = seedDate }
+            );
+
+            // ===== ÉQUIPES DE DÉMONSTRATION =====
+            modelBuilder.Entity<Equipe>().HasData(
+                // Siège Social
+                new Equipe { Id = 1, Nom = "Direction", Description = "Direction générale", SocieteId = 1, Actif = true, DateCreation = seedDate },
+                new Equipe { Id = 2, Nom = "Projets", Description = "Équipe projets", SocieteId = 1, Actif = true, DateCreation = seedDate },
+                new Equipe { Id = 3, Nom = "Commercial", Description = "Équipe commerciale", SocieteId = 1, Actif = true, DateCreation = seedDate },
+
+                // Dambach
+                new Equipe { Id = 4, Nom = "Transport", Description = "Équipe transport Dambach", SocieteId = 2, Actif = true, DateCreation = seedDate },
+                new Equipe { Id = 5, Nom = "Logistique", Description = "Équipe logistique Dambach", SocieteId = 2, Actif = true, DateCreation = seedDate },
+
+                // Kronembourg
+                new Equipe { Id = 6, Nom = "Production", Description = "Équipe production Kronembourg", SocieteId = 3, Actif = true, DateCreation = seedDate }
+            );
+
+            // ===== PÔLES DE DÉMONSTRATION =====
+            modelBuilder.Entity<Pole>().HasData(
+                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex", Actif = true, DateCreation = seedDate },
+                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", Actif = true, DateCreation = seedDate }
+            );
+
+            // ===== RELATIONS ÉQUIPES-PÔLES =====
+            modelBuilder.Entity<EquipePole>().HasData(
+                // L'équipe Projets du siège a les pôles Développement et Réseaux
+                new EquipePole { Id = 1, EquipeId = 2, PoleId = 1, Actif = true, DateAffectation = seedDate },
+                new EquipePole { Id = 2, EquipeId = 2, PoleId = 2, Actif = true, DateAffectation = seedDate },
+                new EquipePole { Id = 3, EquipeId = 2, PoleId = 3, Actif = true, DateAffectation = seedDate },
+
+                // L'équipe Logistique de Dambach a le pôle Logistique
+                new EquipePole { Id = 4, EquipeId = 5, PoleId = 4, Actif = true, DateAffectation = seedDate }
+            );
+
+            // Types d'absences par défaut
             modelBuilder.Entity<TypeAbsence>().HasData(
                 new TypeAbsence { Id = 1, Nom = "Congés Payés", CouleurHex = "#e74c3c", OrdreAffichage = 1, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
                 new TypeAbsence { Id = 2, Nom = "RTT", CouleurHex = "#3498db", OrdreAffichage = 2, Actif = true, NecessiteValidation = true, DateCreation = seedDate },
@@ -131,15 +250,7 @@ namespace GestionConges.Core.Data
                 new TypeAbsence { Id = 5, Nom = "Formation", CouleurHex = "#9b59b6", OrdreAffichage = 5, Actif = true, NecessiteValidation = true, DateCreation = seedDate }
             );
 
-            // Pôles par défaut (GARDER EXISTANT)
-            modelBuilder.Entity<Pole>().HasData(
-                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", Actif = true, DateCreation = seedDate }
-            );
-
-            // ✅ NOUVEAUX PARAMÈTRES PAR DÉFAUT
+            // Paramètres globaux
             modelBuilder.Entity<ParametreGlobal>().HasData(
                 // Calendrier
                 new ParametreGlobal { Id = 1, Cle = "JoursOuvres", Valeur = "1,2,3,4,5", Categorie = "Calendrier", Description = "Jours ouvrés (1=Lundi, 7=Dimanche)", DateModification = seedDate },
@@ -162,7 +273,7 @@ namespace GestionConges.Core.Data
                 new ParametreGlobal { Id = 14, Cle = "SSLSMTP", Valeur = "true", Categorie = "Email", Description = "Utiliser SSL/TLS", DateModification = seedDate }
             );
 
-            // ✅ JOURS FÉRIÉS FRANÇAIS 2025 - DATES FIXES
+            // Jours fériés français 2025
             modelBuilder.Entity<JourFerie>().HasData(
                 new JourFerie { Id = 1, Date = new DateTime(2025, 1, 1), Nom = "Nouvel An", Type = "National", Recurrent = true, Actif = true, DateCreation = seedDate },
                 new JourFerie { Id = 2, Date = new DateTime(2025, 4, 21), Nom = "Lundi de Pâques", Type = "National", Recurrent = false, Actif = true, DateCreation = seedDate },

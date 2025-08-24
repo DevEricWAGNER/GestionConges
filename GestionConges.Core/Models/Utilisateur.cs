@@ -17,9 +17,6 @@ namespace GestionConges.Core.Models
         [Required, MaxLength(200)]
         public string Email { get; set; } = string.Empty;
 
-        [Required, MaxLength(50)]
-        public string Login { get; set; } = string.Empty;
-
         [Required]
         public string MotDePasseHash { get; set; } = string.Empty;
 
@@ -27,9 +24,26 @@ namespace GestionConges.Core.Models
 
         public bool Actif { get; set; } = true;
 
-        // Relations
+        public bool Admin { get; set; } = false;
+
+        // Relations principales (obligatoires)
+        [Required]
+        public int SocieteId { get; set; }
+        public virtual Societe Societe { get; set; } = null!;
+
+        [Required]
+        public int EquipeId { get; set; }
+        public virtual Equipe Equipe { get; set; } = null!;
+
+        // Pôle optionnel (seulement si l'équipe a des pôles)
         public int? PoleId { get; set; }
         public virtual Pole? Pole { get; set; }
+
+        // Relations secondaires
+        public virtual ICollection<UtilisateurSocieteSecondaire> SocietesSecondaires { get; set; } = new List<UtilisateurSocieteSecondaire>();
+
+        // Relations de validation
+        public virtual ICollection<ValidateurSociete> SocietesValidation { get; set; } = new List<ValidateurSociete>();
 
         // Navigation - Demandes créées
         public virtual ICollection<DemandeConge> Demandes { get; set; } = new List<DemandeConge>();
@@ -49,5 +63,7 @@ namespace GestionConges.Core.Models
             RoleUtilisateur.ChefEquipe => "Chef d'Équipe",
             _ => "Inconnu"
         };
+
+        public bool EstValidateur => SocietesValidation.Any();
     }
 }

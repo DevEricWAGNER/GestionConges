@@ -22,6 +22,21 @@ namespace GestionConges.Core.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EquipePole", b =>
+                {
+                    b.Property<int>("EquipesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PolesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EquipesId", "PolesId");
+
+                    b.HasIndex("PolesId");
+
+                    b.ToTable("EquipePole");
+                });
+
             modelBuilder.Entity("GestionConges.Core.Models.DemandeConge", b =>
                 {
                     b.Property<int>("Id")
@@ -79,6 +94,163 @@ namespace GestionConges.Core.Migrations
                     b.HasIndex("UtilisateurId");
 
                     b.ToTable("DemandesConges");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.Equipe", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SocieteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SocieteId", "Nom")
+                        .IsUnique();
+
+                    b.ToTable("Equipes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Direction générale",
+                            Nom = "Direction",
+                            SocieteId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Équipe projets",
+                            Nom = "Projets",
+                            SocieteId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Équipe commerciale",
+                            Nom = "Commercial",
+                            SocieteId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Équipe transport Dambach",
+                            Nom = "Transport",
+                            SocieteId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Équipe logistique Dambach",
+                            Nom = "Logistique",
+                            SocieteId = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Équipe production Kronembourg",
+                            Nom = "Production",
+                            SocieteId = 3
+                        });
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.EquipePole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("DateAffectation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EquipeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoleId");
+
+                    b.HasIndex("EquipeId", "PoleId")
+                        .IsUnique();
+
+                    b.ToTable("EquipesPoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Actif = true,
+                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            EquipeId = 2,
+                            PoleId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Actif = true,
+                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            EquipeId = 2,
+                            PoleId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Actif = true,
+                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            EquipeId = 2,
+                            PoleId = 3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Actif = true,
+                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            EquipeId = 5,
+                            PoleId = 4
+                        });
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.JourFerie", b =>
@@ -414,9 +586,6 @@ namespace GestionConges.Core.Migrations
                     b.Property<bool>("Actif")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("ChefId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("DateCreation")
                         .HasColumnType("datetime2");
 
@@ -431,7 +600,8 @@ namespace GestionConges.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChefId");
+                    b.HasIndex("Nom")
+                        .IsUnique();
 
                     b.ToTable("Poles");
 
@@ -511,6 +681,63 @@ namespace GestionConges.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("ReglesTypesAbsences");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.Societe", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nom")
+                        .IsUnique();
+
+                    b.ToTable("Societes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Siège principal de l'entreprise",
+                            Nom = "Siège Social"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Site de Dambach",
+                            Nom = "Dambach"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Actif = true,
+                            DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Site de Kronembourg",
+                            Nom = "Kronembourg"
+                        });
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.TypeAbsence", b =>
@@ -615,6 +842,9 @@ namespace GestionConges.Core.Migrations
                     b.Property<bool>("Actif")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("Admin")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("DateCreation")
                         .HasColumnType("datetime2");
 
@@ -626,10 +856,8 @@ namespace GestionConges.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("EquipeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("MotDePasseHash")
                         .IsRequired()
@@ -651,17 +879,98 @@ namespace GestionConges.Core.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
+                    b.Property<int>("SocieteId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("Login")
-                        .IsUnique();
+                    b.HasIndex("EquipeId");
 
                     b.HasIndex("PoleId");
 
+                    b.HasIndex("SocieteId");
+
                     b.ToTable("Utilisateurs");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.UtilisateurSocieteSecondaire", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Commentaire")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("DateAffectation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SocieteId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UtilisateurId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SocieteId");
+
+                    b.HasIndex("UtilisateurId", "SocieteId")
+                        .IsUnique();
+
+                    b.ToTable("UtilisateursSocietesSecondaires");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.ValidateurSociete", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Commentaire")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("DateAffectation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NiveauValidation")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SocieteId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ValidateurId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SocieteId");
+
+                    b.HasIndex("ValidateurId", "SocieteId", "NiveauValidation")
+                        .IsUnique();
+
+                    b.ToTable("ValidateursSocietes");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.ValidationDemande", b =>
@@ -700,6 +1009,21 @@ namespace GestionConges.Core.Migrations
                     b.ToTable("ValidationsDemanades");
                 });
 
+            modelBuilder.Entity("EquipePole", b =>
+                {
+                    b.HasOne("GestionConges.Core.Models.Equipe", null)
+                        .WithMany()
+                        .HasForeignKey("EquipesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GestionConges.Core.Models.Pole", null)
+                        .WithMany()
+                        .HasForeignKey("PolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GestionConges.Core.Models.DemandeConge", b =>
                 {
                     b.HasOne("GestionConges.Core.Models.TypeAbsence", "TypeAbsence")
@@ -719,14 +1043,34 @@ namespace GestionConges.Core.Migrations
                     b.Navigation("Utilisateur");
                 });
 
-            modelBuilder.Entity("GestionConges.Core.Models.Pole", b =>
+            modelBuilder.Entity("GestionConges.Core.Models.Equipe", b =>
                 {
-                    b.HasOne("GestionConges.Core.Models.Utilisateur", "Chef")
-                        .WithMany()
-                        .HasForeignKey("ChefId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("GestionConges.Core.Models.Societe", "Societe")
+                        .WithMany("Equipes")
+                        .HasForeignKey("SocieteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Chef");
+                    b.Navigation("Societe");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.EquipePole", b =>
+                {
+                    b.HasOne("GestionConges.Core.Models.Equipe", "Equipe")
+                        .WithMany()
+                        .HasForeignKey("EquipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GestionConges.Core.Models.Pole", "Pole")
+                        .WithMany()
+                        .HasForeignKey("PoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipe");
+
+                    b.Navigation("Pole");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.RegleTypeAbsence", b =>
@@ -742,12 +1086,66 @@ namespace GestionConges.Core.Migrations
 
             modelBuilder.Entity("GestionConges.Core.Models.Utilisateur", b =>
                 {
+                    b.HasOne("GestionConges.Core.Models.Equipe", "Equipe")
+                        .WithMany("Employes")
+                        .HasForeignKey("EquipeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("GestionConges.Core.Models.Pole", "Pole")
                         .WithMany("Employes")
                         .HasForeignKey("PoleId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("GestionConges.Core.Models.Societe", "Societe")
+                        .WithMany("EmployesPrincipaux")
+                        .HasForeignKey("SocieteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Equipe");
+
                     b.Navigation("Pole");
+
+                    b.Navigation("Societe");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.UtilisateurSocieteSecondaire", b =>
+                {
+                    b.HasOne("GestionConges.Core.Models.Societe", "Societe")
+                        .WithMany("UtilisateursSecondaires")
+                        .HasForeignKey("SocieteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GestionConges.Core.Models.Utilisateur", "Utilisateur")
+                        .WithMany("SocietesSecondaires")
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Societe");
+
+                    b.Navigation("Utilisateur");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.ValidateurSociete", b =>
+                {
+                    b.HasOne("GestionConges.Core.Models.Societe", "Societe")
+                        .WithMany("Validateurs")
+                        .HasForeignKey("SocieteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GestionConges.Core.Models.Utilisateur", "Validateur")
+                        .WithMany("SocietesValidation")
+                        .HasForeignKey("ValidateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Societe");
+
+                    b.Navigation("Validateur");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.ValidationDemande", b =>
@@ -774,9 +1172,25 @@ namespace GestionConges.Core.Migrations
                     b.Navigation("Validations");
                 });
 
+            modelBuilder.Entity("GestionConges.Core.Models.Equipe", b =>
+                {
+                    b.Navigation("Employes");
+                });
+
             modelBuilder.Entity("GestionConges.Core.Models.Pole", b =>
                 {
                     b.Navigation("Employes");
+                });
+
+            modelBuilder.Entity("GestionConges.Core.Models.Societe", b =>
+                {
+                    b.Navigation("EmployesPrincipaux");
+
+                    b.Navigation("Equipes");
+
+                    b.Navigation("UtilisateursSecondaires");
+
+                    b.Navigation("Validateurs");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.TypeAbsence", b =>
@@ -787,6 +1201,10 @@ namespace GestionConges.Core.Migrations
             modelBuilder.Entity("GestionConges.Core.Models.Utilisateur", b =>
                 {
                     b.Navigation("Demandes");
+
+                    b.Navigation("SocietesSecondaires");
+
+                    b.Navigation("SocietesValidation");
 
                     b.Navigation("ValidationsEffectuees");
                 });

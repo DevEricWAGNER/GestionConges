@@ -4,6 +4,7 @@ using GestionConges.Core.Data;
 using GestionConges.Core.Models;
 using GestionConges.Core.Enums;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace GestionConges.WPF.Views
 {
@@ -27,28 +28,132 @@ namespace GestionConges.WPF.Views
             try
             {
                 // Pré-remplir les champs
-                TxtLogin.Text = _login;
+                TxtEmail.Text = _login;
                 TxtMotDePasse.Password = _motDePasse;
 
-                // Charger les pôles existants
                 using var context = App.GetService<GestionCongesContext>();
-                var poles = await context.Poles
-                    .Where(p => p.Actif)
-                    .OrderBy(p => p.Nom)
+
+                // Charger les sociétés existantes
+                var societes = await context.Societes
+                    .Where(s => s.Actif)
+                    .OrderBy(s => s.Nom)
                     .ToListAsync();
 
-                foreach (var pole in poles)
+                CmbSociete.Items.Clear();
+                foreach (var societe in societes)
                 {
-                    CmbPole.Items.Add(new System.Windows.Controls.ComboBoxItem
+                    CmbSociete.Items.Add(new System.Windows.Controls.ComboBoxItem
                     {
-                        Content = pole.Nom,
-                        Tag = pole.Id
+                        Content = societe.Nom,
+                        Tag = societe.Id
                     });
+                }
+
+                // Sélectionner la première société si disponible
+                if (CmbSociete.Items.Count > 0)
+                {
+                    CmbSociete.SelectedIndex = 0;
+                    await ChargerEquipesPourSociete();
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void CmbSociete_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            await ChargerEquipesPourSociete();
+        }
+
+        private async void CmbEquipe_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            await ChargerPolesPourEquipe();
+        }
+
+        private async Task ChargerEquipesPourSociete()
+        {
+            try
+            {
+                CmbEquipe.Items.Clear();
+                CmbPole.Items.Clear();
+
+                if (CmbSociete.SelectedItem is System.Windows.Controls.ComboBoxItem societeItem &&
+                    societeItem.Tag is int societeId)
+                {
+                    using var context = App.GetService<GestionCongesContext>();
+                    var equipes = await context.Equipes
+                        .Where(e => e.SocieteId == societeId && e.Actif)
+                        .OrderBy(e => e.Nom)
+                        .ToListAsync();
+
+                    foreach (var equipe in equipes)
+                    {
+                        CmbEquipe.Items.Add(new System.Windows.Controls.ComboBoxItem
+                        {
+                            Content = equipe.Nom,
+                            Tag = equipe.Id
+                        });
+                    }
+
+                    // Sélectionner la première équipe si disponible
+                    if (CmbEquipe.Items.Count > 0)
+                    {
+                        CmbEquipe.SelectedIndex = 0;
+                        await ChargerPolesPourEquipe();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des équipes : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task ChargerPolesPourEquipe()
+        {
+            try
+            {
+                CmbPole.Items.Clear();
+
+                // Ajouter l'option "Aucun pôle"
+                CmbPole.Items.Add(new System.Windows.Controls.ComboBoxItem
+                {
+                    Content = "Aucun pôle",
+                    Tag = null
+                });
+
+                if (CmbEquipe.SelectedItem is System.Windows.Controls.ComboBoxItem equipeItem &&
+                    equipeItem.Tag is int equipeId)
+                {
+                    using var context = App.GetService<GestionCongesContext>();
+                    var poles = await context.EquipesPoles
+                        .Where(ep => ep.EquipeId == equipeId && ep.Actif)
+                        .Include(ep => ep.Pole)
+                        .Select(ep => ep.Pole)
+                        .Where(p => p.Actif)
+                        .OrderBy(p => p.Nom)
+                        .ToListAsync();
+
+                    foreach (var pole in poles)
+                    {
+                        CmbPole.Items.Add(new System.Windows.Controls.ComboBoxItem
+                        {
+                            Content = pole.Nom,
+                            Tag = pole.Id
+                        });
+                    }
+                }
+
+                // Sélectionner "Aucun pôle" par défaut
+                CmbPole.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
                               "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -82,6 +187,22 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
+                if (CmbSociete.SelectedItem == null)
+                {
+                    MessageBox.Show("La société est obligatoire.", "Validation",
+                                  MessageBoxButton.OK, MessageBoxImage.Warning);
+                    CmbSociete.Focus();
+                    return;
+                }
+
+                if (CmbEquipe.SelectedItem == null)
+                {
+                    MessageBox.Show("L'équipe est obligatoire.", "Validation",
+                                  MessageBoxButton.OK, MessageBoxImage.Warning);
+                    CmbEquipe.Focus();
+                    return;
+                }
+
                 // Validation format email
                 if (!EstEmailValide(TxtEmail.Text))
                 {
@@ -91,12 +212,26 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
+                // Récupération des IDs sélectionnés
+                int societeId = (int)((System.Windows.Controls.ComboBoxItem)CmbSociete.SelectedItem).Tag;
+                int equipeId = (int)((System.Windows.Controls.ComboBoxItem)CmbEquipe.SelectedItem).Tag;
+                int? poleId = null;
+
+                if (CmbPole.SelectedItem is System.Windows.Controls.ComboBoxItem poleItem &&
+                    poleItem.Tag is int selectedPoleId)
+                {
+                    poleId = selectedPoleId;
+                }
+
                 // Confirmation finale
                 var confirmation = MessageBox.Show(
                     $"Confirmer la création du compte administrateur ?\n\n" +
                     $"Nom : {TxtNom.Text} {TxtPrenom.Text}\n" +
                     $"Email : {TxtEmail.Text}\n" +
-                    $"Login : {_login}\n\n" +
+                    $"Login : {_login}\n" +
+                    $"Société : {((System.Windows.Controls.ComboBoxItem)CmbSociete.SelectedItem).Content}\n" +
+                    $"Équipe : {((System.Windows.Controls.ComboBoxItem)CmbEquipe.SelectedItem).Content}\n" +
+                    $"Pôle : {(poleId.HasValue ? ((System.Windows.Controls.ComboBoxItem)CmbPole.SelectedItem).Content : "Aucun")}\n\n" +
                     "Ce compte aura tous les droits d'administration.",
                     "Confirmer la création",
                     MessageBoxButton.YesNo,
@@ -119,24 +254,18 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                // Récupérer le pôle sélectionné
-                int? poleId = null;
-                if (CmbPole.SelectedItem is System.Windows.Controls.ComboBoxItem item &&
-                    item.Tag is int selectedPoleId)
-                {
-                    poleId = selectedPoleId;
-                }
-
                 // Créer l'administrateur
                 var admin = new Utilisateur
                 {
                     Nom = TxtNom.Text.Trim(),
                     Prenom = TxtPrenom.Text.Trim(),
-                    Email = TxtEmail.Text.Trim().ToLower(),
-                    Login = _login,
+                    Email = TxtEmail.Text.Trim(),
                     MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(_motDePasse),
                     Role = RoleUtilisateur.ChefEquipe, // Administrateur complet
+                    SocieteId = societeId,
+                    EquipeId = equipeId,
                     PoleId = poleId,
+                    Admin = true, // Marquer comme administrateur système
                     Actif = true,
                     DateCreation = DateTime.Now,
                     DerniereConnexion = DateTime.Now
@@ -145,16 +274,35 @@ namespace GestionConges.WPF.Views
                 context.Utilisateurs.Add(admin);
                 await context.SaveChangesAsync();
 
+                // Créer automatiquement les droits de validation pour toutes les sociétés
+                var toutesLesSocietes = await context.Societes.Where(s => s.Actif).ToListAsync();
+                foreach (var societe in toutesLesSocietes)
+                {
+                    var validateurSociete = new ValidateurSociete
+                    {
+                        ValidateurId = admin.Id,
+                        SocieteId = societe.Id,
+                        NiveauValidation = 2, // Chef d'équipe (niveau maximum)
+                        Actif = true,
+                        DateAffectation = DateTime.Now
+                    };
+                    context.ValidateursSocietes.Add(validateurSociete);
+                }
+
+                await context.SaveChangesAsync();
+
                 AdminCree = admin;
 
                 // Message de succès
                 MessageBox.Show(
                     "Félicitations ! Votre compte administrateur a été créé avec succès.\n\n" +
                     "Vous allez maintenant être connecté à l'application.\n\n" +
-                    "Conseils :\n" +
-                    "• Configurez les paramètres de l'application dans Administration\n" +
-                    "• Créez les pôles et types d'absences nécessaires\n" +
-                    "• Ajoutez les autres utilisateurs de votre organisation",
+                    "Informations importantes :\n" +
+                    "• Vous avez des droits de validation sur toutes les sociétés\n" +
+                    "• Configurez les paramètres dans Administration\n" +
+                    "• Créez les types d'absences nécessaires\n" +
+                    "• Ajoutez les autres utilisateurs de votre organisation\n" +
+                    "• Gérez les droits de validation selon vos besoins",
                     "Compte créé avec succès !",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);

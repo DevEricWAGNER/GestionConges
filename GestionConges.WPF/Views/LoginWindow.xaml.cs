@@ -55,12 +55,12 @@ namespace GestionConges.WPF.Views
             Title = "Première Installation - JungLogistique";
 
             // Modifier les textes avec les noms définis
-            TxtTitreFormulaire.Text = "Configuration Initiale";
-            TxtSousTitreFormulaire.Text = "Créez le compte administrateur principal";
+            TxtTitreFormulaire.Text = "Initialisation";
+            TxtSousTitreFormulaire.Text = "Créez le compte administrateur";
             BtnLogin.Content = "CRÉER LE COMPTE ADMINISTRATEUR";
 
             // Changer les tooltips
-            TxtLogin.ToolTip = "Choisissez votre nom d'utilisateur administrateur";
+            TxtLogin.ToolTip = "Veuillez entrer votre adresse mail";
             TxtPassword.ToolTip = "Créez un mot de passe sécurisé (min. 8 caractères)";
         }
 
@@ -83,14 +83,14 @@ namespace GestionConges.WPF.Views
                 // Validation renforcée pour le premier admin
                 if (string.IsNullOrWhiteSpace(TxtLogin.Text))
                 {
-                    AfficherErreur("Veuillez saisir un nom d'utilisateur.");
+                    AfficherErreur("Veuillez saisir une adresse mail.");
                     TxtLogin.Focus();
                     return;
                 }
 
-                if (TxtLogin.Text.Length < 3)
+                if (!TxtLogin.Text.Contains('@'))
                 {
-                    AfficherErreur("Le nom d'utilisateur doit contenir au moins 3 caractères.");
+                    AfficherErreur("L'adresse mail doit être au bon format");
                     TxtLogin.Focus();
                     return;
                 }
@@ -133,7 +133,7 @@ namespace GestionConges.WPF.Views
                 // Validation des champs
                 if (string.IsNullOrWhiteSpace(TxtLogin.Text))
                 {
-                    AfficherErreur("Veuillez saisir votre nom d'utilisateur.");
+                    AfficherErreur("Veuillez saisir votre adresse mail.");
                     TxtLogin.Focus();
                     return;
                 }
@@ -153,7 +153,7 @@ namespace GestionConges.WPF.Views
                 var context = App.GetService<GestionCongesContext>();
                 var utilisateur = await context.Utilisateurs
                     .Include(u => u.Pole)
-                    .FirstOrDefaultAsync(u => u.Login == TxtLogin.Text && u.Actif);
+                    .FirstOrDefaultAsync(u => u.Email == TxtLogin.Text && u.Actif);
 
                 if (utilisateur != null && BCrypt.Net.BCrypt.Verify(TxtPassword.Password, utilisateur.MotDePasseHash))
                 {
@@ -170,7 +170,7 @@ namespace GestionConges.WPF.Views
                 else
                 {
                     // Échec de connexion
-                    AfficherErreur("Nom d'utilisateur ou mot de passe incorrect.");
+                    AfficherErreur("Adresse mail ou mot de passe incorrect.");
                     TxtPassword.Clear();
                     TxtLogin.Focus();
                 }

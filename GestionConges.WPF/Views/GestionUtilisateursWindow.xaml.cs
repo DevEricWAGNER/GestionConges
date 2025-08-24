@@ -1,45 +1,165 @@
-﻿using System.Collections.ObjectModel;
+﻿using GestionConges.Core.Data;
+using GestionConges.Core.Enums;
+using GestionConges.Core.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.EntityFrameworkCore;
-using GestionConges.Core.Data;
-using GestionConges.Core.Models;
-using GestionConges.Core.Enums;
 
 namespace GestionConges.WPF.Views
 {
     public partial class GestionUtilisateursWindow : Window
     {
+        private readonly GestionCongesContext _context;
         private ObservableCollection<Utilisateur> _utilisateurs;
+        private ObservableCollection<Societe> _societes;
+        private ObservableCollection<Equipe> _equipes;
         private ObservableCollection<Pole> _poles;
+        private ObservableCollection<UtilisateurSocieteSecondaire> _societesSecondaires;
         private Utilisateur? _utilisateurSelectionne;
         private bool _modeEdition = false;
+        private readonly SemaphoreSlim _semaphoreFiltre = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _semaphore = new(1, 1);
+
 
         public GestionUtilisateursWindow()
         {
             InitializeComponent();
-            _utilisateurs = new ObservableCollection<Utilisateur>();
-            _poles = new ObservableCollection<Pole>();
 
-            InitialiserInterface();
-            ChargerDonnees();
+            // Initialiser les collections
+            _utilisateurs = new ObservableCollection<Utilisateur>();
+            _societes = new ObservableCollection<Societe>();
+            _equipes = new ObservableCollection<Equipe>();
+            _poles = new ObservableCollection<Pole>();
+            _societesSecondaires = new ObservableCollection<UtilisateurSocieteSecondaire>();
+
+            try
+            {
+                _context = CreerContexte();
+                if (_context == null)
+                {
+                    MessageBox.Show("Impossible de créer le contexte EF.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Close();
+                    return;
+                }
+
+                InitialiserInterface(); // Ajoutez cette ligne
+                ChargerFiltres();
+                ChargerDonnees(); // Changez FiltrerUtilisateurs() par ChargerDonnees()
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'initialisation : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                Close();
+            }
+        }
+
+        private GestionCongesContext CreerContexte()
+        {
+            try
+            {
+                var connectionString = "Server=(localdb)\\mssqllocaldb;Database=GestionCongesDB;Trusted_Connection=true;MultipleActiveResultSets=true";
+                var options = new DbContextOptionsBuilder<GestionCongesContext>()
+                    .UseSqlServer(connectionString)
+                    .Options;
+
+                return new GestionCongesContext(options);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de la création du contexte : {ex.Message}");
+                return null;
+            }
+        }
+
+        private async void ChargerFiltres()
+        {
+            try
+            {
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                // Charger seulement les sociétés accessibles à l'utilisateur connecté
+                var societesUtilisateur = new List<Societe>();
+
+                if (App.UtilisateurConnecte != null)
+                {
+                    // Société principale
+                    var societePrincipale = await context.Societes
+                        .FirstOrDefaultAsync(s => s.Id == App.UtilisateurConnecte.SocieteId && s.Actif);
+                    if (societePrincipale != null)
+                        societesUtilisateur.Add(societePrincipale);
+
+                    // Sociétés secondaires
+                    var societesSecondaires = await context.UtilisateursSocietesSecondaires
+                        .Where(uss => uss.UtilisateurId == App.UtilisateurConnecte.Id && uss.Actif)
+                        .Include(uss => uss.Societe)
+                        .Select(uss => uss.Societe)
+                        .Where(s => s.Actif)
+                        .ToListAsync();
+
+                    societesUtilisateur.AddRange(societesSecondaires);
+                }
+
+                // Trier et ajouter l'option "Toutes"
+                societesUtilisateur = societesUtilisateur.Distinct().OrderBy(s => s.Nom).ToList();
+                societesUtilisateur.Insert(0, new Societe { Id = 0, Nom = "Toutes les sociétés" });
+
+                CmbFiltreSociete.ItemsSource = societesUtilisateur;
+                CmbFiltreSociete.DisplayMemberPath = "Nom";
+                CmbFiltreSociete.SelectedValuePath = "Id";
+                CmbFiltreSociete.SelectedIndex = 0;
+
+                // Masquer équipes et pôles par défaut
+                MasquerFiltresEquipeEtPole();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des filtres : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void MasquerFiltresEquipeEtPole()
+        {
+            LblFiltreEquipe.Visibility = Visibility.Collapsed;
+            CmbFiltreEquipe.Visibility = Visibility.Collapsed;
+            LblFiltrePole.Visibility = Visibility.Collapsed;
+            CmbFiltrePole.Visibility = Visibility.Collapsed;
+        }
+
+        private void AfficherFiltreEquipe()
+        {
+            LblFiltreEquipe.Visibility = Visibility.Visible;
+            CmbFiltreEquipe.Visibility = Visibility.Visible;
+        }
+
+        private void AfficherFiltrePole()
+        {
+            LblFiltrePole.Visibility = Visibility.Visible;
+            CmbFiltrePole.Visibility = Visibility.Visible;
         }
 
         private void InitialiserInterface()
         {
             DgUtilisateurs.ItemsSource = _utilisateurs;
+            CmbSociete.ItemsSource = _societes;
+            CmbSociete.DisplayMemberPath = "Nom";
+            CmbSociete.SelectedValuePath = "Id";
+
+            CmbEquipe.ItemsSource = _equipes;
+            CmbEquipe.DisplayMemberPath = "Nom";
+            CmbEquipe.SelectedValuePath = "Id";
+
             CmbPole.ItemsSource = _poles;
             CmbPole.DisplayMemberPath = "Nom";
             CmbPole.SelectedValuePath = "Id";
-        }
 
-        private GestionCongesContext CreerContexte()
-        {
-            var connectionString = "Server=(localdb)\\mssqllocaldb;Database=GestionCongesDB;Trusted_Connection=true;MultipleActiveResultSets=true";
-            var options = new DbContextOptionsBuilder<GestionCongesContext>()
-                .UseSqlServer(connectionString)
-                .Options;
-            return new GestionCongesContext(options);
+            CmbSocieteSecondaire.ItemsSource = _societes;
+            CmbSocieteSecondaire.DisplayMemberPath = "Nom";
+            CmbSocieteSecondaire.SelectedValuePath = "Id";
+
+            LstSocietesSecondaires.ItemsSource = _societesSecondaires;
         }
 
         private void ChargerDonnees()
@@ -48,14 +168,15 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
-                    using var context = CreerContexte();
-
-                    // Récupérer tous les utilisateurs avec leurs pôles
-                    var tousUtilisateurs = await context.Utilisateurs
+                    // Charger les utilisateurs avec toutes leurs relations
+                    var tousUtilisateurs = await _context.Utilisateurs
+                        .Include(u => u.Societe)
+                        .Include(u => u.Equipe)
                         .Include(u => u.Pole)
+                        .Include(u => u.SocietesSecondaires)
+                            .ThenInclude(ss => ss.Societe)
                         .ToListAsync();
 
-                    // Filtrer en mémoire
                     bool afficherInactifs = false;
                     await Dispatcher.InvokeAsync(() =>
                     {
@@ -77,29 +198,42 @@ namespace GestionConges.WPF.Views
                         }
                     });
 
-                    // Charger les pôles
-                    var polesList = await context.Poles
+                    // Charger les sociétés
+                    var societesList = await _context.Societes
+                        .Where(s => s.Actif)
+                        .OrderBy(s => s.Nom)
+                        .ToListAsync();
+
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        _societes.Clear();
+                        foreach (var societe in societesList)
+                        {
+                            _societes.Add(societe);
+                        }
+
+                        // Pour les filtres, recréer les collections avec les éléments "Tous"
+                        var societesFiltres = new List<Societe> { new Societe { Id = 0, Nom = "Toutes les sociétés" } };
+                        societesFiltres.AddRange(societesList);
+
+                        CmbFiltreSociete.ItemsSource = societesFiltres;
+                        CmbFiltreSociete.SelectedIndex = 0;
+                    });
+
+                    // Charger les pôles pour le filtre
+                    var polesList = await _context.Poles
                         .Where(p => p.Actif)
                         .OrderBy(p => p.Nom)
                         .ToListAsync();
 
                     await Dispatcher.InvokeAsync(() =>
                     {
-                        _poles.Clear();
-                        _poles.Add(new Pole { Id = 0, Nom = "Aucun pôle" });
-                        foreach (var pole in polesList)
-                        {
-                            _poles.Add(pole);
-                        }
+                        // Pour les filtres, recréer les collections avec les éléments "Tous"
+                        var polesFiltres = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
+                        polesFiltres.AddRange(polesList);
 
-                        // Remplir le filtre des pôles
-                        CmbFiltreRole.Items.Clear();
-                        CmbFiltreRole.Items.Add(new ComboBoxItem { Content = "Tous les pôles", Tag = null });
-                        foreach (var pole in polesList)
-                        {
-                            CmbFiltreRole.Items.Add(new ComboBoxItem { Content = pole.Nom, Tag = pole.Id });
-                        }
-                        CmbFiltreRole.SelectedIndex = 0;
+                        CmbFiltrePole.ItemsSource = polesFiltres;
+                        CmbFiltrePole.SelectedIndex = 0;
                     });
                 }
                 catch (Exception ex)
@@ -113,15 +247,98 @@ namespace GestionConges.WPF.Views
             });
         }
 
-        private void DgUtilisateurs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void CmbSociete_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbSociete.SelectedValue is int societeId && societeId > 0)
+            {
+                await ChargerEquipesPourSociete(societeId);
+            }
+            else
+            {
+                _equipes.Clear();
+                _poles.Clear();
+            }
+        }
+
+        private async void CmbEquipe_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbEquipe.SelectedValue is int equipeId && equipeId > 0)
+            {
+                await ChargerPolesPourEquipe(equipeId);
+            }
+            else
+            {
+                _poles.Clear();
+            }
+        }
+
+        private async Task ChargerEquipesPourSociete(int societeId)
+        {
+            await _semaphore.WaitAsync();
+            try
+            {
+                var equipes = await _context.Equipes
+                    .Where(e => e.SocieteId == societeId && e.Actif)
+                    .OrderBy(e => e.Nom)
+                    .ToListAsync();
+
+                _equipes.Clear();
+                foreach (var equipe in equipes)
+                {
+                    _equipes.Add(equipe);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des équipes : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private async Task ChargerPolesPourEquipe(int equipeId)
+        {
+            await _semaphore.WaitAsync();
+            try
+            {
+                var poles = await _context.EquipesPoles
+                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
+                    .Include(ep => ep.Pole)
+                    .Select(ep => ep.Pole)
+                    .Where(p => p.Actif)
+                    .OrderBy(p => p.Nom)
+                    .ToListAsync();
+
+                _poles.Clear();
+                _poles.Add(new Pole { Id = 0, Nom = "Aucun pôle" }); // Option vide
+                foreach (var pole in poles)
+                {
+                    _poles.Add(pole);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private async void DgUtilisateurs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _utilisateurSelectionne = DgUtilisateurs.SelectedItem as Utilisateur;
 
             if (_utilisateurSelectionne != null)
             {
-                AfficherDetailsUtilisateur(_utilisateurSelectionne);
+                await AfficherDetailsUtilisateur(_utilisateurSelectionne);
                 BtnModifier.IsEnabled = true;
-                BtnSupprimer.IsEnabled = _utilisateurSelectionne.Id != App.UtilisateurConnecte?.Id; // Pas de suppression de soi-même
+                BtnSupprimer.IsEnabled = _utilisateurSelectionne.Id != App.UtilisateurConnecte?.Id;
                 BtnActiver.IsEnabled = true;
             }
             else
@@ -133,27 +350,58 @@ namespace GestionConges.WPF.Views
             }
         }
 
-        private void AfficherDetailsUtilisateur(Utilisateur utilisateur)
+        private async Task AfficherDetailsUtilisateur(Utilisateur utilisateur)
         {
             TxtNom.Text = utilisateur.Nom;
             TxtPrenom.Text = utilisateur.Prenom;
             TxtEmail.Text = utilisateur.Email;
-            TxtLogin.Text = utilisateur.Login;
             CmbRole.SelectedIndex = (int)utilisateur.Role;
-            CmbPole.SelectedValue = utilisateur.PoleId ?? 0;
             ChkActif.IsChecked = utilisateur.Actif;
+
+            // Société principale
+            CmbSociete.SelectedValue = utilisateur.SocieteId;
+            await ChargerEquipesPourSociete(utilisateur.SocieteId);
+
+            // Équipe
+            CmbEquipe.SelectedValue = utilisateur.EquipeId;
+            await ChargerPolesPourEquipe(utilisateur.EquipeId);
+
+            // Pôle
+            CmbPole.SelectedValue = utilisateur.PoleId ?? 0;
+
+            // Charger les sociétés secondaires
+            var societesSecondaires = await _context.UtilisateursSocietesSecondaires
+                .Where(uss => uss.UtilisateurId == utilisateur.Id && uss.Actif)
+                .Include(uss => uss.Societe)
+                .ToListAsync();
+
+            _societesSecondaires.Clear();
+            foreach (var ss in societesSecondaires)
+            {
+                _societesSecondaires.Add(ss);
+            }
 
             // Masquer le champ mot de passe pour modification
             LblMotDePasse.Visibility = Visibility.Collapsed;
             TxtMotDePasse.Visibility = Visibility.Collapsed;
 
             // Informations supplémentaires
-            var infos = $"📅 Créé le : {utilisateur.DateCreation:dd/MM/yyyy HH:mm}\n";
+            var infos = $"Créé le : {utilisateur.DateCreation:dd/MM/yyyy HH:mm}\n";
             if (utilisateur.DerniereConnexion.HasValue)
             {
-                infos += $"🔗 Dernière connexion : {utilisateur.DerniereConnexion:dd/MM/yyyy HH:mm}\n";
+                infos += $"Dernière connexion : {utilisateur.DerniereConnexion:dd/MM/yyyy HH:mm}\n";
             }
-            infos += $"🆔 ID : {utilisateur.Id}";
+            infos += $"Société : {utilisateur.Societe?.Nom}\n";
+            infos += $"Équipe : {utilisateur.Equipe?.Nom}\n";
+            if (utilisateur.Pole != null)
+            {
+                infos += $"Pôle : {utilisateur.Pole.Nom}\n";
+            }
+            if (_societesSecondaires.Count > 0)
+            {
+                infos += $"Sociétés secondaires : {_societesSecondaires.Count}\n";
+            }
+            infos += $"ID : {utilisateur.Id}";
 
             TxtInfos.Text = infos;
 
@@ -166,11 +414,13 @@ namespace GestionConges.WPF.Views
             TxtNom.Clear();
             TxtPrenom.Clear();
             TxtEmail.Clear();
-            TxtLogin.Clear();
             TxtMotDePasse.Clear();
             CmbRole.SelectedIndex = 0;
+            CmbSociete.SelectedValue = null;
+            CmbEquipe.SelectedValue = null;
             CmbPole.SelectedValue = 0;
             ChkActif.IsChecked = true;
+            _societesSecondaires.Clear();
             TxtInfos.Text = "Sélectionnez un utilisateur pour voir les détails";
 
             DesactiverFormulaire();
@@ -181,11 +431,14 @@ namespace GestionConges.WPF.Views
             TxtNom.IsEnabled = true;
             TxtPrenom.IsEnabled = true;
             TxtEmail.IsEnabled = true;
-            TxtLogin.IsEnabled = true;
             TxtMotDePasse.IsEnabled = true;
             CmbRole.IsEnabled = true;
+            CmbSociete.IsEnabled = true;
+            CmbEquipe.IsEnabled = true;
             CmbPole.IsEnabled = true;
             ChkActif.IsEnabled = true;
+            BtnAjouterSocieteSecondaire.IsEnabled = true;
+            BtnRetirerSocieteSecondaire.IsEnabled = true;
             BtnSauvegarder.IsEnabled = true;
             BtnAnnuler.IsEnabled = true;
             _modeEdition = true;
@@ -196,22 +449,32 @@ namespace GestionConges.WPF.Views
             TxtNom.IsEnabled = false;
             TxtPrenom.IsEnabled = false;
             TxtEmail.IsEnabled = false;
-            TxtLogin.IsEnabled = false;
             TxtMotDePasse.IsEnabled = false;
             CmbRole.IsEnabled = false;
+            CmbSociete.IsEnabled = false;
+            CmbEquipe.IsEnabled = false;
             CmbPole.IsEnabled = false;
             ChkActif.IsEnabled = false;
+            BtnAjouterSocieteSecondaire.IsEnabled = false;
+            BtnRetirerSocieteSecondaire.IsEnabled = false;
             BtnSauvegarder.IsEnabled = false;
             BtnAnnuler.IsEnabled = false;
             _modeEdition = false;
         }
 
-        private void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
+        private async void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
         {
             _utilisateurSelectionne = null;
             DgUtilisateurs.SelectedItem = null;
 
             ViderFormulaire();
+
+            // Charger les équipes pour la première société si disponible
+            if (_societes.Count > 0)
+            {
+                CmbSociete.SelectedIndex = 0;
+                await ChargerEquipesPourSociete(_societes[0].Id);
+            }
 
             // Afficher le champ mot de passe pour nouveau
             LblMotDePasse.Visibility = Visibility.Visible;
@@ -236,7 +499,7 @@ namespace GestionConges.WPF.Views
             {
                 var result = MessageBox.Show(
                     $"Êtes-vous sûr de vouloir supprimer l'utilisateur {_utilisateurSelectionne.NomComplet} ?\n\n" +
-                    "Cette action est irréversible et supprimera également toutes ses demandes de congés.",
+                    "Cette action supprimera également toutes ses demandes de congés et relations.",
                     "Confirmation de suppression",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning);
@@ -245,13 +508,8 @@ namespace GestionConges.WPF.Views
                 {
                     try
                     {
-                        using var context = CreerContexte();
-                        var utilisateurASupprimer = context.Utilisateurs.Find(_utilisateurSelectionne.Id);
-                        if (utilisateurASupprimer != null)
-                        {
-                            context.Utilisateurs.Remove(utilisateurASupprimer);
-                            await context.SaveChangesAsync();
-                        }
+                        _context.Utilisateurs.Remove(_utilisateurSelectionne);
+                        await _context.SaveChangesAsync();
 
                         ChargerDonnees();
                         ViderFormulaire();
@@ -274,17 +532,12 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
-                    using var context = CreerContexte();
-                    var utilisateur = context.Utilisateurs.Find(_utilisateurSelectionne.Id);
-                    if (utilisateur != null)
-                    {
-                        utilisateur.Actif = !utilisateur.Actif;
-                        await context.SaveChangesAsync();
+                    _utilisateurSelectionne.Actif = !_utilisateurSelectionne.Actif;
+                    await _context.SaveChangesAsync();
 
-                        string message = utilisateur.Actif ? "activé" : "désactivé";
-                        MessageBox.Show($"Utilisateur {message} avec succès.", "Succès",
-                                      MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    string message = _utilisateurSelectionne.Actif ? "activé" : "désactivé";
+                    MessageBox.Show($"Utilisateur {message} avec succès.", "Succès",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
 
                     ChargerDonnees();
                 }
@@ -300,37 +553,30 @@ namespace GestionConges.WPF.Views
         {
             try
             {
+                using var context = CreerContexte();
+                if (context == null) return;
+
                 // Validation des champs
                 if (string.IsNullOrWhiteSpace(TxtNom.Text) ||
                     string.IsNullOrWhiteSpace(TxtPrenom.Text) ||
                     string.IsNullOrWhiteSpace(TxtEmail.Text) ||
-                    string.IsNullOrWhiteSpace(TxtLogin.Text))
+                    CmbSociete.SelectedValue == null ||
+                    CmbEquipe.SelectedValue == null)
                 {
-                    MessageBox.Show("Veuillez remplir tous les champs obligatoires.",
+                    MessageBox.Show("Veuillez remplir tous les champs obligatoires (Nom, Prénom, Email, Société, Équipe).",
                                   "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                using var context = CreerContexte();
-
-                // Vérifier l'unicité de l'email et du login
-                var emailExiste = await context.Utilisateurs
-                    .Where(u => u.Email == TxtEmail.Text && u.Id != (_utilisateurSelectionne != null ? _utilisateurSelectionne.Id : 0))
-                    .AnyAsync();
-                var loginExiste = await context.Utilisateurs
-                    .Where(u => u.Login == TxtLogin.Text && u.Id != (_utilisateurSelectionne != null ? _utilisateurSelectionne.Id : 0))
+                // Vérifier l'unicité de l'email
+                int utilisateurIdActuel = _utilisateurSelectionne != null ? _utilisateurSelectionne.Id : 0;
+                var emailExiste = await _context.Utilisateurs
+                    .Where(u => u.Email == TxtEmail.Text && u.Id != utilisateurIdActuel)
                     .AnyAsync();
 
                 if (emailExiste)
                 {
                     MessageBox.Show("Cet email est déjà utilisé par un autre utilisateur.",
-                                  "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (loginExiste)
-                {
-                    MessageBox.Show("Ce login est déjà utilisé par un autre utilisateur.",
                                   "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -353,38 +599,49 @@ namespace GestionConges.WPF.Views
                         DateCreation = DateTime.Now,
                         MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(TxtMotDePasse.Password)
                     };
-                    context.Utilisateurs.Add(utilisateur);
+                    _context.Utilisateurs.Add(utilisateur);
                 }
                 else
                 {
-                    utilisateur = context.Utilisateurs.Find(_utilisateurSelectionne!.Id)!;
+                    utilisateur = await context.Utilisateurs
+                        .FirstOrDefaultAsync(u => u.Id == _utilisateurSelectionne.Id);
+
+                    if (utilisateur == null)
+                    {
+                        MessageBox.Show("Utilisateur introuvable.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
                 }
 
                 // Mettre à jour les propriétés
                 utilisateur.Nom = TxtNom.Text.Trim();
                 utilisateur.Prenom = TxtPrenom.Text.Trim();
                 utilisateur.Email = TxtEmail.Text.Trim();
-                utilisateur.Login = TxtLogin.Text.Trim();
                 utilisateur.Role = (RoleUtilisateur)CmbRole.SelectedIndex;
+                utilisateur.SocieteId = ((Societe)CmbSociete.SelectedItem).Id;
+                utilisateur.EquipeId = ((Equipe)CmbEquipe.SelectedItem).Id;
 
-                var selectedPoleId = CmbPole.SelectedValue as int?;
-                utilisateur.PoleId = selectedPoleId == 0 ? null : selectedPoleId;
+                // Gestion du pôle
+                int? selectedPoleId = null;
+                if (CmbPole.SelectedItem is Pole poleSelectionne && poleSelectionne.Id != 0)
+                {
+                    selectedPoleId = poleSelectionne.Id;
+                }
+                utilisateur.PoleId = selectedPoleId;
+
                 utilisateur.Actif = ChkActif.IsChecked ?? true;
 
-                // Mettre à jour le mot de passe si fourni (modification)
-                if (!nouveauUtilisateur && !string.IsNullOrWhiteSpace(TxtMotDePasse.Password))
-                {
-                    utilisateur.MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(TxtMotDePasse.Password);
-                }
-
+                context.Entry(utilisateur).Property(u => u.PoleId).IsModified = true;
                 await context.SaveChangesAsync();
 
+                // Recharger les données et réinitialiser l'interface
                 ChargerDonnees();
                 DesactiverFormulaire();
 
                 string message = nouveauUtilisateur ? "créé" : "modifié";
                 MessageBox.Show($"Utilisateur {message} avec succès.", "Succès",
                               MessageBoxButton.OK, MessageBoxImage.Information);
+
             }
             catch (Exception ex)
             {
@@ -393,11 +650,117 @@ namespace GestionConges.WPF.Views
             }
         }
 
+        private async void BtnAjouterSocieteSecondaire_Click(object sender, RoutedEventArgs e)
+        {
+            if (CmbSocieteSecondaire.SelectedValue is int societeId && _utilisateurSelectionne != null)
+            {
+                try
+                {
+                    // Vérifier si l'association existe déjà
+                    var existeDejaAssociation = await _context.UtilisateursSocietesSecondaires
+                        .AnyAsync(uss => uss.UtilisateurId == _utilisateurSelectionne.Id &&
+                                        uss.SocieteId == societeId &&
+                                        uss.Actif);
+
+                    if (existeDejaAssociation)
+                    {
+                        MessageBox.Show("Cette société est déjà associée comme secondaire.",
+                                      "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+
+                    // Vérifier que ce n'est pas la société principale
+                    if (societeId == _utilisateurSelectionne.SocieteId)
+                    {
+                        MessageBox.Show("Impossible d'ajouter la société principale comme secondaire.",
+                                      "Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // Créer la nouvelle association
+                    var nouvelleAssociation = new UtilisateurSocieteSecondaire
+                    {
+                        UtilisateurId = _utilisateurSelectionne.Id,
+                        SocieteId = societeId,
+                        Actif = true,
+                        DateAffectation = DateTime.Now
+                    };
+
+                    _context.UtilisateursSocietesSecondaires.Add(nouvelleAssociation);
+                    await _context.SaveChangesAsync();
+
+                    // Recharger les sociétés secondaires
+                    await RechargerSocietesSecondaires();
+
+                    MessageBox.Show("Société secondaire ajoutée avec succès.", "Succès",
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ajout de la société : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void BtnRetirerSocieteSecondaire_Click(object sender, RoutedEventArgs e)
+        {
+            if (LstSocietesSecondaires.SelectedItem is UtilisateurSocieteSecondaire societeSelectionnee && _utilisateurSelectionne != null)
+            {
+                var result = MessageBox.Show(
+                    $"Êtes-vous sûr de vouloir retirer la société '{societeSelectionnee.Societe?.Nom}' des sociétés secondaires ?",
+                    "Confirmation",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        _context.UtilisateursSocietesSecondaires.Remove(societeSelectionnee);
+                        await _context.SaveChangesAsync();
+
+                        await RechargerSocietesSecondaires();
+
+                        MessageBox.Show("Société secondaire retirée avec succès.", "Succès",
+                                      MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Erreur lors du retrait de la société : {ex.Message}",
+                                      "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Veuillez sélectionner une société à retirer.",
+                              "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private async Task RechargerSocietesSecondaires()
+        {
+            if (_utilisateurSelectionne != null)
+            {
+                var societesSecondaires = await _context.UtilisateursSocietesSecondaires
+                    .Where(uss => uss.UtilisateurId == _utilisateurSelectionne.Id && uss.Actif)
+                    .Include(uss => uss.Societe)
+                    .ToListAsync();
+
+                _societesSecondaires.Clear();
+                foreach (var ss in societesSecondaires)
+                {
+                    _societesSecondaires.Add(ss);
+                }
+            }
+        }
+
         private void BtnAnnuler_Click(object sender, RoutedEventArgs e)
         {
             if (_utilisateurSelectionne != null)
             {
-                AfficherDetailsUtilisateur(_utilisateurSelectionne);
+                _ = AfficherDetailsUtilisateur(_utilisateurSelectionne);
             }
             else
             {
@@ -423,93 +786,179 @@ namespace GestionConges.WPF.Views
             FiltrerUtilisateurs();
         }
 
-        private void CmbFiltreRole_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void CmbFiltreSociete_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbFiltreSociete.SelectedValue is int societeId && societeId > 0)
+            {
+                // Société spécifique sélectionnée - afficher le filtre équipe
+                await ChargerEquipesPourFiltre(societeId);
+                AfficherFiltreEquipe();
+
+                // Masquer le filtre pôle
+                LblFiltrePole.Visibility = Visibility.Collapsed;
+                CmbFiltrePole.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // "Toutes les sociétés" - masquer équipes et pôles
+                MasquerFiltresEquipeEtPole();
+            }
+
+            FiltrerUtilisateurs();
+        }
+
+        private async void CmbFiltreEquipe_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbFiltreEquipe.SelectedValue is int equipeId && equipeId > 0)
+            {
+                // Équipe spécifique sélectionnée - afficher le filtre pôle
+                await ChargerPolesPourFiltre(equipeId);
+                AfficherFiltrePole();
+            }
+            else
+            {
+                // "Toutes les équipes" - masquer le filtre pôle
+                LblFiltrePole.Visibility = Visibility.Collapsed;
+                CmbFiltrePole.Visibility = Visibility.Collapsed;
+            }
+
+            FiltrerUtilisateurs();
+        }
+
+        private async Task ChargerEquipesPourFiltre(int societeId)
+        {
+            try
+            {
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                var equipes = await context.Equipes
+                    .Where(e => e.SocieteId == societeId && e.Actif)
+                    .OrderBy(e => e.Nom)
+                    .ToListAsync();
+
+                var equipesFiltre = new List<Equipe> { new Equipe { Id = 0, Nom = "Toutes les équipes" } };
+                equipesFiltre.AddRange(equipes);
+
+                CmbFiltreEquipe.ItemsSource = equipesFiltre;
+                CmbFiltreEquipe.DisplayMemberPath = "Nom";
+                CmbFiltreEquipe.SelectedValuePath = "Id";
+                CmbFiltreEquipe.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des équipes : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        private void CmbFiltrePole_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FiltrerUtilisateurs();
         }
 
         private void ChkAfficherInactifs_Checked(object sender, RoutedEventArgs e)
         {
-            ChargerDonnees();
+            FiltrerUtilisateurs();
         }
 
         private void ChkAfficherInactifs_Unchecked(object sender, RoutedEventArgs e)
         {
-            ChargerDonnees();
+            FiltrerUtilisateurs();
         }
 
-        private void FiltrerUtilisateurs()
+        private async void FiltrerUtilisateurs()
         {
-            _ = Task.Run(async () =>
+            try
             {
-                try
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                string recherche = TxtRecherche.Text?.ToLower() ?? "";
+
+                // Récupération correcte des IDs
+                int societeId = 0;
+                if (CmbFiltreSociete.SelectedItem is Societe societeSelectionnee)
+                    societeId = societeSelectionnee.Id;
+
+                int equipeId = 0;
+                if (CmbFiltreEquipe.SelectedItem is Equipe equipeSelectionnee)
+                    equipeId = equipeSelectionnee.Id;
+
+                int poleId = 0;
+                if (CmbFiltrePole.SelectedItem is Pole poleSelectionne)
+                    poleId = poleSelectionne.Id;
+
+                bool afficherInactifs = ChkAfficherInactifs.IsChecked == true;
+
+                var query = context.Utilisateurs
+                    .Include(u => u.Societe)
+                    .Include(u => u.Pole)
+                    .Include(u => u.Equipe)
+                    .AsQueryable();
+
+                // Appliquer les filtres...
+                if (!string.IsNullOrWhiteSpace(recherche))
                 {
-                    using var context = CreerContexte();
-
-                    // Récupérer TOUS les utilisateurs avec leurs pôles
-                    var tousUtilisateurs = await context.Utilisateurs
-                        .Include(u => u.Pole)
-                        .ToListAsync();
-
-                    // Le reste du code reste identique...
-                    bool afficherInactifs = false;
-                    string rechercheText = "";
-                    int? selectedPoleId = null;
-
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        afficherInactifs = ChkAfficherInactifs.IsChecked == true;
-                        rechercheText = (TxtRecherche.Text ?? "").Trim().ToLower();
-                        if (CmbFiltreRole.SelectedItem is ComboBoxItem item && item.Tag is int poleId)
-                        {
-                            selectedPoleId = poleId;
-                        }
-                    });
-
-                    var utilisateursFiltres = tousUtilisateurs.AsEnumerable();
-
-                    if (!afficherInactifs)
-                    {
-                        utilisateursFiltres = utilisateursFiltres.Where(u => u.Actif);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(rechercheText))
-                    {
-                        utilisateursFiltres = utilisateursFiltres.Where(u =>
-                            u.Nom.ToLower().Contains(rechercheText) ||
-                            u.Prenom.ToLower().Contains(rechercheText) ||
-                            u.Email.ToLower().Contains(rechercheText));
-                    }
-
-                    if (selectedPoleId.HasValue)
-                    {
-                        utilisateursFiltres = utilisateursFiltres.Where(u => u.PoleId == selectedPoleId.Value);
-                    }
-
-                    var resultat = utilisateursFiltres
-                        .OrderBy(u => u.Nom)
-                        .ThenBy(u => u.Prenom)
-                        .ToList();
-
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        _utilisateurs.Clear();
-                        foreach (var user in resultat)
-                        {
-                            _utilisateurs.Add(user);
-                        }
-                    });
+                    query = query.Where(u =>
+                        u.Nom.ToLower().Contains(recherche) ||
+                        u.Prenom.ToLower().Contains(recherche) ||
+                        u.Email.ToLower().Contains(recherche));
                 }
-                catch (Exception ex)
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        MessageBox.Show($"Erreur lors du filtrage : {ex.Message}",
-                                      "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    });
-                }
-            });
+
+                if (societeId != 0)
+                    query = query.Where(u => u.SocieteId == societeId);
+
+                if (equipeId != 0)
+                    query = query.Where(u => u.EquipeId == equipeId);
+
+                if (poleId != 0)
+                    query = query.Where(u => u.PoleId == poleId);
+
+                if (!afficherInactifs)
+                    query = query.Where(u => u.Actif);
+
+                var resultats = await query.ToListAsync();
+                DgUtilisateurs.ItemsSource = resultats;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du filtrage : {ex.Message}");
+            }
         }
+
+        private async Task ChargerPolesPourFiltre(int equipeId)
+        {
+            try
+            {
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                var poles = await context.EquipesPoles
+                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
+                    .Include(ep => ep.Pole)
+                    .Select(ep => ep.Pole)
+                    .Where(p => p.Actif)
+                    .OrderBy(p => p.Nom)
+                    .ToListAsync();
+
+                var polesFiltre = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
+                polesFiltre.AddRange(poles);
+
+                CmbFiltrePole.ItemsSource = polesFiltre;
+                CmbFiltrePole.DisplayMemberPath = "Nom";
+                CmbFiltrePole.SelectedValuePath = "Id";
+                CmbFiltrePole.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
 
         private void BtnGestionPoles_Click(object sender, RoutedEventArgs e)
         {
@@ -518,7 +967,6 @@ namespace GestionConges.WPF.Views
                 var gestionPolesWindow = new GestionPolesWindow();
                 gestionPolesWindow.ShowDialog();
 
-                // Recharger les données après fermeture (au cas où des pôles auraient été modifiés)
                 ChargerDonnees();
             }
             catch (Exception ex)
@@ -528,9 +976,34 @@ namespace GestionConges.WPF.Views
             }
         }
 
+        private void BtnGestionValidation_Click(object sender, RoutedEventArgs e)
+        {
+            if (_utilisateurSelectionne != null)
+            {
+                try
+                {
+                    //var gestionValidationWindow = new GestionValidateurWindow(_utilisateurSelectionne.Id);
+                    //gestionValidationWindow.ShowDialog();
+
+                    ChargerDonnees();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ouverture de la gestion des validateurs : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Veuillez sélectionner un utilisateur pour gérer ses droits de validation.",
+                              "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            // Plus besoin de disposer un contexte local
+            _semaphoreFiltre?.Dispose();
+            _context?.Dispose();
             base.OnClosed(e);
         }
     }
