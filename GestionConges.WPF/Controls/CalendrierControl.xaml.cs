@@ -210,27 +210,10 @@ namespace GestionConges.WPF.Controls
 
         private void MasquerFiltresEquipeEtPole()
         {
-            // Vérifier que les contrôles sont initialisés
-            if (CmbFiltreEquipe == null || CmbFiltrePole == null)
-                return;
-
-            // Réinitialiser les combos
-            CmbFiltreEquipe.ItemsSource = null;
-            CmbFiltrePole.ItemsSource = null;
-
-            // Ajouter juste l'option par défaut
-            var equipesDefaut = new List<Equipe> { new Equipe { Id = 0, Nom = "Toutes les équipes" } };
-            var polesDefaut = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
-
-            CmbFiltreEquipe.ItemsSource = equipesDefaut;
-            CmbFiltreEquipe.DisplayMemberPath = "Nom";
-            CmbFiltreEquipe.SelectedValuePath = "Id";
-            CmbFiltreEquipe.SelectedIndex = 0;
-
-            CmbFiltrePole.ItemsSource = polesDefaut;
-            CmbFiltrePole.DisplayMemberPath = "Nom";
-            CmbFiltrePole.SelectedValuePath = "Id";
-            CmbFiltrePole.SelectedIndex = 0;
+            LblFiltreEquipe.Visibility = Visibility.Collapsed;
+            CmbFiltreEquipe.Visibility = Visibility.Collapsed;
+            LblFiltrePole.Visibility = Visibility.Collapsed;
+            CmbFiltrePole.Visibility = Visibility.Collapsed;
         }
 
         private void CreerLegendeTypes()
@@ -606,14 +589,15 @@ namespace GestionConges.WPF.Controls
 
         private async void CmbFiltreSociete_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Vérifier que les contrôles sont initialisés
-            if (CmbFiltreSociete == null || CmbFiltreEquipe == null || CmbFiltrePole == null)
-                return;
-
             if (CmbFiltreSociete.SelectedValue is int societeId && societeId > 0)
             {
-                // Société spécifique sélectionnée - charger ses équipes
-                await ChargerEquipesPourSociete(societeId);
+                // Société spécifique sélectionnée - afficher le filtre équipe
+                await ChargerEquipesPourFiltre(societeId);
+                AfficherFiltreEquipe();
+
+                // Masquer le filtre pôle
+                LblFiltrePole.Visibility = Visibility.Collapsed;
+                CmbFiltrePole.Visibility = Visibility.Collapsed;
             }
             else
             {
@@ -621,31 +605,163 @@ namespace GestionConges.WPF.Controls
                 MasquerFiltresEquipeEtPole();
             }
 
-            AppliquerFiltresEtRafraichir();
+            ChargerDonneesFiltres();
         }
 
         private async void CmbFiltreEquipe_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Vérifier que les contrôles sont initialisés
-            if (CmbFiltreEquipe == null || CmbFiltrePole == null)
-                return;
-
             if (CmbFiltreEquipe.SelectedValue is int equipeId && equipeId > 0)
             {
-                // Équipe spécifique sélectionnée - charger ses pôles
-                await ChargerPolesPourEquipe(equipeId);
+                // Équipe spécifique sélectionnée - afficher le filtre pôle
+                await ChargerPolesPourFiltre(equipeId);
+                AfficherFiltrePole();
             }
             else
             {
                 // "Toutes les équipes" - masquer le filtre pôle
-                var polesDefaut = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
-                CmbFiltrePole.ItemsSource = polesDefaut;
+                LblFiltrePole.Visibility = Visibility.Collapsed;
+                CmbFiltrePole.Visibility = Visibility.Collapsed;
+            }
+
+            ChargerDonneesFiltres();
+        }
+
+        private async Task ChargerPolesPourFiltre(int equipeId)
+        {
+            try
+            {
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                var poles = await context.EquipesPoles
+                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
+                    .Include(ep => ep.Pole)
+                    .Select(ep => ep.Pole)
+                    .Where(p => p.Actif)
+                    .OrderBy(p => p.Nom)
+                    .ToListAsync();
+
+                var polesFiltre = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
+                polesFiltre.AddRange(poles);
+
+                CmbFiltrePole.ItemsSource = polesFiltre;
                 CmbFiltrePole.DisplayMemberPath = "Nom";
                 CmbFiltrePole.SelectedValuePath = "Id";
                 CmbFiltrePole.SelectedIndex = 0;
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-            AppliquerFiltresEtRafraichir();
+        private void AfficherFiltreEquipe()
+        {
+            LblFiltreEquipe.Visibility = Visibility.Visible;
+            CmbFiltreEquipe.Visibility = Visibility.Visible;
+        }
+
+        private void AfficherFiltrePole()
+        {
+            LblFiltrePole.Visibility = Visibility.Visible;
+            CmbFiltrePole.Visibility = Visibility.Visible;
+        }
+
+        private async Task ChargerEquipesPourFiltre(int societeId)
+        {
+            try
+            {
+                using var context = CreerContexte();
+                if (context == null) return;
+
+                var equipes = await context.Equipes
+                    .Where(e => e.SocieteId == societeId && e.Actif)
+                    .OrderBy(e => e.Nom)
+                    .ToListAsync();
+
+                var equipesFiltre = new List<Equipe> { new Equipe { Id = 0, Nom = "Toutes les équipes" } };
+                equipesFiltre.AddRange(equipes);
+
+                CmbFiltreEquipe.ItemsSource = equipesFiltre;
+                CmbFiltreEquipe.DisplayMemberPath = "Nom";
+                CmbFiltreEquipe.SelectedValuePath = "Id";
+                CmbFiltreEquipe.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des équipes : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ChargerDonneesFiltres()
+        {
+            try
+            {
+                TxtStatutCalendrier.Text = "Chargement des congés...";
+
+                using var context = CreerContexte();
+
+                int societeId = 0;
+                if (CmbFiltreSociete.SelectedItem is Societe societeSelectionnee)
+                    societeId = societeSelectionnee.Id;
+
+                int equipeId = 0;
+                if (CmbFiltreEquipe.SelectedItem is Equipe equipeSelectionnee)
+                    equipeId = equipeSelectionnee.Id;
+
+                int poleId = 0;
+                if (CmbFiltrePole.SelectedItem is Pole poleSelectionne)
+                    poleId = poleSelectionne.Id;
+
+                // Récupérer toutes les demandes approuvées du mois (avec marge)
+                var debutMois = new DateTime(_moisAffiche.Year, _moisAffiche.Month, 1);
+                var finMois = debutMois.AddMonths(1).AddDays(-1);
+                var debutPeriode = debutMois.AddDays(-7);
+                var finPeriode = finMois.AddDays(7);
+
+                var query = context.DemandesConges
+                    .Include(d => d.Utilisateur)
+                        .ThenInclude(u => u.Societe)
+                    .Include(d => d.Utilisateur)
+                        .ThenInclude(u => u.Equipe)
+                    .Include(d => d.Utilisateur)
+                        .ThenInclude(u => u.Pole)
+                    .Include(d => d.TypeAbsence)
+                    .AsQueryable();
+                
+                query = query.Where(d => d.Statut == StatusDemande.Approuve &&
+                               d.DateDebut <= finPeriode &&
+                               d.DateFin >= debutPeriode);
+                if (societeId != 0)
+                    query = query.Where(d => d.Utilisateur.SocieteId == societeId);
+
+                if (equipeId != 0)
+                    query = query.Where(d => d.Utilisateur.EquipeId == equipeId);
+
+                if (poleId != 0)
+                    query = query.Where(d => d.Utilisateur.PoleId == poleId);
+
+                _tousLesConges = await query.ToListAsync(); 
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    AppliquerFiltres();
+                    AfficherCalendrier();
+                    MettreAJourStatistiques();
+                    TxtStatutCalendrier.Text = $"{_congesFiltres.Count} congés affichés";
+                });
+            }
+            catch (Exception ex)
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    TxtStatutCalendrier.Text = $"Erreur : {ex.Message}";
+                    MessageBox.Show($"Erreur lors de l'initialisation : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
         }
 
         private void CmbFiltrePole_SelectionChanged(object sender, SelectionChangedEventArgs e)
