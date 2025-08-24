@@ -1,7 +1,7 @@
 ﻿<UserControl x:Class="GestionConges.WPF.Controls.CalendrierControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="White">
+             Background="{StaticResource Background}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -12,145 +12,323 @@
         </Grid.RowDefinitions>
 
         <!-- En-tête avec navigation -->
-        <Border Grid.Row="0" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Bouton mois précédent -->
-                <Button Grid.Column="0" Name="BtnPrecedent" 
-                        Content="◀ Précédent" 
-                        Background="#2196F3" Foreground="White" BorderThickness="0"
-                        Padding="15,8" Margin="0,0,10,0"
-                        Click="BtnPrecedent_Click"/>
-
-                <!-- Titre mois/année -->
-                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
-                    <TextBlock Name="TxtTitreMois" 
-                             Text="Janvier 2025"
-                             FontSize="24" FontWeight="Bold"
-                             HorizontalAlignment="Center"/>
-                    <TextBlock Name="TxtStatutCalendrier"
-                             Text="Chargement..."
-                             FontSize="12" Foreground="Gray"
-                             HorizontalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Bouton mois suivant -->
-                <Button Grid.Column="2" Name="BtnSuivant" 
-                        Content="Suivant ▶" 
-                        Background="#2196F3" Foreground="White" BorderThickness="0"
-                        Padding="15,8" Margin="10,0,0,0"
-                        Click="BtnSuivant_Click"/>
-            </Grid>
-        </Border>
-
-        <!-- Barre de filtres -->
-        <Border Grid.Row="1" Background="White" BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="15">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="🔍 Filtres :" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0"/>
-
-                <!-- Filtre par pôle -->
-                <TextBlock Text="Pôle :" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox Name="CmbFiltrePole" Width="150" Padding="5" Margin="0,0,15,0"
-                        SelectionChanged="CmbFiltrePole_SelectionChanged">
-                    <ComboBoxItem Content="Tous les pôles" IsSelected="True"/>
-                </ComboBox>
-
-                <!-- Filtre par type d'absence -->
-                <TextBlock Text="Type :" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox Name="CmbFiltreType" Width="150" Padding="5" Margin="0,0,15,0"
-                        SelectionChanged="CmbFiltreType_SelectionChanged">
-                    <ComboBoxItem Content="Tous les types" IsSelected="True"/>
-                </ComboBox>
-
-                <!-- Bouton aujourd'hui -->
-                <Button Name="BtnAujourdhui" Content="📅 Aujourd'hui"
-                        Background="#4CAF50" Foreground="White" BorderThickness="0"
-                        Padding="12,6" Margin="10,0,0,0"
-                        Click="BtnAujourdhui_Click"/>
-
-                <!-- Bouton actualiser -->
-                <Button Name="BtnActualiser" Content="🔄 Actualiser"
-                        Background="#FF9800" Foreground="White" BorderThickness="0"
-                        Padding="12,6" Margin="10,0,0,0"
-                        Click="BtnActualiser_Click"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Grille calendrier -->
-        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" Margin="10">
-            <Grid Name="GridCalendrier" Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="40"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- En-têtes jours semaine -->
-                <Border Grid.Row="0" Grid.Column="0" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#F8F8F8">
-                    <TextBlock Text="Lundi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="1" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#F8F8F8">
-                    <TextBlock Text="Mardi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="2" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#F8F8F8">
-                    <TextBlock Text="Mercredi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="3" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#F8F8F8">
-                    <TextBlock Text="Jeudi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="4" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#F8F8F8">
-                    <TextBlock Text="Vendredi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="5" BorderBrush="#DDDDDD" BorderThickness="0,0,1,1" Background="#FFEBEE">
-                    <TextBlock Text="Samedi" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F44336"/>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="6" BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Background="#FFEBEE">
-                    <TextBlock Text="Dimanche" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#F44336"/>
-                </Border>
-
-                <!-- Cases dynamiques générées dans le code -->
-            </Grid>
-        </Border>
-
-        <!-- Légende améliorée -->
-        <Border Grid.Row="3" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15">
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,20">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Première ligne : légende types -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                    <TextBlock Text="🎨 Types d'absences :" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                <!-- Header principal -->
+                <Grid Grid.Row="0" Margin="20,20,20,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Name="PanneauLegendeTypes" Orientation="Horizontal"/>
-                </StackPanel>
+                    <!-- Bouton mois précédent -->
+                    <Button Grid.Column="0" Name="BtnPrecedent" 
+                            Content="❮ Précédent" 
+                            Style="{StaticResource MaterialDesignOutlineButton}"
+                            Margin="0,0,20,0"
+                            Click="BtnPrecedent_Click"/>
 
-                <!-- Deuxième ligne : informations -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock Name="TxtNombrePersonnes" Text="👥 0 personnes" VerticalAlignment="Center" Margin="0,0,20,0"/>
-                    <TextBlock Name="TxtNombreConges" Text="📅 0 congés ce mois" VerticalAlignment="Center" Margin="0,0,20,0"/>
-                    <TextBlock Text="💡 Survolez les cases pour plus de détails" FontStyle="Italic" Foreground="Gray" VerticalAlignment="Center"/>
-                </StackPanel>
+                    <!-- Titre mois/année -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Name="TxtTitreMois" 
+                                 Text="Janvier 2025"
+                                 FontSize="28" FontWeight="Bold"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 HorizontalAlignment="Center"/>
+                        <TextBlock Name="TxtStatutCalendrier"
+                                 Text="Chargement..."
+                                 FontSize="14" 
+                                 Foreground="{StaticResource TextMuted}"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Bouton mois suivant -->
+                    <Button Grid.Column="2" Name="BtnSuivant" 
+                            Content="Suivant ❯" 
+                            Style="{StaticResource MaterialDesignOutlineButton}"
+                            Margin="20,0,0,0"
+                            Click="BtnSuivant_Click"/>
+                </Grid>
+
+                <!-- Barre d'actions responsive -->
+                <Border Grid.Row="1" Background="{StaticResource Gray50}" 
+                        CornerRadius="0,0,12,12" 
+                        BorderBrush="{StaticResource Gray200}" 
+                        BorderThickness="0,1,0,0"
+                        Padding="16,12">
+
+                    <!-- Layout adaptatif avec ScrollViewer horizontal -->
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" MinWidth="500">
+                            <!-- Icône et titre -->
+                            <Border Background="{StaticResource Primary}" 
+                                  Width="20" Height="20" CornerRadius="10" 
+                                  Margin="0,0,8,0">
+                                <TextBlock Text="🔍" Foreground="White" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"
+                                         FontSize="10"/>
+                            </Border>
+
+                            <TextBlock Text="Filtres :" FontWeight="SemiBold" 
+                                     Foreground="{StaticResource TextPrimary}"
+                                     VerticalAlignment="Center" Margin="0,0,5,0"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Société -->
+                                <TextBlock Grid.Column="0" Text="Société :" 
+                                    VerticalAlignment="Center" Margin="5,0,5,0"
+                                    FontWeight="SemiBold" 
+                                    Foreground="{StaticResource TextPrimary}"/>
+                                <Border Grid.Column="1" Background="{StaticResource Surface}" 
+                                    BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                                    >
+                                    <ComboBox Name="CmbFiltreSociete" 
+                                        Background="Transparent" BorderThickness="0"
+                                        Padding="8" SelectionChanged="CmbFiltreSociete_SelectionChanged"/>
+                                </Border>
+
+                                <!-- Équipe -->
+                                <TextBlock Name="LblFiltreEquipe" Grid.Column="2" Text="Équipe :" 
+                                    VerticalAlignment="Center" Margin="5,0,5,0" 
+                                    Visibility="Collapsed"
+                                    FontWeight="SemiBold" 
+                                    Foreground="{StaticResource TextPrimary}"/>
+                                <Border Grid.Column="3" Background="{StaticResource Surface}" 
+                                    BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                                    >
+                                    <ComboBox Name="CmbFiltreEquipe" 
+                                        Background="Transparent" BorderThickness="0"
+                                        Padding="8" Visibility="Collapsed"
+                                        SelectionChanged="CmbFiltreEquipe_SelectionChanged"/>
+                                </Border>
+
+                                <!-- Pôle -->
+                                <TextBlock Name="LblFiltrePole" Grid.Column="4" Text="Pôle :" 
+                                    VerticalAlignment="Center" Margin="5,0,5,0" 
+                                    Visibility="Collapsed"
+                                    FontWeight="SemiBold" 
+                                    Foreground="{StaticResource TextPrimary}"/>
+                                <Border Grid.Column="5" Background="{StaticResource Surface}" 
+                                    BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                                    >
+                                    <ComboBox Name="CmbFiltrePole" 
+                                        Background="Transparent" BorderThickness="0"
+                                        Padding="8" Visibility="Collapsed"
+                                        SelectionChanged="CmbFiltrePole_SelectionChanged"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Boutons d'action -->
+                            <Button Name="BtnAujourdhui" Content="Aujourd'hui"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Padding="12,6" FontSize="12"
+                                    Margin="0,0,8,0"
+                                    Click="BtnAujourdhui_Click"/>
+
+                            <Button Name="BtnActualiser" Content="Actualiser"
+                                    Style="{StaticResource MaterialDesignOutlineButton}"
+                                    Padding="12,6" FontSize="12"
+                                    Click="BtnActualiser_Click"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Grille calendrier avec ScrollViewer pour responsive -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header du calendrier -->
+                <Border Grid.Row="0" Background="{StaticResource Gray50}" 
+                      CornerRadius="12,12,0,0" 
+                      BorderBrush="{StaticResource Gray200}" 
+                      BorderThickness="0,0,0,1"
+                      Padding="0,16">
+                    <Grid Name="GridCalendrierHeaders">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- En-têtes jours semaine avec texte adaptatif -->
+                        <TextBlock Grid.Column="0" Name="TxtLundi" Text="Lundi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Name="TxtMardi" Text="Mardi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Name="TxtMercredi" Text="Mercredi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Name="TxtJeudi" Text="Jeudi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Name="TxtVendredi" Text="Vendredi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource TextSecondary}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="5" Name="TxtSamedi" Text="Samedi" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource Danger}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="6" Name="TxtDimanche" Text="Dimanche" 
+                                 FontWeight="SemiBold" FontSize="14"
+                                 Foreground="{StaticResource Danger}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- ScrollViewer pour le calendrier -->
+                <ScrollViewer Grid.Row="1" 
+                            HorizontalScrollBarVisibility="Auto" 
+                            VerticalScrollBarVisibility="Auto"
+                            Background="{StaticResource Surface}">
+
+                    <!-- Cases du calendrier avec taille minimum -->
+                    <Grid Name="GridCalendrier" MinWidth="700" Background="{StaticResource Surface}" Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                            <RowDefinition Height="*" MinHeight="80"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                            <ColumnDefinition Width="*" MinWidth="100"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Cases dynamiques générées dans le code -->
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Légende et informations -->
+        <Border Grid.Row="3" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header légende -->
+                <Border Grid.Row="0" Background="{StaticResource Gray50}" 
+                      CornerRadius="12,12,0,0" 
+                      BorderBrush="{StaticResource Gray200}" 
+                      BorderThickness="0,0,0,1"
+                      Padding="20,16">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="{StaticResource Secondary}" 
+                              Width="24" Height="24" CornerRadius="12" 
+                              Margin="0,0,12,0">
+                            <TextBlock Text="🎨" Foreground="White" 
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"
+                                     FontSize="12"/>
+                        </Border>
+                        <TextBlock Text="Légende des Types d'Absences" 
+                                 FontSize="16" FontWeight="SemiBold"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Contenu légende -->
+                <ScrollViewer Grid.Row="1" Padding="20,16">
+                    <StackPanel Name="PanneauLegendeTypes" Orientation="Horizontal" 
+                              HorizontalAlignment="Center" FlowDirection="LeftToRight">
+                        <!-- Types d'absences générés dynamiquement -->
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer avec statistiques -->
+                <Border Grid.Row="2" Background="{StaticResource Gray50}" 
+                      CornerRadius="0,0,12,12" 
+                      BorderBrush="{StaticResource Gray200}" 
+                      BorderThickness="0,1,0,0"
+                      Padding="20,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Statistiques -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Border Background="{StaticResource Primary}" 
+                                  Width="20" Height="20" CornerRadius="10" 
+                                  Margin="0,0,8,0">
+                                <TextBlock Text="👥" Foreground="White" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"
+                                         FontSize="10"/>
+                            </Border>
+                            <TextBlock Name="TxtNombrePersonnes" Text="0 personnes" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{StaticResource TextPrimary}"
+                                     VerticalAlignment="Center" Margin="0,0,24,0"/>
+
+                            <Border Background="{StaticResource Secondary}" 
+                                  Width="20" Height="20" CornerRadius="10" 
+                                  Margin="0,0,8,0">
+                                <TextBlock Text="📅" Foreground="White" 
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"
+                                         FontSize="10"/>
+                            </Border>
+                            <TextBlock Name="TxtNombreConges" Text="0 congés ce mois" 
+                                     FontWeight="SemiBold"
+                                     Foreground="{StaticResource TextPrimary}"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Aide -->
+                        <TextBlock Grid.Column="1" Text="💡 Double-cliquez sur une case pour voir les détails" 
+                                 FontStyle="Italic" FontSize="12"
+                                 Foreground="{StaticResource TextMuted}" 
+                                 VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
             </Grid>
         </Border>
     </Grid>
