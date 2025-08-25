@@ -310,56 +310,6 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Actions Principales -->
-                                <Border Background="{StaticResource Surface}" 
-                                      BorderBrush="{StaticResource Gray200}" BorderThickness="1"
-                                      CornerRadius="12" Padding="24" Margin="0,0,0,24">
-                                    <StackPanel>
-                                        <TextBlock Text="Actions Principales" 
-                                                 FontSize="18" FontWeight="SemiBold" 
-                                                 Foreground="{StaticResource TextPrimary}"
-                                                 Margin="0,0,0,20"/>
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <Button Grid.Column="0" 
-                                                  Style="{StaticResource MaterialDesignRaisedButton}"
-                                                  Height="60" Margin="0,0,8,0"
-                                                  Click="BtnNouvelleDemandeRaccourci_Click">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="📝" FontSize="20" Margin="0,0,8,0"/>
-                                                    <TextBlock Text="Nouvelle Demande" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Button>
-
-                                            <Button Grid.Column="1" 
-                                                  Style="{StaticResource MaterialDesignOutlineButton}"
-                                                  Height="60" Margin="4,0"
-                                                  Click="BtnCalendrier_Click">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="📊" FontSize="20" Margin="0,0,8,0"/>
-                                                    <TextBlock Text="Voir Calendrier" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Button>
-
-                                            <Button Grid.Column="2" 
-                                                  Style="{StaticResource MaterialDesignOutlineButton}"
-                                                  Height="60" Margin="8,0,0,0"
-                                                  Click="BtnMesConges_Click">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="📅" FontSize="20" Margin="0,0,8,0"/>
-                                                    <TextBlock Text="Mes Congés" FontWeight="SemiBold"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-
                                 <!-- Activité Récente -->
                                 <Border Background="{StaticResource Surface}" 
                                       BorderBrush="{StaticResource Gray200}" BorderThickness="1"
