@@ -130,6 +130,21 @@ namespace GestionConges.WPF.Controls
                     .OrderBy(t => t.OrdreAffichage)
                     .ToListAsync();
 
+                _societes = await context.Societes
+                    .Where(s => s.Actif)
+                    .OrderBy(s => s.Nom)
+                    .ToListAsync();
+
+                _equipes = await context.Equipes
+                    .Where(e => e.Actif)
+                    .OrderBy(e => e.Nom)
+                    .ToListAsync();
+
+                _poles = await context.Poles
+                    .Where(p => p.Actif)
+                    .OrderBy(p => p.Nom)
+                    .ToListAsync();
+
                 await Dispatcher.InvokeAsync(() =>
                 {
                     // Créer la légende
@@ -1034,25 +1049,42 @@ namespace GestionConges.WPF.Controls
             //     .ToList();
 
             // Correction : donner des noms uniques à chaque propriété du type anonyme
-            var congesParPersonne = congesDuJour
-                .GroupBy(c => new
+            var result =
+                from c in congesDuJour
+                join s in _societes on c.Utilisateur.SocieteId equals s.Id into societeJoin
+                from s in societeJoin.DefaultIfEmpty()
+                join e in _equipes on c.Utilisateur.EquipeId equals e.Id into equipeJoin
+                from e in equipeJoin.DefaultIfEmpty()
+                join p in _poles on c.Utilisateur.PoleId equals p.Id into poleJoin
+                from p in poleJoin.DefaultIfEmpty()
+                group c by new
                 {
                     UtilisateurId = c.Utilisateur.Id,
                     NomComplet = c.Utilisateur.NomComplet,
-                    SocieteNom = c.Utilisateur.Societe?.Nom,
-                    EquipeNom = c.Utilisateur.Equipe?.Nom,
-                    PoleNom = c.Utilisateur.Pole?.Nom
-                })
-                .Select(g => new
+                    SocieteId = s != null ? s.Id : (int?)null,
+                    SocieteNom = s != null ? s.Nom : "Sans société",
+                    EquipeId = e != null ? e.Id : (int?)null,
+                    EquipeNom = e != null ? e.Nom : "Sans équipe",
+                    PoleId = p != null ? p.Id : (int?)null,
+                    PoleNom = p != null ? p.Nom : "Sans pôle"
+                }
+                into g
+                select new
                 {
                     Personne = g.Key.NomComplet,
-                    Societe = g.Key.SocieteNom ?? "Sans société",
-                    Equipe = g.Key.EquipeNom ?? "Sans équipe",
-                    Pole = g.Key.PoleNom ?? "Sans pôle",
+                    SocieteId = g.Key.SocieteId,
+                    Societe = g.Key.SocieteNom,
+                    EquipeId = g.Key.EquipeId,
+                    Equipe = g.Key.EquipeNom,
+                    PoleId = g.Key.PoleId,
+                    Pole = g.Key.PoleNom,
                     Conges = g.ToList()
-                })
+                };
+
+            var congesParPersonne = result
                 .OrderBy(x => x.Personne)
                 .ToList();
+
 
             foreach (var groupe in congesParPersonne)
             {
