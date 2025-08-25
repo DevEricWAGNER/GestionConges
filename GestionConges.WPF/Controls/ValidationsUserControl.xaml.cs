@@ -57,8 +57,8 @@ namespace GestionConges.WPF.Controls
         {
             try
             {
-                // ✅ DEBUG: Vérifier l'ID utilisateur
-                System.Diagnostics.Debug.WriteLine($"🔍 ChargerDemandesAValider appelé pour utilisateur ID: {_utilisateurConnecte.Id}");
+                // DEBUG: Vérifier l'ID utilisateur
+                System.Diagnostics.Debug.WriteLine($"ChargerDemandesAValider appelé pour utilisateur ID: {_utilisateurConnecte.Id}");
                 System.Diagnostics.Debug.WriteLine($"   Nom: {_utilisateurConnecte.NomComplet}");
                 System.Diagnostics.Debug.WriteLine($"   Rôle: {_utilisateurConnecte.Role}");
 
@@ -68,22 +68,23 @@ namespace GestionConges.WPF.Controls
                 {
                     _demandes.Clear();
 
-                    System.Diagnostics.Debug.WriteLine($"📊 Demandes reçues du service: {demandesAValider.Count}");
+                    System.Diagnostics.Debug.WriteLine($"Demandes reçues du service: {demandesAValider.Count}");
 
                     foreach (var demande in demandesAValider)
                     {
-                        System.Diagnostics.Debug.WriteLine($"   📝 Ajout demande ID {demande.Id} de {demande.Utilisateur?.NomComplet}");
+                        System.Diagnostics.Debug.WriteLine($"   Ajout demande ID {demande.Id} de {demande.Utilisateur?.NomComplet}");
                         var viewModel = new DemandeValidationViewModel(demande);
                         _demandes.Add(viewModel);
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"🎯 ObservableCollection final: {_demandes.Count} éléments");
+                    System.Diagnostics.Debug.WriteLine($"ObservableCollection final: {_demandes.Count} éléments");
                     MettreAJourStatistiques();
+                    GererAffichageVide();
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"💥 Erreur dans ChargerDemandesAValider : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur dans ChargerDemandesAValider : {ex.Message}");
                 await Dispatcher.InvokeAsync(() =>
                 {
                     MessageBox.Show($"Erreur lors du chargement des demandes : {ex.Message}",
@@ -94,14 +95,36 @@ namespace GestionConges.WPF.Controls
 
         private void MettreAJourStatistiques()
         {
-            if (_demandes == null || TxtNombreEnAttente == null || TxtNombreTotal == null)
-                return;
+            if (_demandes == null) return;
 
             var nombreEnAttente = _demandes.Count;
             var nombreUrgent = _demandes.Count(d => d.IsUrgent);
 
-            TxtNombreEnAttente.Text = $"{nombreEnAttente} en attente";
-            TxtNombreTotal.Text = nombreUrgent > 0 ? $"{nombreUrgent} urgent(s)" : $"{nombreEnAttente} total";
+            // Mise à jour des statistiques avec le nouveau design
+            if (TxtNombreEnAttente != null)
+                TxtNombreEnAttente.Text = nombreEnAttente.ToString();
+
+            if (TxtNombreUrgent != null)
+                TxtNombreUrgent.Text = nombreUrgent.ToString();
+
+            if (TxtNombreTotal != null)
+                TxtNombreTotal.Text = nombreEnAttente.ToString(); // ou calculer le total mensuel
+        }
+
+        private void GererAffichageVide()
+        {
+            if (EmptyStatePanel != null && DgDemandesAValider != null)
+            {
+                bool hasData = _demandes != null && _demandes.Count > 0;
+
+                EmptyStatePanel.Visibility = hasData ? Visibility.Collapsed : Visibility.Visible;
+
+                // Accéder correctement au parent Border du DataGrid
+                if (DgDemandesAValider.Parent is Grid parentGrid && parentGrid.Parent is Border parentBorder)
+                {
+                    parentBorder.Visibility = hasData ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
         }
 
         private void DgDemandesAValider_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -159,7 +182,7 @@ namespace GestionConges.WPF.Controls
         {
             if (_demandeSelectionnee == null) return;
 
-            // ✅ NOUVELLE MÉTHODE : Utiliser la fenêtre personnalisée
+            // Utiliser la fenêtre personnalisée pour le motif de refus
             try
             {
                 var motifRefusWindow = new MotifRefusWindow(_demandeSelectionnee.Demande);
@@ -169,7 +192,6 @@ namespace GestionConges.WPF.Controls
                 {
                     await ValiderDemande(false, motifRefusWindow.MotifRefus);
                 }
-                // Si l'utilisateur annule, on ne fait rien
             }
             catch (Exception ex)
             {
@@ -203,14 +225,15 @@ namespace GestionConges.WPF.Controls
                 if (success)
                 {
                     var action = approuve ? "approuvée" : "refusée";
-                    MessageBox.Show($"Demande {action} avec succès !", "Validation",
-                                  MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Afficher notification moderne
+                    AfficherNotificationSucces($"Demande {action} avec succès !");
 
                     // Réinitialiser le commentaire
                     if (TxtCommentaireRapide != null)
                     {
                         TxtCommentaireRapide.Text = "Commentaire optionnel...";
-                        TxtCommentaireRapide.Foreground = Brushes.Gray;
+                        TxtCommentaireRapide.Foreground = (Brush)Application.Current.Resources["TextMuted"];
                     }
 
                     // Recharger la liste
@@ -268,10 +291,24 @@ namespace GestionConges.WPF.Controls
         // Gestion du placeholder pour le commentaire
         private void TxtCommentaireRapide_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (TxtCommentaireRapide.Text == "Commentaire optionnel..." && TxtCommentaireRapide.Foreground == Brushes.Gray)
+            try
             {
-                TxtCommentaireRapide.Text = "";
-                TxtCommentaireRapide.Foreground = Brushes.Black;
+                var textMutedBrush = (Brush)Application.Current.Resources["TextMuted"];
+                if (TxtCommentaireRapide.Text == "Commentaire optionnel..." &&
+                    TxtCommentaireRapide.Foreground.ToString() == textMutedBrush.ToString())
+                {
+                    TxtCommentaireRapide.Text = "";
+                    TxtCommentaireRapide.Foreground = (Brush)Application.Current.Resources["TextPrimary"];
+                }
+            }
+            catch
+            {
+                // Fallback si les ressources ne sont pas disponibles
+                if (TxtCommentaireRapide.Text == "Commentaire optionnel...")
+                {
+                    TxtCommentaireRapide.Text = "";
+                    TxtCommentaireRapide.Foreground = Brushes.Black;
+                }
             }
         }
 
@@ -280,7 +317,90 @@ namespace GestionConges.WPF.Controls
             if (string.IsNullOrWhiteSpace(TxtCommentaireRapide.Text))
             {
                 TxtCommentaireRapide.Text = "Commentaire optionnel...";
-                TxtCommentaireRapide.Foreground = Brushes.Gray;
+                try
+                {
+                    TxtCommentaireRapide.Foreground = (Brush)Application.Current.Resources["TextMuted"];
+                }
+                catch
+                {
+                    TxtCommentaireRapide.Foreground = Brushes.Gray;
+                }
+            }
+        }
+
+        // Nouvelle méthode pour afficher une notification moderne
+        private void AfficherNotificationSucces(string message)
+        {
+            try
+            {
+                // Créer une notification toast moderne
+                var notification = new Border
+                {
+                    Background = (Brush)Application.Current.Resources["Secondary"],
+                    CornerRadius = new CornerRadius(12),
+                    Padding = new Thickness(20, 16, 20, 16),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, 20, 20, 0),
+                    Opacity = 0
+                };
+
+                var stackPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal
+                };
+
+                var icone = new TextBlock
+                {
+                    Text = "✓",
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.Bold,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 12, 0),
+                    FontSize = 16
+                };
+
+                var texte = new TextBlock
+                {
+                    Text = message,
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.SemiBold,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                stackPanel.Children.Add(icone);
+                stackPanel.Children.Add(texte);
+                notification.Child = stackPanel;
+
+                // Trouver le parent Grid pour ajouter la notification
+                var parent = this.Parent;
+                while (parent != null && !(parent is Grid))
+                {
+                    parent = ((FrameworkElement)parent).Parent;
+                }
+
+                if (parent is Grid mainGrid)
+                {
+                    mainGrid.Children.Add(notification);
+
+                    // Animation d'apparition et disparition
+                    var fadeIn = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
+                    var fadeOut = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300))
+                    {
+                        BeginTime = TimeSpan.FromSeconds(3)
+                    };
+
+                    fadeOut.Completed += (s, e) => mainGrid.Children.Remove(notification);
+
+                    notification.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+                    notification.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fallback : MessageBox simple si la notification échoue
+                MessageBox.Show(message, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Diagnostics.Debug.WriteLine($"Erreur notification: {ex.Message}");
             }
         }
     }
@@ -293,18 +413,27 @@ namespace GestionConges.WPF.Controls
         public string AncienneteTexte { get; }
         public Brush AncienneteCouleur { get; }
 
-        // Propriétés pour binding direct (éviter les problèmes de navigation)
-        public Utilisateur Utilisateur => Demande?.Utilisateur;
-        public TypeAbsence TypeAbsence => Demande?.TypeAbsence;
-        public DateTime DateDebut => Demande?.DateDebut ?? DateTime.MinValue;
-        public DateTime DateFin => Demande?.DateFin ?? DateTime.MinValue;
-        public decimal NombreJours => Demande?.NombreJours ?? 0;
-        public string Commentaire => Demande?.Commentaire ?? "";
-        public DateTime DateCreation => Demande?.DateCreation ?? DateTime.MinValue;
+        // Propriétés pour binding direct avec setters privés (éviter les problèmes de binding bidirectionnel)
+        public Utilisateur Utilisateur { get; private set; }
+        public TypeAbsence TypeAbsence { get; private set; }
+        public DateTime DateDebut { get; private set; }
+        public DateTime DateFin { get; private set; }
+        public decimal NombreJours { get; private set; }
+        public string Commentaire { get; private set; }
+        public DateTime DateCreation { get; private set; }
 
         public DemandeValidationViewModel(DemandeConge demande)
         {
             Demande = demande ?? throw new ArgumentNullException(nameof(demande));
+
+            // Initialiser les propriétés pour éviter les erreurs de binding
+            Utilisateur = demande.Utilisateur;
+            TypeAbsence = demande.TypeAbsence;
+            DateDebut = demande.DateDebut;
+            DateFin = demande.DateFin;
+            NombreJours = demande.NombreJours;
+            Commentaire = demande.Commentaire ?? "";
+            DateCreation = demande.DateCreation;
 
             // Calculer l'ancienneté
             var anciennete = DateTime.Now - demande.DateCreation;

@@ -1,257 +1,507 @@
 ﻿<UserControl x:Class="GestionConges.WPF.Controls.ValidationsUserControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="White">
+             Background="{StaticResource Background}">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32">
 
-        <!-- Titre -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-            <TextBlock Text="✅" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBlock Text="Validation des Demandes"
-                     FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
-        </StackPanel>
-
-        <!-- Barre d'informations et actions -->
-        <Border Grid.Row="1" Background="#E3F2FD" BorderBrush="#2196F3" BorderThickness="1" 
-                Padding="15" Margin="0,0,0,15" CornerRadius="5">
-            <Grid>
+            <!-- Header Section -->
+            <Grid Margin="0,0,0,32">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Informations utilisateur -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Name="TxtValidateurInfo" Text="Validateur connecté"
-                                 FontWeight="SemiBold"/>
-                        <TextBlock Name="TxtRoleInfo" Text="Rôle"
-                                 FontSize="12" Foreground="#1976D2"/>
+                <!-- Titre et description -->
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Border Background="{StaticResource Primary}" 
+                                Width="48" Height="48" 
+                                CornerRadius="12" Margin="0,0,16,0">
+                            <TextBlock Text="✅" FontSize="24" 
+                                     Foreground="White"
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Validation des Demandes" 
+                                     FontSize="28" FontWeight="Bold" 
+                                     Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Gérez les demandes de congés de votre équipe" 
+                                     FontSize="16" 
+                                     Foreground="{StaticResource TextSecondary}"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Statistiques -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Border Background="#4CAF50" CornerRadius="15" Padding="10,5" Margin="5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⏳" Foreground="White" Margin="0,0,5,0"/>
-                            <TextBlock Name="TxtNombreEnAttente" Text="0 en attente" 
-                                     Foreground="White" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#FF9800" CornerRadius="15" Padding="10,5" Margin="5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📊" Foreground="White" Margin="0,0,5,0"/>
-                            <TextBlock Name="TxtNombreTotal" Text="0 total" 
-                                     Foreground="White" FontWeight="SemiBold"/>
+                <!-- Informations validateur et actions -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Border Background="{StaticResource Surface}" 
+                            BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                            CornerRadius="12" Padding="20">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Border Background="{StaticResource Secondary}" 
+                                        Width="36" Height="36" 
+                                        CornerRadius="18" Margin="0,0,12,0">
+                                    <TextBlock Text="👤" FontSize="16" 
+                                             Foreground="White"
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Name="TxtValidateurInfo" 
+                                             Text="Validateur connecté"
+                                             FontWeight="SemiBold"
+                                             Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Name="TxtRoleInfo" 
+                                             Text="Rôle"
+                                             FontSize="12" 
+                                             Foreground="{StaticResource TextMuted}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Button Name="BtnActualiser" 
+                                    Content="🔄 Actualiser"
+                                    Style="{StaticResource MaterialDesignOutlineButton}"
+                                    HorizontalAlignment="Stretch"
+                                    Click="BtnActualiser_Click"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
-
-                <!-- Bouton actualiser -->
-                <Button Grid.Column="2" Name="BtnActualiser" 
-                        Content="🔄 Actualiser"
-                        Background="#2196F3" Foreground="White" BorderThickness="0"
-                        Padding="15,8"
-                        Click="BtnActualiser_Click"/>
             </Grid>
-        </Border>
 
-        <!-- Liste des demandes à valider -->
-        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" Background="White">
-            <DataGrid Name="DgDemandesAValider" 
-                    AutoGenerateColumns="False"
-                    IsReadOnly="True"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    SelectionMode="Single"
-                    SelectionChanged="DgDemandesAValider_SelectionChanged"
-                    MouseDoubleClick="DgDemandesAValider_MouseDoubleClick">
-
-                <DataGrid.Columns>
-                    <!-- Priorité/urgence -->
-                    <DataGridTemplateColumn Header="🔥" Width="40">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock HorizontalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <!-- Urgence selon l'ancienneté -->
-                                                <DataTrigger Binding="{Binding IsUrgent}" Value="True">
-                                                    <Setter Property="Text" Value="🔥"/>
-                                                    <Setter Property="ToolTip" Value="Demande ancienne (> 3 jours)"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsUrgent}" Value="False">
-                                                    <Setter Property="Text" Value=""/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!-- Demandeur -->
-                    <DataGridTemplateColumn Header="👤 Demandeur" Width="150">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Utilisateur.NomComplet}" FontWeight="SemiBold" Foreground="Black"/>
-                                    <TextBlock Text="{Binding Utilisateur.Pole.Nom}" FontSize="11" Foreground="Gray"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!-- Type avec couleur -->
-                    <DataGridTemplateColumn Header="🏷️ Type" Width="130">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Border Width="16" Height="12" Background="{Binding TypeAbsence.CouleurHex}" 
-                                          Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding TypeAbsence.Nom}" VerticalAlignment="Center" Foreground="Black"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <DataGridTextColumn Header="📅 Du" Binding="{Binding DateDebut, StringFormat='dd/MM/yyyy'}" Width="90">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="📅 Au" Binding="{Binding DateFin, StringFormat='dd/MM/yyyy'}" Width="90">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="⏱️ Durée" Binding="{Binding NombreJours, StringFormat='{}{0} j'}" Width="70">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="💬 Commentaire" Binding="{Binding Commentaire}" Width="200">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="📝 Demandée le" Binding="{Binding DateCreation, StringFormat='dd/MM/yyyy HH:mm'}" Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Ancienneté -->
-                    <DataGridTemplateColumn Header="⏰ Ancienneté" Width="100">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding AncienneteTexte}" 
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"
-                                         Foreground="{Binding AncienneteCouleur}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-
-                <!-- Style des lignes selon urgence -->
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsUrgent}" Value="True">
-                                <Setter Property="Background" Value="#FFEBEE"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
-
-                <!-- Style des cellules pour éviter les problèmes de couleur -->
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#E3F2FD"/>
-                                <Setter Property="BorderBrush" Value="#2196F3"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </Style.Triggers>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Padding" Value="8,4"/>
-                    </Style>
-                </DataGrid.CellStyle>
-            </DataGrid>
-        </Border>
-
-        <!-- Panneau de validation -->
-        <Border Grid.Row="3" Background="#F8F8F8" BorderBrush="#DDDDDD" BorderThickness="1,1,1,0" 
-                Padding="15">
-            <Grid>
+            <!-- Statistiques -->
+            <Grid Margin="0,0,0,32">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Boutons de validation -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Button Name="BtnApprouver" Content="✅ Approuver"
-                            Background="#4CAF50" Foreground="White" BorderThickness="0"
-                            Padding="20,10" Margin="0,0,10,0"
-                            IsEnabled="False" Click="BtnApprouver_Click"/>
+                <!-- Demandes en attente -->
+                <Border Grid.Column="0" Background="{StaticResource Surface}" 
+                        BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                        CornerRadius="12" Padding="24" Margin="0,0,12,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Background="{StaticResource Warning}" 
+                                    Width="40" Height="40" 
+                                    CornerRadius="10" Margin="0,0,16,0">
+                                <TextBlock Text="⏳" FontSize="20" 
+                                         Foreground="White"
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Name="TxtNombreEnAttente" 
+                                         Text="0" 
+                                         FontSize="28" FontWeight="Bold"
+                                         Foreground="{StaticResource Warning}"/>
+                                <TextBlock Text="En attente" 
+                                         FontSize="14"
+                                         Foreground="{StaticResource TextMuted}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                    <Button Name="BtnRefuser" Content="❌ Refuser"
-                            Background="#F44336" Foreground="White" BorderThickness="0"
-                            Padding="20,10" Margin="0,0,15,0"
-                            IsEnabled="False" Click="BtnRefuser_Click"/>
+                <!-- Demandes urgentes -->
+                <Border Grid.Column="1" Background="{StaticResource Surface}" 
+                        BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                        CornerRadius="12" Padding="24" Margin="6,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Background="{StaticResource Danger}" 
+                                    Width="40" Height="40" 
+                                    CornerRadius="10" Margin="0,0,16,0">
+                                <TextBlock Text="🔥" FontSize="20" 
+                                         Foreground="White"
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Name="TxtNombreUrgent" 
+                                         Text="0" 
+                                         FontSize="28" FontWeight="Bold"
+                                         Foreground="{StaticResource Danger}"/>
+                                <TextBlock Text="Urgentes" 
+                                         FontSize="14"
+                                         Foreground="{StaticResource TextMuted}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                    <Button Name="BtnVoirDetails" Content="👁️ Détails"
-                            Background="#2196F3" Foreground="White" BorderThickness="0"
-                            Padding="20,10"
-                            IsEnabled="False" Click="BtnVoirDetails_Click"/>
-                </StackPanel>
-
-                <!-- Zone commentaire rapide -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock Text="💬 Commentaire :" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBox Name="TxtCommentaireRapide" Width="300" Padding="5"
-                           Text="Commentaire optionnel..."
-                           Foreground="Gray"
-                           GotFocus="TxtCommentaireRapide_GotFocus"
-                           LostFocus="TxtCommentaireRapide_LostFocus"/>
-                </StackPanel>
-
-                <!-- Informations -->
-                <TextBlock Grid.Column="2" Name="TxtInfoSelection" 
-                         Text="Sélectionnez une demande pour la valider"
-                         FontStyle="Italic" Foreground="Gray" VerticalAlignment="Center"/>
+                <!-- Total traité -->
+                <Border Grid.Column="2" Background="{StaticResource Surface}" 
+                        BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                        CornerRadius="12" Padding="24" Margin="12,0,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Background="{StaticResource Secondary}" 
+                                    Width="40" Height="40" 
+                                    CornerRadius="10" Margin="0,0,16,0">
+                                <TextBlock Text="📊" FontSize="20" 
+                                         Foreground="White"
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Name="TxtNombreTotal" 
+                                         Text="0" 
+                                         FontSize="28" FontWeight="Bold"
+                                         Foreground="{StaticResource Secondary}"/>
+                                <TextBlock Text="Ce mois" 
+                                         FontSize="14"
+                                         Foreground="{StaticResource TextMuted}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </Grid>
-        </Border>
-    </Grid>
+
+            <!-- Liste des demandes -->
+            <Border Background="{StaticResource Surface}" 
+                    BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                    CornerRadius="16" 
+                    Margin="0,0,0,24">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- En-tête du tableau -->
+                    <Border Grid.Row="0" Background="{StaticResource Gray50}" 
+                            CornerRadius="16,16,0,0" 
+                            Padding="24,20">
+                        <Grid>
+                            <TextBlock Text="Demandes à valider" 
+                                     FontSize="18" FontWeight="SemiBold" 
+                                     Foreground="{StaticResource TextPrimary}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- DataGrid modernisé -->
+                    <DataGrid Grid.Row="1" Name="DgDemandesAValider" 
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              RowBackground="{StaticResource Surface}"
+                              AlternatingRowBackground="{StaticResource Gray50}"
+                              SelectionChanged="DgDemandesAValider_SelectionChanged"
+                              MouseDoubleClick="DgDemandesAValider_MouseDoubleClick">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="16,12"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource Gray200}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.Columns>
+                            <!-- Statut/Priorité -->
+                            <DataGridTemplateColumn Header="Statut" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <Border CornerRadius="12" Padding="6,4" Margin="8">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsUrgent}" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource Danger}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsUrgent}" Value="False">
+                                                                <Setter Property="Background" Value="{StaticResource Warning}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock HorizontalAlignment="Center" 
+                                                          Foreground="White" FontSize="10" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUrgent}" Value="True">
+                                                                    <Setter Property="Text" Value="URGENT"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsUrgent}" Value="False">
+                                                                    <Setter Property="Text" Value="NORMAL"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Demandeur -->
+                            <DataGridTemplateColumn Header="Demandeur" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="16,12">
+                                            <TextBlock Text="{Binding Utilisateur.NomComplet}" 
+                                                     FontWeight="SemiBold" 
+                                                     Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding Utilisateur.Pole.Nom}" 
+                                                     FontSize="11" 
+                                                     Foreground="{StaticResource TextMuted}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Type avec couleur moderne -->
+                            <DataGridTemplateColumn Header="Type d'absence" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="16,12">
+                                            <Border Width="20" Height="20" 
+                                                  Background="{Binding TypeAbsence.CouleurHex}" 
+                                                  CornerRadius="4"
+                                                  Margin="0,0,12,0"/>
+                                            <TextBlock Text="{Binding TypeAbsence.Nom}" 
+                                                     VerticalAlignment="Center" 
+                                                     Foreground="{StaticResource TextPrimary}"
+                                                     FontWeight="Medium"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Période -->
+                            <DataGridTemplateColumn Header="Période" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="16,12">
+                                            <TextBlock Foreground="{StaticResource TextPrimary}" FontWeight="Medium">
+                                                <Run Text="Du "/><Run Text="{Binding DateDebut, Mode=OneWay, StringFormat='dd/MM/yyyy'}"/>
+                                            </TextBlock>
+                                            <TextBlock Foreground="{StaticResource TextPrimary}" FontWeight="Medium">
+                                                <Run Text="Au "/><Run Text="{Binding DateFin, Mode=OneWay, StringFormat='dd/MM/yyyy'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Durée -->
+                            <DataGridTemplateColumn Header="Durée" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel HorizontalAlignment="Center" Margin="16,12">
+                                            <Border Background="{StaticResource Primary}" 
+                                                  CornerRadius="8" Padding="8,4">
+                                                <TextBlock Text="{Binding NombreJours, Mode=OneWay, StringFormat='{}{0} j'}" 
+                                                         Foreground="White" 
+                                                         FontWeight="Bold"
+                                                         HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Commentaire -->
+                            <DataGridTextColumn Header="Commentaire" 
+                                              Binding="{Binding Commentaire, Mode=OneWay}" 
+                                              Width="250">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                        <Setter Property="FontStyle" Value="Italic"/>
+                                        <Setter Property="Margin" Value="16,12"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Ancienneté modernisée -->
+                            <DataGridTemplateColumn Header="Ancienneté" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="16,8" CornerRadius="8" Padding="8,4">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsUrgent}" Value="True">
+                                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsUrgent}" Value="False">
+                                                            <Setter Property="Background" Value="#E8F5E8"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding AncienneteTexte}" 
+                                                     HorizontalAlignment="Center"
+                                                     Foreground="{Binding AncienneteCouleur}"
+                                                     FontWeight="SemiBold"
+                                                     FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+
+                        <!-- Style des lignes -->
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="MinHeight" Value="60"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource Gray50}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                        <Setter Property="BorderBrush" Value="{StaticResource Primary}"/>
+                                        <Setter Property="BorderThickness" Value="2,0"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+                    </DataGrid>
+
+                    <!-- Panneau de validation moderne -->
+                    <Border Grid.Row="2" Background="{StaticResource Gray50}" 
+                            CornerRadius="0,0,16,16" 
+                            Padding="24,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Boutons d'action -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Button Name="BtnApprouver" 
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Background="{StaticResource Secondary}"
+                                        Padding="24,12" Margin="0,0,12,0"
+                                        IsEnabled="False" 
+                                        Click="BtnApprouver_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="✓" FontSize="16" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Approuver" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Name="BtnRefuser" 
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Background="{StaticResource Danger}"
+                                        Padding="24,12" Margin="0,0,12,0"
+                                        IsEnabled="False" 
+                                        Click="BtnRefuser_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="✗" FontSize="16" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Refuser" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Name="BtnVoirDetails" 
+                                        Style="{StaticResource MaterialDesignOutlineButton}"
+                                        Padding="24,12"
+                                        IsEnabled="False" 
+                                        Click="BtnVoirDetails_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="👁️" FontSize="16" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Détails" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Zone commentaire -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" 
+                                      HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="💬" FontSize="16" 
+                                         VerticalAlignment="Center" 
+                                         Margin="0,0,12,0"
+                                         Foreground="{StaticResource TextMuted}"/>
+                                <Border Background="{StaticResource Surface}" 
+                                        BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                                        CornerRadius="8" Padding="12,8">
+                                    <TextBox Name="TxtCommentaireRapide" 
+                                           Width="300" 
+                                           Background="Transparent"
+                                           BorderThickness="0"
+                                           Text="Commentaire optionnel..."
+                                           Foreground="{StaticResource TextMuted}"
+                                           GotFocus="TxtCommentaireRapide_GotFocus"
+                                           LostFocus="TxtCommentaireRapide_LostFocus"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Informations de sélection -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Name="TxtInfoSelection" 
+                                         Text="Sélectionnez une demande pour la valider"
+                                         FontSize="14"
+                                         FontStyle="Italic" 
+                                         Foreground="{StaticResource TextMuted}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Message si aucune demande -->
+            <Border Name="EmptyStatePanel"
+                    Background="{StaticResource Surface}" 
+                    BorderBrush="{StaticResource Gray200}" BorderThickness="1"
+                    CornerRadius="16" 
+                    Padding="48"
+                    Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="📋" FontSize="64" 
+                             HorizontalAlignment="Center" 
+                             Margin="0,0,0,16"
+                             Opacity="0.5"/>
+                    <TextBlock Text="Aucune demande en attente" 
+                             FontSize="20" FontWeight="SemiBold"
+                             Foreground="{StaticResource TextPrimary}"
+                             HorizontalAlignment="Center"
+                             Margin="0,0,0,8"/>
+                    <TextBlock Text="Toutes les demandes ont été traitées" 
+                             FontSize="14"
+                             Foreground="{StaticResource TextMuted}"
+                             HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
