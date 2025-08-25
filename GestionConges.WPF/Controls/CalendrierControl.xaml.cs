@@ -1018,13 +1018,37 @@ namespace GestionConges.WPF.Controls
 
             var contentStack = new StackPanel { Margin = new Thickness(24, 20, 24, 20) };
 
-            // Grouper par personne
+            // Remplacement de la ligne problématique dans la méthode AfficherDetailsJour
+            // Ancienne ligne (provoquant CS0833) :
+            // var congesParPersonne = congesDuJour
+            //     .GroupBy(c => new { c.Utilisateur.Id, c.Utilisateur.NomComplet, c.Utilisateur.Societe?.Nom, c.Utilisateur.Equipe?.Nom, c.Utilisateur.Pole?.Nom })
+            //     .Select(g => new
+            //     {
+            //         Personne = g.Key.NomComplet,
+            //         Societe = g.Key.Nom ?? "Sans société",
+            //         Equipe = g.Key.Nom ?? "Sans équipe",
+            //         Pole = g.Key.Nom ?? "Sans pôle",
+            //         Conges = g.ToList()
+            //     })
+            //     .OrderBy(x => x.Personne)
+            //     .ToList();
+
+            // Correction : donner des noms uniques à chaque propriété du type anonyme
             var congesParPersonne = congesDuJour
-                .GroupBy(c => new { c.Utilisateur.Id, c.Utilisateur.NomComplet, c.Utilisateur.Pole?.Nom })
+                .GroupBy(c => new
+                {
+                    UtilisateurId = c.Utilisateur.Id,
+                    NomComplet = c.Utilisateur.NomComplet,
+                    SocieteNom = c.Utilisateur.Societe?.Nom,
+                    EquipeNom = c.Utilisateur.Equipe?.Nom,
+                    PoleNom = c.Utilisateur.Pole?.Nom
+                })
                 .Select(g => new
                 {
                     Personne = g.Key.NomComplet,
-                    Pole = g.Key.Nom ?? "Sans pôle",
+                    Societe = g.Key.SocieteNom ?? "Sans société",
+                    Equipe = g.Key.EquipeNom ?? "Sans équipe",
+                    Pole = g.Key.PoleNom ?? "Sans pôle",
                     Conges = g.ToList()
                 })
                 .OrderBy(x => x.Personne)
@@ -1079,7 +1103,19 @@ namespace GestionConges.WPF.Controls
                 });
                 personneInfo.Children.Add(new TextBlock
                 {
-                    Text = $"🏢 {groupe.Pole}",
+                    Text = $"🏢 Société : {groupe.Societe}",
+                    FontSize = 13,
+                    Foreground = (Brush)FindResource("TextMuted")
+                });
+                personneInfo.Children.Add(new TextBlock
+                {
+                    Text = $"👥 Equipe : {groupe.Equipe}",
+                    FontSize = 13,
+                    Foreground = (Brush)FindResource("TextMuted")
+                });
+                personneInfo.Children.Add(new TextBlock
+                {
+                    Text = $"Pôle : {groupe.Pole}",
                     FontSize = 13,
                     Foreground = (Brush)FindResource("TextMuted")
                 });
