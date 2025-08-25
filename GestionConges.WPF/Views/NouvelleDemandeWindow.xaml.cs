@@ -252,7 +252,7 @@ namespace GestionConges.WPF.Views
 
             if (result == MessageBoxResult.Yes)
             {
-                await SauvegarderDemande(StatusDemande.EnAttenteChefPole);
+                await SauvegarderDemande(StatusDemande.EnAttenteValidateur);
             }
         }
 
@@ -321,18 +321,18 @@ namespace GestionConges.WPF.Views
 
                 switch (demande.Statut)
                 {
-                    case StatusDemande.EnAttenteChefPole:
+                    case StatusDemande.EnAttenteValidateur:
                         // Chercher le chef de pôle de l'utilisateur
                         validateur = await context.Utilisateurs
-                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefPole &&
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.Validateur &&
                                                      u.PoleId == _utilisateurConnecte.PoleId &&
                                                      u.Actif);
                         break;
 
-                    case StatusDemande.EnAttenteChefEquipe:
+                    case StatusDemande.EnAttenteAdmin:
                         // Chercher le chef d'équipe
                         validateur = await context.Utilisateurs
-                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefEquipe && u.Actif);
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.Admin && u.Actif);
                         break;
 
                     case StatusDemande.Approuve:
@@ -448,7 +448,7 @@ namespace GestionConges.WPF.Views
                 {
                     message = "Demande sauvegardée en brouillon avec succès !";
                 }
-                else if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+                else if (_utilisateurConnecte.Role == RoleUtilisateur.Admin)
                 {
                     message = "Demande approuvée automatiquement ! (Chef d'équipe)";
                 }
@@ -472,15 +472,15 @@ namespace GestionConges.WPF.Views
         private StatusDemande DeterminerStatutInitial()
         {
             // Si c'est un chef d'équipe → approuvé automatiquement
-            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+            if (_utilisateurConnecte.Role == RoleUtilisateur.Admin)
             {
                 return StatusDemande.Approuve;
             }
 
             // Si c'est un chef de pôle → va directement au chef équipe
-            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefPole)
+            if (_utilisateurConnecte.Role == RoleUtilisateur.Validateur)
             {
-                return StatusDemande.EnAttenteChefEquipe;
+                return StatusDemande.EnAttenteAdmin;
             }
 
             // Pour un employé : vérifier s'il y a un chef de pôle dans son pôle
@@ -488,31 +488,31 @@ namespace GestionConges.WPF.Views
             {
                 // Dans ce contexte simple, on suppose qu'il y a toujours un chef de pôle
                 // (vous pourriez ajouter une vérification en base si nécessaire)
-                return StatusDemande.EnAttenteChefPole;
+                return StatusDemande.EnAttenteValidateur;
             }
 
             // Pas de pôle → directement chef équipe
-            return StatusDemande.EnAttenteChefEquipe;
+            return StatusDemande.EnAttenteAdmin;
         }
 
         private async Task<StatusDemande> DeterminerStatutInitialAsync()
         {
             // Si c'est un chef d'équipe → approuvé automatiquement
-            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefEquipe)
+            if (_utilisateurConnecte.Role == RoleUtilisateur.Admin)
             {
                 return StatusDemande.Approuve;
             }
 
             // Si c'est un chef de pôle → va directement au chef équipe
-            if (_utilisateurConnecte.Role == RoleUtilisateur.ChefPole)
+            if (_utilisateurConnecte.Role == RoleUtilisateur.Validateur)
             {
-                return StatusDemande.EnAttenteChefEquipe;
+                return StatusDemande.EnAttenteAdmin;
             }
 
             // Si l'utilisateur n'a pas de pôle → directement chef équipe
             if (!_utilisateurConnecte.PoleId.HasValue)
             {
-                return StatusDemande.EnAttenteChefEquipe;
+                return StatusDemande.EnAttenteAdmin;
             }
 
             try
@@ -521,17 +521,17 @@ namespace GestionConges.WPF.Views
                 using var context = CreerContexte();
                 var aUnChefDePole = await context.Utilisateurs
                     .AnyAsync(u => u.PoleId == _utilisateurConnecte.PoleId &&
-                                  u.Role == RoleUtilisateur.ChefPole &&
+                                  u.Role == RoleUtilisateur.Validateur &&
                                   u.Actif &&
                                   u.Id != _utilisateurConnecte.Id);
 
                 // S'il y a un chef de pôle → passer par lui d'abord
-                return aUnChefDePole ? StatusDemande.EnAttenteChefPole : StatusDemande.EnAttenteChefEquipe;
+                return aUnChefDePole ? StatusDemande.EnAttenteValidateur : StatusDemande.EnAttenteAdmin;
             }
             catch
             {
                 // En cas d'erreur, par défaut aller au chef équipe
-                return StatusDemande.EnAttenteChefEquipe;
+                return StatusDemande.EnAttenteAdmin;
             }
         }
 

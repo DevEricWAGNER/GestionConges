@@ -159,7 +159,7 @@
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Délai maximum pour validation chef de pôle :" Margin="0,0,0,5"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBox Name="TxtDelaiChefPole" Width="60" Padding="5" Text="7"/>
+                                            <TextBox Name="TxtDelaiValidateur" Width="60" Padding="5" Text="7"/>
                                             <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -167,7 +167,7 @@
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Délai maximum pour validation chef d'équipe :" Margin="0,0,0,5"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBox Name="TxtDelaiChefEquipe" Width="60" Padding="5" Text="5"/>
+                                            <TextBox Name="TxtDelaiAdmin" Width="60" Padding="5" Text="5"/>
                                             <TextBlock Text="jours" VerticalAlignment="Center" Margin="5,0,0,0"/>
                                         </StackPanel>
                                     </StackPanel>

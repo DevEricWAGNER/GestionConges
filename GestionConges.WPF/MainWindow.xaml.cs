@@ -46,13 +46,13 @@ namespace GestionConges.WPF
         private void ConfigurerMenuSelonDroits(RoleUtilisateur role)
         {
             // Les chefs de pôle et chef d'équipe voient les validations
-            if (role == RoleUtilisateur.ChefPole || role == RoleUtilisateur.ChefEquipe)
+            if (role == RoleUtilisateur.Validateur || role == RoleUtilisateur.Admin)
             {
                 BtnValidation.Visibility = Visibility.Visible;
             }
 
             // Seul le chef d'équipe voit l'administration
-            if (role == RoleUtilisateur.ChefEquipe)
+            if (role == RoleUtilisateur.Admin)
             {
                 BtnAdmin.Visibility = Visibility.Visible;
                 TxtSectionAdmin.Visibility = Visibility.Visible;

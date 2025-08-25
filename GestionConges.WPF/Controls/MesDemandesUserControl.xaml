@@ -100,10 +100,10 @@
                                                 <DataTrigger Binding="{Binding Statut}" Value="Brouillon">
                                                     <Setter Property="Background" Value="#EEEEEE"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Statut}" Value="EnAttenteChefPole">
+                                                <DataTrigger Binding="{Binding Statut}" Value="EnAttenteValidateur">
                                                     <Setter Property="Background" Value="#FFF3E0"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Statut}" Value="EnAttenteChefEquipe">
+                                                <DataTrigger Binding="{Binding Statut}" Value="EnAttenteAdmin">
                                                     <Setter Property="Background" Value="#E3F2FD"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Statut}" Value="Approuve">

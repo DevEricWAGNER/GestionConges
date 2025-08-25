@@ -8,7 +8,7 @@ namespace GestionConges.WPF.Services
         bool PeutValiderDemandesPole(int poleId);
         bool PeutValiderToutesDemanades();
         bool EstChefDePole(int poleId);
-        bool EstChefEquipe();
+        bool EstAdmin();
         List<int> PolesGeres();
     }
 }

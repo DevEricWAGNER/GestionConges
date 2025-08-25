@@ -215,9 +215,9 @@
 
                             <DataGrid.Resources>
                                 <!-- Override des brushes système pour la sélection -->
-                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource Primary}"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#6366F1"/>
                                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
-                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{StaticResource Primary}"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#6366F1"/>
                                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="White"/>
                             </DataGrid.Resources>
 
@@ -401,18 +401,6 @@
                                     </Border>
                                 </StackPanel>
 
-                                <!-- Mot de passe -->
-                                <StackPanel Name="StackMotDePasse" Margin="0,0,0,16">
-                                    <TextBlock Name="LblMotDePasse" Text="Mot de passe" FontWeight="SemiBold" 
-                                             Foreground="{StaticResource TextPrimary}" 
-                                             Margin="0,0,0,6"/>
-                                    <Border Background="{StaticResource Surface}" 
-                                          BorderBrush="{StaticResource Gray300}" BorderThickness="1"
-                                           Padding="12,10">
-                                        <PasswordBox Name="TxtMotDePasse" Background="Transparent" BorderThickness="0"/>
-                                    </Border>
-                                </StackPanel>
-
                                 <!-- Séparateur -->
                                 <Border Height="1" Background="{StaticResource Gray200}" Margin="0,12,0,20"/>
 
@@ -432,8 +420,8 @@
                                           >
                                         <ComboBox Name="CmbRole" Background="Transparent" BorderThickness="0" Padding="12,10">
                                             <ComboBoxItem Content="Employé" Tag="0"/>
-                                            <ComboBoxItem Content="Chef de Pôle" Tag="1"/>
-                                            <ComboBoxItem Content="Chef d'Équipe" Tag="2"/>
+                                            <ComboBoxItem Content="Employé / Valideur de congés" Tag="1"/>
+                                            <ComboBoxItem Content="Employé / Admin" Tag="2"/>
                                         </ComboBox>
                                     </Border>
                                 </StackPanel>

@@ -132,10 +132,10 @@ namespace GestionConges.WPF.Services
                         await emailService.EnvoyerNotificationDemandeApprouvee(demande);
                     }
                     // Sinon, si passe au niveau suivant → notifier le prochain validateur
-                    else if (demande.Statut == StatusDemande.EnAttenteChefEquipe && ancienStatut == StatusDemande.EnAttenteChefPole)
+                    else if (demande.Statut == StatusDemande.EnAttenteAdmin && ancienStatut == StatusDemande.EnAttenteValidateur)
                     {
                         var prochainValidateur = await _context.Utilisateurs
-                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefEquipe && u.Actif);
+                            .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.Admin && u.Actif);
 
                         if (prochainValidateur?.Email != null)
                         {
@@ -172,93 +172,43 @@ namespace GestionConges.WPF.Services
                     return new List<DemandeConge>();
                 }
 
-                System.Diagnostics.Debug.WriteLine($"✅ Validateur trouvé : {validateur.NomComplet}");
-                System.Diagnostics.Debug.WriteLine($"   - ID: {validateur.Id}");
-                System.Diagnostics.Debug.WriteLine($"   - Rôle: {validateur.Role}");
-                System.Diagnostics.Debug.WriteLine($"   - PoleId: {validateur.PoleId}");
-
-                // ✅ REQUÊTE AVEC DEBUG DÉTAILLÉ
-                var toutesLesDemandes = await _context.DemandesConges
+                var query = _context.DemandesConges
                     .Include(d => d.Utilisateur)
                         .ThenInclude(u => u.Pole)
                     .Include(d => d.TypeAbsence)
-                    .Where(d => d.Statut == StatusDemande.EnAttenteChefPole ||
-                               d.Statut == StatusDemande.EnAttenteChefEquipe)
-                    .ToListAsync();
-
-                System.Diagnostics.Debug.WriteLine($"📊 Nombre total de demandes en attente: {toutesLesDemandes.Count}");
-
-                foreach (var demande in toutesLesDemandes)
-                {
-                    System.Diagnostics.Debug.WriteLine($"   Demande ID {demande.Id}:");
-                    System.Diagnostics.Debug.WriteLine($"     - Statut: {demande.Statut}");
-                    System.Diagnostics.Debug.WriteLine($"     - Demandeur: {demande.Utilisateur?.NomComplet}");
-                    System.Diagnostics.Debug.WriteLine($"     - PoleId Demandeur: {demande.Utilisateur?.PoleId}");
-                    System.Diagnostics.Debug.WriteLine($"     - Type: {demande.TypeAbsence?.Nom}");
-                }
+                    .Where(d => d.UtilisateurId != validateurId); // Exclure ses propres demandes
 
                 List<DemandeConge> resultat;
 
-                // Filtrer selon le rôle du validateur
-                if (validateur.Role == RoleUtilisateur.ChefPole)
+                if (validateur.Role == RoleUtilisateur.Admin)
                 {
-                    System.Diagnostics.Debug.WriteLine($"🎯 Filtre Chef de Pôle - PoleId validateur: {validateur.PoleId}");
-
-                    resultat = toutesLesDemandes
-                        .Where(d => d.Statut == StatusDemande.EnAttenteChefPole &&
-                                   d.Utilisateur.PoleId == validateur.PoleId)
+                    // Admin voit toutes les demandes en attente (Validateur + Admin)
+                    resultat = await query
+                        .Where(d => d.Statut == StatusDemande.EnAttenteValidateur ||
+                                   d.Statut == StatusDemande.EnAttenteAdmin)
                         .OrderBy(d => d.DateCreation)
-                        .ToList();
-
-                    System.Diagnostics.Debug.WriteLine($"📋 Demandes filtrées pour ce chef de pôle: {resultat.Count}");
-
-                    // ✅ DEBUG SPÉCIFIQUE POUR JEAN ET MARIE
-                    var demandeMarie = toutesLesDemandes.FirstOrDefault(d => d.UtilisateurId == 4); // Marie = ID 4
-                    if (demandeMarie != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"🔍 DEMANDE DE MARIE TROUVÉE:");
-                        System.Diagnostics.Debug.WriteLine($"   - ID: {demandeMarie.Id}");
-                        System.Diagnostics.Debug.WriteLine($"   - Statut: {demandeMarie.Statut} (EnAttenteChefPole = 1)");
-                        System.Diagnostics.Debug.WriteLine($"   - PoleId Marie: {demandeMarie.Utilisateur?.PoleId}");
-                        System.Diagnostics.Debug.WriteLine($"   - PoleId Jean: {validateur.PoleId}");
-                        System.Diagnostics.Debug.WriteLine($"   - Match PoleId? {demandeMarie.Utilisateur?.PoleId == validateur.PoleId}");
-                        System.Diagnostics.Debug.WriteLine($"   - Statut OK? {demandeMarie.Statut == StatusDemande.EnAttenteChefPole}");
-
-                        bool devraitEtreVisible = demandeMarie.Statut == StatusDemande.EnAttenteChefPole &&
-                                                demandeMarie.Utilisateur?.PoleId == validateur.PoleId;
-                        System.Diagnostics.Debug.WriteLine($"   - 🎯 DEVRAIT ÊTRE VISIBLE: {devraitEtreVisible}");
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ DEMANDE DE MARIE NON TROUVÉE dans toutes les demandes!");
-                    }
+                        .ToListAsync();
                 }
-                else if (validateur.Role == RoleUtilisateur.ChefEquipe)
+                else if (validateur.Role == RoleUtilisateur.Validateur)
                 {
-                    System.Diagnostics.Debug.WriteLine($"🎯 Filtre Chef d'Équipe");
-                    resultat = toutesLesDemandes
-                        .Where(d => d.Statut == StatusDemande.EnAttenteChefEquipe)
+                    // Validateur ne voit que les demandes en attente validateur
+                    resultat = await query
+                        .Where(d => d.Statut == StatusDemande.EnAttenteValidateur)
                         .OrderBy(d => d.DateCreation)
-                        .ToList();
+                        .ToListAsync();
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"❌ Utilisateur n'est pas un validateur (rôle: {validateur.Role})");
+                    // Les employés ne peuvent pas valider
                     return new List<DemandeConge>();
                 }
 
-                System.Diagnostics.Debug.WriteLine($"🎯 RÉSULTAT FINAL: {resultat.Count} demande(s) à valider");
-                foreach (var demande in resultat)
-                {
-                    System.Diagnostics.Debug.WriteLine($"   ✅ {demande.Utilisateur?.NomComplet} - {demande.TypeAbsence?.Nom}");
-                }
-
+                System.Diagnostics.Debug.WriteLine($"🎯 {validateur.NomComplet} ({validateur.Role}) peut valider {resultat.Count} demande(s)");
                 return resultat;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"💥 ERREUR dans ObtenirDemandesAValider : {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"💥 StackTrace: {ex.StackTrace}");
                 return new List<DemandeConge>();
             }
         }
@@ -270,8 +220,12 @@ namespace GestionConges.WPF.Services
 
             return demande.Statut switch
             {
-                StatusDemande.EnAttenteChefPole => StatusDemande.EnAttenteChefEquipe,
-                StatusDemande.EnAttenteChefEquipe => StatusDemande.Approuve,
+                // Un employé validé par un Validateur → Approuvé (plus besoin de passer par Admin)
+                StatusDemande.EnAttenteValidateur => StatusDemande.Approuve,
+
+                // Une demande en attente Admin → Approuvé
+                StatusDemande.EnAttenteAdmin => StatusDemande.Approuve,
+
                 _ => demande.Statut
             };
         }
@@ -282,60 +236,64 @@ namespace GestionConges.WPF.Services
             if (demande.UtilisateurId == validateur.Id)
                 return false;
 
+            // Vérifier selon le statut de la demande
             return demande.Statut switch
             {
-                StatusDemande.EnAttenteChefPole => validateur.Role == RoleUtilisateur.ChefPole &&
-                                                  validateur.PoleId.HasValue &&
-                                                  demande.Utilisateur?.PoleId.HasValue == true &&
-                                                  validateur.PoleId == demande.Utilisateur.PoleId,
-                StatusDemande.EnAttenteChefEquipe => validateur.Role == RoleUtilisateur.ChefEquipe,
+                // En attente validateur → seuls Validateur et Admin peuvent valider
+                StatusDemande.EnAttenteValidateur => validateur.Role == RoleUtilisateur.Validateur ||
+                                                   validateur.Role == RoleUtilisateur.Admin,
+
+                // En attente admin → seul Admin peut valider
+                StatusDemande.EnAttenteAdmin => validateur.Role == RoleUtilisateur.Admin,
+
                 _ => false
             };
         }
 
         private async Task<StatusDemande> DeterminerPremierNiveauValidationAsync(DemandeConge demande)
         {
-            // Si c'est un chef d'équipe → approuvé automatiquement
-            if (demande.Utilisateur.Role == RoleUtilisateur.ChefEquipe)
+            // Si c'est un Admin → approuvé automatiquement (pas besoin de validation)
+            if (demande.Utilisateur.Role == RoleUtilisateur.Admin)
             {
                 return StatusDemande.Approuve;
             }
 
-            // Si c'est un chef de pôle → va directement au chef équipe
-            if (demande.Utilisateur.Role == RoleUtilisateur.ChefPole)
+            // Si c'est un Validateur → doit être validé par un Admin
+            if (demande.Utilisateur.Role == RoleUtilisateur.Validateur)
             {
-                return StatusDemande.EnAttenteChefEquipe;
+                return StatusDemande.EnAttenteAdmin;
             }
 
-            // Si l'utilisateur n'a pas de pôle → directement chef équipe
-            if (!demande.Utilisateur.PoleId.HasValue)
+            // Si c'est un Employé → peut être validé par un Validateur OU un Admin
+            if (demande.Utilisateur.Role == RoleUtilisateur.Employe)
             {
-                return StatusDemande.EnAttenteChefEquipe;
+                // Vérifier s'il y a un Validateur disponible (actif et différent du demandeur)
+                var aUnValidateurDisponible = await _context.Utilisateurs
+                    .AnyAsync(u => u.Role == RoleUtilisateur.Validateur &&
+                                  u.Actif &&
+                                  u.Id != demande.UtilisateurId);
+
+                // S'il y a un Validateur disponible → passer par lui d'abord
+                if (aUnValidateurDisponible)
+                {
+                    return StatusDemande.EnAttenteValidateur;
+                }
+                else
+                {
+                    // Sinon → directement à l'Admin
+                    return StatusDemande.EnAttenteAdmin;
+                }
             }
 
-            // Chercher s'il y a un chef de pôle pour ce pôle (différent du demandeur)
-            var aUnChefDePole = await _context.Utilisateurs
-                .AnyAsync(u => u.PoleId == demande.Utilisateur.PoleId &&
-                              u.Role == RoleUtilisateur.ChefPole &&
-                              u.Actif &&
-                              u.Id != demande.UtilisateurId);
-
-            // S'il y a un chef de pôle → passer par lui d'abord
-            if (aUnChefDePole)
-            {
-                return StatusDemande.EnAttenteChefPole;
-            }
-
-            // Sinon → directement chef équipe
-            return StatusDemande.EnAttenteChefEquipe;
+            // Par défaut → directement à l'Admin (sécurité)
+            return StatusDemande.EnAttenteAdmin;
         }
 
         private int DeterminerOrdreValidation(DemandeConge demande, Utilisateur validateur)
         {
             return validateur.Role switch
             {
-                RoleUtilisateur.ChefPole => 1,
-                RoleUtilisateur.ChefEquipe => 2,
+                RoleUtilisateur.Validateur => 1,
                 _ => 0
             };
         }

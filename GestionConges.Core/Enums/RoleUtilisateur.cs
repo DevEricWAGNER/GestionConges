@@ -3,7 +3,7 @@
     public enum RoleUtilisateur
     {
         Employe = 0,
-        ChefPole = 1,
-        ChefEquipe = 2
+        Validateur = 1,
+        Admin = 2
     }
 }

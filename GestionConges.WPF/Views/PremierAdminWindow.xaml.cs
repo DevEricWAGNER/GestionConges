@@ -261,7 +261,7 @@ namespace GestionConges.WPF.Views
                     Prenom = TxtPrenom.Text.Trim(),
                     Email = TxtEmail.Text.Trim(),
                     MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(_motDePasse),
-                    Role = RoleUtilisateur.ChefEquipe, // Administrateur complet
+                    Role = RoleUtilisateur.Admin, // Administrateur complet
                     SocieteId = societeId,
                     EquipeId = equipeId,
                     PoleId = poleId,

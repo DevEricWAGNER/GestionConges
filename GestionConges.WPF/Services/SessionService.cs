@@ -22,36 +22,36 @@ namespace GestionConges.WPF.Services
         public bool PeutValiderDemandesPole(int poleId)
         {
             var user = UtilisateurConnecte;
-            return user.Role == RoleUtilisateur.ChefEquipe ||
-                   (user.Role == RoleUtilisateur.ChefPole && user.PoleId == poleId);
+            return user.Role == RoleUtilisateur.Admin ||
+                   (user.Role == RoleUtilisateur.Validateur && user.PoleId == poleId);
         }
 
         public bool PeutValiderToutesDemanades()
         {
-            return UtilisateurConnecte.Role == RoleUtilisateur.ChefEquipe;
+            return UtilisateurConnecte.Role == RoleUtilisateur.Admin;
         }
 
         public bool EstChefDePole(int poleId)
         {
             var user = UtilisateurConnecte;
-            return user.Role == RoleUtilisateur.ChefPole && user.PoleId == poleId;
+            return user.Role == RoleUtilisateur.Validateur && user.PoleId == poleId;
         }
 
-        public bool EstChefEquipe()
+        public bool EstAdmin()
         {
-            return UtilisateurConnecte.Role == RoleUtilisateur.ChefEquipe;
+            return UtilisateurConnecte.Role == RoleUtilisateur.Admin;
         }
 
         public List<int> PolesGeres()
         {
             var user = UtilisateurConnecte;
 
-            if (user.Role == RoleUtilisateur.ChefEquipe)
+            if (user.Role == RoleUtilisateur.Admin)
             {
                 // Chef d'équipe gère tous les pôles
                 return _context.Poles.Where(p => p.Actif).Select(p => p.Id).ToList();
             }
-            else if (user.Role == RoleUtilisateur.ChefPole && user.PoleId.HasValue)
+            else if (user.Role == RoleUtilisateur.Validateur && user.PoleId.HasValue)
             {
                 // Chef de pôle gère uniquement son pôle
                 return new List<int> { user.PoleId.Value };

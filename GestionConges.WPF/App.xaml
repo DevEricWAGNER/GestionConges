@@ -16,6 +16,9 @@
             <SolidColorBrush x:Key="Warning" Color="#F59E0B"/>
             <SolidColorBrush x:Key="WarningHover" Color="#D97706"/>
 
+            <Color x:Key="PrimaryColor">#6366F1</Color>
+            <Color x:Key="WhiteColor">#FFFFFF</Color>
+
             <!-- Neutres -->
             <SolidColorBrush x:Key="Gray50" Color="#F9FAFB"/>
             <SolidColorBrush x:Key="Gray100" Color="#F3F4F6"/>

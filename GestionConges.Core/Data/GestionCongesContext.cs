@@ -258,8 +258,8 @@ namespace GestionConges.Core.Data
                 new ParametreGlobal { Id = 3, Cle = "DebutAnneeConges", Valeur = "1", Categorie = "Calendrier", Description = "Mois de début d'année de congés (1-12)", DateModification = seedDate },
 
                 // Validation
-                new ParametreGlobal { Id = 4, Cle = "DelaiValidationChefPole", Valeur = "7", Categorie = "Validation", Description = "Délai validation chef pôle (jours)", DateModification = seedDate },
-                new ParametreGlobal { Id = 5, Cle = "DelaiValidationChefEquipe", Valeur = "5", Categorie = "Validation", Description = "Délai validation chef équipe (jours)", DateModification = seedDate },
+                new ParametreGlobal { Id = 4, Cle = "DelaiValidationValidateur", Valeur = "7", Categorie = "Validation", Description = "Délai validation chef pôle (jours)", DateModification = seedDate },
+                new ParametreGlobal { Id = 5, Cle = "DelaiValidationAdmin", Valeur = "5", Categorie = "Validation", Description = "Délai validation chef équipe (jours)", DateModification = seedDate },
                 new ParametreGlobal { Id = 6, Cle = "PreavisMinimum", Valeur = "14", Categorie = "Validation", Description = "Préavis minimum congés (jours)", DateModification = seedDate },
                 new ParametreGlobal { Id = 7, Cle = "AnticipationMaximum", Valeur = "365", Categorie = "Validation", Description = "Anticipation maximum (jours)", DateModification = seedDate },
                 new ParametreGlobal { Id = 8, Cle = "EscaladeAutomatique", Valeur = "false", Categorie = "Validation", Description = "Escalade auto si délai dépassé", DateModification = seedDate },

@@ -59,8 +59,8 @@ namespace GestionConges.Core.Models
         public string RoleLibelle => Role switch
         {
             RoleUtilisateur.Employe => "Employé",
-            RoleUtilisateur.ChefPole => "Chef de Pôle",
-            RoleUtilisateur.ChefEquipe => "Chef d'Équipe",
+            RoleUtilisateur.Validateur => "Employé / Valideur de congés",
+            RoleUtilisateur.Admin => "Employé / Admin",
             _ => "Inconnu"
         };
 

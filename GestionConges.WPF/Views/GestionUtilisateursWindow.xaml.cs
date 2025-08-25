@@ -2,6 +2,7 @@
 using GestionConges.Core.Enums;
 using GestionConges.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
@@ -382,9 +383,6 @@ namespace GestionConges.WPF.Views
                 _societesSecondaires.Add(ss);
             }
 
-            // Masquer le champ mot de passe pour modification
-            StackMotDePasse.Visibility = Visibility.Collapsed;
-
             // Informations supplémentaires
             var infos = $"Créé le : {utilisateur.DateCreation:dd/MM/yyyy HH:mm}\n";
             if (utilisateur.DerniereConnexion.HasValue)
@@ -414,7 +412,6 @@ namespace GestionConges.WPF.Views
             TxtNom.Clear();
             TxtPrenom.Clear();
             TxtEmail.Clear();
-            TxtMotDePasse.Clear();
             CmbRole.SelectedIndex = 0;
             CmbSociete.SelectedValue = null;
             CmbEquipe.SelectedValue = null;
@@ -431,7 +428,6 @@ namespace GestionConges.WPF.Views
             TxtNom.IsEnabled = true;
             TxtPrenom.IsEnabled = true;
             TxtEmail.IsEnabled = true;
-            TxtMotDePasse.IsEnabled = true;
             CmbRole.IsEnabled = true;
             CmbSociete.IsEnabled = true;
             CmbEquipe.IsEnabled = true;
@@ -449,7 +445,6 @@ namespace GestionConges.WPF.Views
             TxtNom.IsEnabled = false;
             TxtPrenom.IsEnabled = false;
             TxtEmail.IsEnabled = false;
-            TxtMotDePasse.IsEnabled = false;
             CmbRole.IsEnabled = false;
             CmbSociete.IsEnabled = false;
             CmbEquipe.IsEnabled = false;
@@ -476,8 +471,6 @@ namespace GestionConges.WPF.Views
                 ChargerEquipesPourSociete(_societes[0].Id);
             }
 
-            // Afficher le champ mot de passe pour nouveau
-            StackMotDePasse.Visibility = Visibility.Visible;
 
             ActiverFormulaire();
             TxtNom.Focus();
@@ -567,9 +560,9 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                // Vérifier l'unicité de l'email
-                int utilisateurIdActuel = _utilisateurSelectionne != null ? _utilisateurSelectionne.Id : 0;
-                var emailExiste = await _context.Utilisateurs
+                // Vérifier l'unicité de l'email avec le MÊME contexte
+                int utilisateurIdActuel = _utilisateurSelectionne?.Id ?? 0;
+                var emailExiste = await context.Utilisateurs
                     .Where(u => u.Email == TxtEmail.Text && u.Id != utilisateurIdActuel)
                     .AnyAsync();
 
@@ -581,27 +574,22 @@ namespace GestionConges.WPF.Views
                 }
 
                 bool nouveauUtilisateur = _utilisateurSelectionne == null;
-
-                // Créer ou modifier l'utilisateur
                 Utilisateur utilisateur;
+
                 if (nouveauUtilisateur)
                 {
-                    if (string.IsNullOrWhiteSpace(TxtMotDePasse.Password))
-                    {
-                        MessageBox.Show("Le mot de passe est obligatoire pour un nouvel utilisateur.",
-                                      "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
+                    var configuration = App.GetService<IConfiguration>();
+                    var password = configuration["AppSettings:DefaultPasswordForUsers"];
                     utilisateur = new Utilisateur
                     {
                         DateCreation = DateTime.Now,
-                        MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(TxtMotDePasse.Password)
+                        MotDePasseHash = BCrypt.Net.BCrypt.HashPassword(password)
                     };
-                    _context.Utilisateurs.Add(utilisateur);
+                    context.Utilisateurs.Add(utilisateur);
                 }
                 else
                 {
+                    // Recharger l'utilisateur avec le contexte actuel
                     utilisateur = await context.Utilisateurs
                         .FirstOrDefaultAsync(u => u.Id == _utilisateurSelectionne.Id);
 
@@ -627,10 +615,11 @@ namespace GestionConges.WPF.Views
                     selectedPoleId = poleSelectionne.Id;
                 }
                 utilisateur.PoleId = selectedPoleId;
-
                 utilisateur.Actif = ChkActif.IsChecked ?? true;
 
-                context.Entry(utilisateur).Property(u => u.PoleId).IsModified = true;
+                // Pas besoin de marquer manuellement les propriétés comme modifiées
+                // EF Core le fait automatiquement pour les entités trackées
+
                 await context.SaveChangesAsync();
 
                 // Recharger les données et réinitialiser l'interface
@@ -640,7 +629,12 @@ namespace GestionConges.WPF.Views
                 string message = nouveauUtilisateur ? "créé" : "modifié";
                 MessageBox.Show($"Utilisateur {message} avec succès.", "Succès",
                               MessageBoxButton.OK, MessageBoxImage.Information);
-
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                MessageBox.Show("L'utilisateur a été modifié par une autre personne. Veuillez recharger les données et réessayer.",
+                              "Conflit de concurrence", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ChargerDonnees(); // Recharger pour avoir les dernières données
             }
             catch (Exception ex)
             {

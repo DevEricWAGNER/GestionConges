@@ -75,8 +75,8 @@ namespace GestionConges.WPF.Services
                 .Include(d => d.Utilisateur)
                     .ThenInclude(u => u.Pole)
                 .Include(d => d.TypeAbsence)
-                .Where(d => (d.Statut == StatusDemande.EnAttenteChefPole ||
-                            d.Statut == StatusDemande.EnAttenteChefEquipe) &&
+                .Where(d => (d.Statut == StatusDemande.EnAttenteValidateur ||
+                            d.Statut == StatusDemande.EnAttenteAdmin) &&
                            d.DateCreation <= dateLimit)
                 .OrderBy(d => d.DateCreation)
                 .ToListAsync();
@@ -86,13 +86,13 @@ namespace GestionConges.WPF.Services
         {
             return demande.Statut switch
             {
-                StatusDemande.EnAttenteChefPole => await _context.Utilisateurs
-                    .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefPole &&
+                StatusDemande.EnAttenteValidateur => await _context.Utilisateurs
+                    .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.Validateur &&
                                              u.PoleId == demande.Utilisateur.PoleId &&
                                              u.Actif),
 
-                StatusDemande.EnAttenteChefEquipe => await _context.Utilisateurs
-                    .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.ChefEquipe && u.Actif),
+                StatusDemande.EnAttenteAdmin => await _context.Utilisateurs
+                    .FirstOrDefaultAsync(u => u.Role == RoleUtilisateur.Admin && u.Actif),
 
                 _ => null
             };

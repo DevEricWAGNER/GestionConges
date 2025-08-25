@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestionConges.Core.Migrations
 {
     [DbContext(typeof(GestionCongesContext))]
-    [Migration("20250823143526_InitialCreate")]
+    [Migration("20250825083359_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -481,7 +481,7 @@ namespace GestionConges.Core.Migrations
                         {
                             Id = 4,
                             Categorie = "Validation",
-                            Cle = "DelaiValidationChefPole",
+                            Cle = "DelaiValidationValidateur",
                             DateModification = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Délai validation chef pôle (jours)",
                             Valeur = "7"
@@ -490,7 +490,7 @@ namespace GestionConges.Core.Migrations
                         {
                             Id = 5,
                             Categorie = "Validation",
-                            Cle = "DelaiValidationChefEquipe",
+                            Cle = "DelaiValidationAdmin",
                             DateModification = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Délai validation chef équipe (jours)",
                             Valeur = "5"

@@ -51,16 +51,16 @@ namespace GestionConges.Core.Models
         public string StatutLibelle => Statut switch
         {
             StatusDemande.Brouillon => "Brouillon",
-            StatusDemande.EnAttenteChefPole => "En attente chef de pôle",
-            StatusDemande.EnAttenteChefEquipe => "En attente chef d'équipe",
+            StatusDemande.EnAttenteValidateur => "En attente Validateur",
+            StatusDemande.EnAttenteAdmin => "En attente admin",
             StatusDemande.Approuve => "Approuvé",
             StatusDemande.Refuse => "Refusé",
             StatusDemande.Annule => "Annulé",
             _ => "Inconnu"
         };
 
-        public bool EstEnAttente => Statut == StatusDemande.EnAttenteChefPole ||
-                                   Statut == StatusDemande.EnAttenteChefEquipe;
+        public bool EstEnAttente => Statut == StatusDemande.EnAttenteValidateur ||
+                                   Statut == StatusDemande.EnAttenteAdmin;
 
         public bool EstApprouve => Statut == StatusDemande.Approuve;
     }

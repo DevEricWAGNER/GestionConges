@@ -127,11 +127,11 @@ namespace GestionConges.WPF.Views
             using var context = CreerContexte();
             var parametresService = new ParametresService(context);
 
-            var delaiChefPole = await parametresService.ObtenirParametre("DelaiValidationChefPole", "7");
-            TxtDelaiChefPole.Text = delaiChefPole;
+            var delaiValidateur = await parametresService.ObtenirParametre("DelaiValidationValidateur", "7");
+            TxtDelaiValidateur.Text = delaiValidateur;
 
-            var delaiChefEquipe = await parametresService.ObtenirParametre("DelaiValidationChefEquipe", "5");
-            TxtDelaiChefEquipe.Text = delaiChefEquipe;
+            var delaiAdmin = await parametresService.ObtenirParametre("DelaiValidationAdmin", "5");
+            TxtDelaiAdmin.Text = delaiAdmin;
 
             var preavis = await parametresService.ObtenirParametre("PreavisMinimum", "14");
             TxtPreavisConges.Text = preavis;
@@ -648,8 +648,8 @@ namespace GestionConges.WPF.Views
             await parametresService.SauvegarderParametre("DebutAnneeConges", debutAnnee.ToString(), "Calendrier");
 
             // Sauvegarder paramètres validation
-            await parametresService.SauvegarderParametre("DelaiValidationChefPole", TxtDelaiChefPole.Text, "Validation");
-            await parametresService.SauvegarderParametre("DelaiValidationChefEquipe", TxtDelaiChefEquipe.Text, "Validation");
+            await parametresService.SauvegarderParametre("DelaiValidationValidateur", TxtDelaiValidateur.Text, "Validation");
+            await parametresService.SauvegarderParametre("DelaiValidationAdmin", TxtDelaiAdmin.Text, "Validation");
             await parametresService.SauvegarderParametre("PreavisMinimum", TxtPreavisConges.Text, "Validation");
             await parametresService.SauvegarderParametre("AnticipationMaximum", TxtAnticipationMax.Text, "Validation");
             await parametresService.SauvegarderParametre("EscaladeAutomatique", (ChkEscaladeAuto.IsChecked == true).ToString(), "Validation");
@@ -751,8 +751,8 @@ namespace GestionConges.WPF.Views
             await parametresService.SauvegarderParametre("JoursOuvres", "1,2,3,4,5", "Calendrier");
             await parametresService.SauvegarderParametre("ExclureFeries", "true", "Calendrier");
             await parametresService.SauvegarderParametre("DebutAnneeConges", "1", "Calendrier");
-            await parametresService.SauvegarderParametre("DelaiValidationChefPole", "7", "Validation");
-            await parametresService.SauvegarderParametre("DelaiValidationChefEquipe", "5", "Validation");
+            await parametresService.SauvegarderParametre("DelaiValidationValidateur", "7", "Validation");
+            await parametresService.SauvegarderParametre("DelaiValidationAdmin", "5", "Validation");
             await parametresService.SauvegarderParametre("PreavisMinimum", "14", "Validation");
             await parametresService.SauvegarderParametre("AnticipationMaximum", "365", "Validation");
             await parametresService.SauvegarderParametre("EscaladeAutomatique", "false", "Validation");

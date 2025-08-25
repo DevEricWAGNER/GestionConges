@@ -177,8 +177,8 @@ namespace GestionConges.WPF.Views
             return statut switch
             {
                 StatusDemande.Brouillon => ("#9E9E9E", "#FFFFFF"),
-                StatusDemande.EnAttenteChefPole => ("#FF9800", "#FFFFFF"),
-                StatusDemande.EnAttenteChefEquipe => ("#2196F3", "#FFFFFF"),
+                StatusDemande.EnAttenteValidateur => ("#FF9800", "#FFFFFF"),
+                StatusDemande.EnAttenteAdmin => ("#2196F3", "#FFFFFF"),
                 StatusDemande.Approuve => ("#4CAF50", "#FFFFFF"),
                 StatusDemande.Refuse => ("#F44336", "#FFFFFF"),
                 StatusDemande.Annule => ("#607D8B", "#FFFFFF"),
