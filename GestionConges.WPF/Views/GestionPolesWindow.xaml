@@ -2,172 +2,566 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Gestion des Pôles - Administration" 
-        Height="700" Width="1200"
+        Height="800" Width="1300"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5">
+        Background="Transparent"
+        ResizeMode="CanResize"
+        WindowStyle="None"
+        AllowsTransparency="True">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Border CornerRadius="16" Background="{StaticResource Background}"
+            BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+            Effect="{StaticResource ShadowLarge}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="20"/>
-            <ColumnDefinition Width="1.5*"/>
-        </Grid.ColumnDefinitions>
+            <!-- Custom Title Bar -->
+            <Border Grid.Row="0" Background="{StaticResource Surface}" 
+                    CornerRadius="16,16,0,0" 
+                    BorderBrush="{StaticResource Gray200}" 
+                    BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Height="60" Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        <!-- Titre -->
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="3" 
-                 Text="Gestion des Pôles"
-                 FontSize="24" FontWeight="Bold"
-                 Margin="0,0,0,20"
-                 HorizontalAlignment="Center"/>
-
-        <!-- Liste des pôles -->
-        <Border Grid.Row="1" Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="1" Background="White">
-            <DataGrid Name="DgPoles" 
-                    AutoGenerateColumns="False"
-                    IsReadOnly="True"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    SelectionMode="Single"
-                    SelectionChanged="DgPoles_SelectionChanged">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Nom" Binding="{Binding Nom}" Width="150"/>
-                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="250"/>
-                    <DataGridTextColumn Header="Équipes" Binding="{Binding Equipes.Count}" Width="80"/>
-                    <DataGridTextColumn Header="Employés" Binding="{Binding Employes.Count}" Width="80"/>
-                    <DataGridCheckBoxColumn Header="Actif" Binding="{Binding Actif}" Width="60"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
-
-        <!-- Boutons d'action -->
-        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" 
-                  HorizontalAlignment="Left" Margin="0,20,0,0">
-            <Button Name="BtnNouveauPole" Content="Nouveau Pôle"
-                  Background="#4CAF50" Foreground="White" BorderThickness="0"
-                  Padding="15,8" Margin="0,0,10,0" Click="BtnNouveauPole_Click"/>
-            <Button Name="BtnModifier" Content="Modifier"
-                  Background="#FF9800" Foreground="White" BorderThickness="0"
-                  Padding="15,8" Margin="0,0,10,0" 
-                  IsEnabled="False" Click="BtnModifier_Click"/>
-            <Button Name="BtnSupprimer" Content="Supprimer"
-                  Background="#F44336" Foreground="White" BorderThickness="0"
-                  Padding="15,8" Margin="0,0,10,0" 
-                  IsEnabled="False" Click="BtnSupprimer_Click"/>
-            <Button Name="BtnActiver" Content="Activer/Désactiver"
-                  Background="#2196F3" Foreground="White" BorderThickness="0"
-                  Padding="15,8" 
-                  IsEnabled="False" Click="BtnActiver_Click"/>
-        </StackPanel>
-
-        <!-- Panneau de détail/édition -->
-        <Border Grid.Row="1" Grid.Column="2" 
-              BorderBrush="#CCCCCC" BorderThickness="1" 
-              Background="White" Padding="15">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Name="PanneauDetail">
-                    <TextBlock Text="Détails / Édition" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
-
-                    <!-- Nom -->
-                    <TextBlock Text="Nom du pôle :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <TextBox Name="TxtNom" Padding="5" Margin="0,0,0,10"/>
-
-                    <!-- Description -->
-                    <TextBlock Text="Description :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <TextBox Name="TxtDescription" 
-                           Padding="5" 
-                           Height="80" 
-                           TextWrapping="Wrap" 
-                           AcceptsReturn="True"
-                           VerticalScrollBarVisibility="Auto"
-                           Margin="0,0,0,10"/>
-
-                    <!-- Actif -->
-                    <CheckBox Name="ChkActif" Content="Pôle actif" Margin="0,10,0,20"/>
-
-                    <!-- Gestion des équipes -->
-                    <Separator Margin="0,10,0,10"/>
-                    <TextBlock Text="Équipes associées :" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
-
-                    <!-- Liste des équipes associées -->
-                    <TextBlock Text="Équipes actuelles :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <ListBox Name="LstEquipesAssociees" 
-                           Height="100" 
-                           BorderBrush="#CCCCCC" 
-                           BorderThickness="1" 
-                           Margin="0,0,0,10">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                    <TextBlock Text=" (" Foreground="Gray"/>
-                                    <TextBlock Text="{Binding Societe.Nom}" Foreground="Gray"/>
-                                    <TextBlock Text=")" Foreground="Gray"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <!-- Ajouter une équipe -->
-                    <TextBlock Text="Ajouter une équipe :" FontWeight="SemiBold" Margin="0,10,0,5"/>
-                    <ComboBox Name="CmbEquipes" 
-                            Padding="5" 
-                            Margin="0,0,0,10"
-                            IsEnabled="False">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                    <TextBlock Text=" (" Foreground="Gray"/>
-                                    <TextBlock Text="{Binding Societe.Nom}" Foreground="Gray"/>
-                                    <TextBlock Text=")" Foreground="Gray"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <!-- Boutons de gestion des équipes -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                        <Button Name="BtnAjouterEquipe" Content="Ajouter Équipe"
-                              Background="#4CAF50" Foreground="White" BorderThickness="0"
-                              Padding="10,5" Margin="0,0,5,0" 
-                              Click="BtnAjouterEquipe_Click" IsEnabled="False"/>
-                        <Button Name="BtnRetirerEquipe" Content="Retirer Équipe"
-                              Background="#F44336" Foreground="White" BorderThickness="0"
-                              Padding="10,5" Margin="5,0,0,0" 
-                              Click="BtnRetirerEquipe_Click" IsEnabled="False"/>
+                    <!-- Logo et titre -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" 
+                              VerticalAlignment="Center">
+                        <Border Background="{StaticResource Secondary}" 
+                              Width="40" Height="40" 
+                              CornerRadius="12" Margin="0,0,16,0">
+                            <TextBlock Text="🏢" FontSize="20" 
+                                     Foreground="White"
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Gestion des Pôles" 
+                                     FontSize="18" FontWeight="SemiBold" 
+                                     Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Organisation des équipes par pôles" 
+                                     FontSize="12" 
+                                     Foreground="{StaticResource TextMuted}"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <!-- Boutons de validation -->
-                    <Separator Margin="0,10,0,10"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                        <Button Name="BtnSauvegarder" Content="Sauvegarder"
-                              Background="#4CAF50" Foreground="White" BorderThickness="0"
-                              Padding="15,8" Margin="0,0,10,0" 
-                              Click="BtnSauvegarder_Click" IsEnabled="False"/>
-                        <Button Name="BtnAnnuler" Content="Annuler"
-                              Background="#757575" Foreground="White" BorderThickness="0"
-                              Padding="15,8" 
-                              Click="BtnAnnuler_Click" IsEnabled="False"/>
+                    <!-- Boutons fenêtre -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" 
+                              VerticalAlignment="Center">
+                        <Button Name="BtnMinimize" Content="−" 
+                              Width="32" Height="32" 
+                              Background="Transparent" 
+                              BorderThickness="0" 
+                              Foreground="{StaticResource Gray400}"
+                              FontSize="16" FontWeight="Bold"
+                              Margin="0,0,4,0"
+                              Click="BtnMinimize_Click"/>
+                        <Button Name="BtnClose" Content="✕" 
+                              Width="32" Height="32" 
+                              Background="Transparent" 
+                              BorderThickness="0" 
+                              Foreground="{StaticResource Gray400}"
+                              FontSize="14" FontWeight="Bold"
+                              Click="BtnClose_Click"/>
                     </StackPanel>
+                </Grid>
+            </Border>
 
-                    <!-- Informations supplémentaires -->
-                    <Separator Margin="0,10,0,10"/>
-                    <TextBlock Name="TxtInfos" Text="Sélectionnez un pôle pour voir les détails"
-                             TextWrapping="Wrap" FontStyle="Italic" Foreground="Gray"/>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+            <!-- Contenu principal -->
+            <Grid Grid.Row="1" Margin="32,20,32,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="1.5*"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Bouton Fermer -->
-        <Button Grid.Row="2" Grid.Column="2" Content="Fermer"
-              Background="#757575" Foreground="White" BorderThickness="0"
-              Padding="15,8" HorizontalAlignment="Right"
-              Click="BtnFermer_Click"/>
-    </Grid>
+                <!-- Liste des pôles -->
+                <Border Grid.Column="0" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- En-tête avec titre -->
+                        <Border Grid.Row="0" 
+                                Background="{StaticResource Secondary}" 
+                                CornerRadius="8,8,0,0" 
+                                Padding="20,16">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="White" 
+                                      Width="28" Height="28" 
+                                      CornerRadius="8" Margin="0,0,12,0">
+                                    <TextBlock Text="📋" FontSize="14" 
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Liste des Pôles" 
+                                         FontWeight="SemiBold" FontSize="16" 
+                                         Foreground="White"
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- DataGrid des pôles -->
+                        <DataGrid Grid.Row="1" Name="DgPoles" 
+                                AutoGenerateColumns="False"
+                                IsReadOnly="True"
+                                GridLinesVisibility="None"
+                                HeadersVisibility="Column"
+                                SelectionMode="Single"
+                                SelectionChanged="DgPoles_SelectionChanged"
+                                Background="{StaticResource Surface}"
+                                BorderThickness="0"
+                                RowHeight="56"
+                                AlternatingRowBackground="{StaticResource Gray50}"
+                                AlternationCount="2">
+
+                            <DataGrid.Resources>
+                                <!-- Style pour les en-têtes -->
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="{StaticResource Gray100}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Padding" Value="16,12"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Height" Value="44"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridColumnHeader">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{StaticResource Gray200}"
+                                                        BorderThickness="0,0,0,1"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+
+                                <!-- Style pour les cellules -->
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="16,8"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.Resources>
+
+                            <DataGrid.Columns>
+                                <!-- Nom -->
+                                <DataGridTextColumn Header="🏢 Nom du Pôle" Binding="{Binding Nom}" Width="180">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Description -->
+                                <DataGridTextColumn Header="📝 Description" Binding="{Binding Description}" Width="250">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Équipes -->
+                                <DataGridTextColumn Header="🏛️ Équipes" Binding="{Binding Equipes.Count}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Primary}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Employés -->
+                                <DataGridTextColumn Header="👥 Employés" Binding="{Binding Employes.Count}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Secondary}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Actif -->
+                                <DataGridTemplateColumn Header="🔄 Statut" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="12" 
+                                                  Padding="8,4"
+                                                  HorizontalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Actif}" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource Secondary}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Actif}" Value="False">
+                                                                <Setter Property="Background" Value="{StaticResource Gray400}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="12" 
+                                                         FontWeight="SemiBold"
+                                                         Foreground="White"
+                                                         HorizontalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Actif}" Value="True">
+                                                                    <Setter Property="Text" Value="Actif"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Actif}" Value="False">
+                                                                    <Setter Property="Text" Value="Inactif"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+
+                            <!-- Style des lignes -->
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridRow">
+                                                <Border Name="RowBorder"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="6"
+                                                        Margin="8,2"
+                                                        Padding="8,0">
+                                                    <SelectiveScrollingGrid>
+                                                        <SelectiveScrollingGrid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </SelectiveScrollingGrid.ColumnDefinitions>
+                                                        <DataGridCellsPresenter Grid.Column="1"
+                                                                              ItemsPanel="{TemplateBinding ItemsPanel}"
+                                                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                        <DataGridDetailsPresenter Grid.Column="1"
+                                                                                Grid.Row="1"
+                                                                                SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
+                                                                                Visibility="{TemplateBinding DetailsVisibility}"/>
+                                                        <DataGridRowHeader Grid.RowSpan="2"
+                                                                         SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical"
+                                                                         Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                                                    </SelectiveScrollingGrid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Actif}" Value="False">
+                                                        <Setter Property="Opacity" Value="0.6"/>
+                                                    </DataTrigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="RowBorder" Property="Background" Value="{StaticResource Secondary}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="RowBorder" Property="Background" Value="{StaticResource Gray100}"/>
+                                                    </Trigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="IsSelected" Value="True"/>
+                                                            <Condition Property="IsMouseOver" Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter TargetName="RowBorder" Property="Background" Value="{StaticResource SecondaryHover}"/>
+                                                    </MultiTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.RowStyle>
+                        </DataGrid>
+
+                        <!-- Boutons d'action -->
+                        <Border Grid.Row="2" 
+                                Background="{StaticResource Gray50}" 
+                                CornerRadius="0,0,8,8"
+                                Padding="20,16">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Name="BtnNouveauPole" Content="+ Nouveau Pôle"
+                                      Style="{StaticResource SecondaryButton}"
+                                      Padding="16,8" 
+                                      Margin="0,0,8,0" 
+                                      Click="BtnNouveauPole_Click"/>
+                                <Button Name="BtnModifier" Content="✏️ Modifier"
+                                      Style="{StaticResource MaterialDesignRaisedButton}"
+                                      Background="{StaticResource Warning}"
+                                      Padding="16,8" 
+                                      Margin="0,0,8,0" 
+                                      IsEnabled="False" 
+                                      Click="BtnModifier_Click"/>
+                                <Button Name="BtnSupprimer" Content="🗑️ Supprimer"
+                                      Style="{StaticResource DangerButton}"
+                                      Padding="16,8" 
+                                      Margin="0,0,8,0" 
+                                      IsEnabled="False" 
+                                      Click="BtnSupprimer_Click"/>
+                                <Button Name="BtnActiver" Content="🔄 Activer/Désactiver"
+                                      Style="{StaticResource MaterialDesignOutlineButton}"
+                                      Padding="16,8" 
+                                      IsEnabled="False" 
+                                      Click="BtnActiver_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Panneau de détail/édition -->
+                <Border Grid.Column="2" Style="{StaticResource Card}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Name="PanneauDetail" Margin="4">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                                <Border Background="{StaticResource Primary}" 
+                                      Width="32" Height="32" 
+                                      CornerRadius="8" Margin="0,0,12,0">
+                                    <TextBlock Text="📝" FontSize="16" 
+                                             Foreground="White"
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Détails / Édition" 
+                                         FontSize="16" FontWeight="SemiBold" 
+                                         Foreground="{StaticResource TextPrimary}"
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Nom -->
+                            <TextBlock Text="Nom du pôle" 
+                                     FontSize="14" FontWeight="SemiBold"
+                                     Foreground="{StaticResource TextPrimary}" 
+                                     Margin="0,0,0,8"/>
+                            <TextBox Name="TxtNom" 
+                                   Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                   Margin="0,0,0,20"/>
+
+                            <!-- Description -->
+                            <TextBlock Text="Description" 
+                                     FontSize="14" FontWeight="SemiBold"
+                                     Foreground="{StaticResource TextPrimary}" 
+                                     Margin="0,0,0,8"/>
+                            <TextBox Name="TxtDescription" 
+                                   Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                   Height="80" 
+                                   TextWrapping="Wrap" 
+                                   AcceptsReturn="True"
+                                   VerticalContentAlignment="Top"
+                                   VerticalScrollBarVisibility="Auto"
+                                   Margin="0,0,0,20"/>
+
+                            <!-- Actif -->
+                            <CheckBox Name="ChkActif" 
+                                    Content="Pôle actif" 
+                                    FontSize="14"
+                                    Foreground="{StaticResource TextPrimary}"
+                                    Margin="0,0,0,24"/>
+
+                            <!-- Section Équipes -->
+                            <Border Background="{StaticResource Gray50}" 
+                                  CornerRadius="8" 
+                                  Padding="16"
+                                  Margin="0,0,0,20">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                        <Border Background="{StaticResource Warning}" 
+                                              Width="24" Height="24" 
+                                              CornerRadius="6" Margin="0,0,8,0">
+                                            <TextBlock Text="🏛️" FontSize="12" 
+                                                     Foreground="White"
+                                                     HorizontalAlignment="Center" 
+                                                     VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Équipes associées" 
+                                                 FontSize="14" FontWeight="SemiBold" 
+                                                 Foreground="{StaticResource TextPrimary}"
+                                                 VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Liste des équipes actuelles -->
+                                    <TextBlock Text="Équipes actuelles" 
+                                             FontSize="13" FontWeight="SemiBold"
+                                             Foreground="{StaticResource TextSecondary}" 
+                                             Margin="0,0,0,8"/>
+                                    <ListBox Name="LstEquipesAssociees" 
+                                           Height="100" 
+                                           Background="{StaticResource Surface}"
+                                           BorderBrush="{StaticResource Gray300}" 
+                                           BorderThickness="1"
+                                           Padding="8"
+                                           Margin="0,0,0,12">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4">
+                                                    <Border Width="4" Height="16" 
+                                                          Background="{StaticResource Primary}" 
+                                                          CornerRadius="2" 
+                                                          Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding Nom}" 
+                                                             FontWeight="SemiBold"
+                                                             Foreground="{StaticResource TextPrimary}"/>
+                                                    <TextBlock Text=" (" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text="{Binding Societe.Nom}" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text=")" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <!-- Ajouter une équipe -->
+                                    <TextBlock Text="Ajouter une équipe" 
+                                             FontSize="13" FontWeight="SemiBold"
+                                             Foreground="{StaticResource TextSecondary}" 
+                                             Margin="0,0,0,8"/>
+                                    <ComboBox Name="CmbEquipes" 
+                                            Height="40"
+                                            FontSize="14"
+                                            Background="{StaticResource Surface}"
+                                            BorderBrush="{StaticResource Gray300}"
+                                            BorderThickness="1"
+                                            Padding="12,8"
+                                            Margin="0,0,0,12"
+                                            IsEnabled="False">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="4">
+                                                    <TextBlock Text="{Binding Nom}" 
+                                                             FontWeight="SemiBold"
+                                                             Foreground="{StaticResource TextPrimary}"/>
+                                                    <TextBlock Text=" (" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text="{Binding Societe.Nom}" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                    <TextBlock Text=")" 
+                                                             Foreground="{StaticResource TextMuted}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+
+                                    <!-- Boutons gestion équipes -->
+                                    <StackPanel Orientation="Horizontal" 
+                                              HorizontalAlignment="Center">
+                                        <Button Name="BtnAjouterEquipe" Content="+ Ajouter"
+                                              Style="{StaticResource SecondaryButton}"
+                                              Padding="12,6" 
+                                              Margin="0,0,6,0" 
+                                              FontSize="12"
+                                              Click="BtnAjouterEquipe_Click" 
+                                              IsEnabled="False"/>
+                                        <Button Name="BtnRetirerEquipe" Content="- Retirer"
+                                              Style="{StaticResource DangerButton}"
+                                              Padding="12,6" 
+                                              FontSize="12"
+                                              Margin="6,0,0,0" 
+                                              Click="BtnRetirerEquipe_Click" 
+                                              IsEnabled="False"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Boutons de validation -->
+                            <StackPanel Orientation="Horizontal" 
+                                      HorizontalAlignment="Center" 
+                                      Margin="0,0,0,20">
+                                <Button Name="BtnSauvegarder" Content="💾 Sauvegarder"
+                                      Style="{StaticResource SecondaryButton}"
+                                      Padding="16,10" 
+                                      Margin="0,0,8,0" 
+                                      Click="BtnSauvegarder_Click" 
+                                      IsEnabled="False"/>
+                                <Button Name="BtnAnnuler" Content="❌ Annuler"
+                                      Background="{StaticResource Gray500}" 
+                                      Foreground="White" 
+                                      BorderThickness="0"
+                                      Style="{StaticResource MaterialDesignRaisedButton}"
+                                      Padding="16,10" 
+                                      Click="BtnAnnuler_Click" 
+                                      IsEnabled="False"/>
+                            </StackPanel>
+
+                            <!-- Informations supplémentaires -->
+                            <Border Background="{StaticResource Gray50}" 
+                                  CornerRadius="8" 
+                                  Padding="16"
+                                  Margin="0,8,0,0">
+                                <TextBlock Name="TxtInfos" 
+                                         Text="Sélectionnez un pôle pour voir les détails"
+                                         TextWrapping="Wrap" 
+                                         FontStyle="Italic" 
+                                         FontSize="13"
+                                         Foreground="{StaticResource TextMuted}"/>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Bouton Fermer -->
+            <Border Grid.Row="2" 
+                    Background="{StaticResource Surface}" 
+                    BorderBrush="{StaticResource Gray200}" 
+                    BorderThickness="0,1,0,0" 
+                    CornerRadius="0,0,16,16"
+                    Padding="32,16">
+                <Button Name="BtnFermer" Content="🚪 Fermer"
+                      Style="{StaticResource MaterialDesignOutlineButton}"
+                      Padding="20,10"
+                      HorizontalAlignment="Right"
+                      Click="BtnFermer_Click"/>
+            </Border>
+        </Grid>
+    </Border>
 </Window>

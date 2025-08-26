@@ -1,10 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using GestionConges.Core.Data;
+using GestionConges.Core.Enums;
+using GestionConges.Core.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.EntityFrameworkCore;
-using GestionConges.Core.Data;
-using GestionConges.Core.Models;
-using GestionConges.Core.Enums;
+using System.Windows.Input;
 
 namespace GestionConges.WPF.Views
 {
@@ -25,6 +26,30 @@ namespace GestionConges.WPF.Views
 
             InitialiserInterface();
             ChargerDonnees();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                WindowState = WindowState == WindowState.Maximized
+                    ? WindowState.Normal
+                    : WindowState.Maximized;
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            BtnFermer_Click(sender, e);
         }
 
         private void InitialiserInterface()
@@ -263,14 +288,26 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
-                    _poleSelectionne.Actif = !_poleSelectionne.Actif;
+                    // Stocker l'ID et le nouvel état avant de modifier
+                    int poleId = _poleSelectionne.Id;
+                    bool nouvelEtat = !_poleSelectionne.Actif;
+
+                    _poleSelectionne.Actif = nouvelEtat;
                     await _context.SaveChangesAsync();
 
                     await ChargerDonneesAsync();
 
-                    string message = _poleSelectionne.Actif ? "activé" : "désactivé";
+                    // Utiliser les valeurs stockées au lieu de _poleSelectionne
+                    string message = nouvelEtat ? "activé" : "désactivé";
                     MessageBox.Show($"Pôle {message} avec succès.", "Succès",
                                   MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Optionnel : resélectionner le pôle dans la grille
+                    var poleRecharge = _poles.FirstOrDefault(p => p.Id == poleId);
+                    if (poleRecharge != null)
+                    {
+                        DgPoles.SelectedItem = poleRecharge;
+                    }
                 }
                 catch (Exception ex)
                 {
