@@ -1,8 +1,9 @@
-﻿using System.Windows;
-using Microsoft.EntityFrameworkCore;
-using GestionConges.Core.Data;
+﻿using GestionConges.Core.Data;
 using GestionConges.Core.Models;
 using GestionConges.WPF.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Windows;
+using System.Windows.Input;
 
 namespace GestionConges.WPF.Views
 {
@@ -21,6 +22,30 @@ namespace GestionConges.WPF.Views
             _preferencesService = new PreferencesUtilisateurService();
 
             ChargerDonneesProfil();
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                WindowState = WindowState == WindowState.Maximized
+                    ? WindowState.Normal
+                    : WindowState.Maximized;
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private async void ChargerDonneesProfil()
