@@ -977,8 +977,8 @@ namespace GestionConges.WPF
             stackPanel.Children.Add(texte);
             notification.Child = stackPanel;
 
-            // Ajouter à la grille principale
-            var mainGrid = (Grid)this.Content;
+            var mainBorder = (Border)this.Content;
+            var mainGrid = (Grid)mainBorder.Child;
             mainGrid.Children.Add(notification);
 
             // Animation d'apparition et disparition

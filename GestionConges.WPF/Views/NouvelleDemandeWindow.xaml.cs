@@ -5,6 +5,7 @@ using GestionConges.WPF.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace GestionConges.WPF.Views
 {
@@ -54,6 +55,36 @@ namespace GestionConges.WPF.Views
             {
                 Title = "Modification de Demande de Congés";
                 ChargerDemande(_demandeEnCours);
+            }
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                // Optionnel: gérer le double-clic pour maximiser
+                WindowState = WindowState == WindowState.Maximized
+                    ? WindowState.Normal
+                    : WindowState.Maximized;
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Êtes-vous sûr de vouloir fermer ? Toutes les modifications seront perdues.",
+                "Confirmer la fermeture",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                DialogResult = false;
+                Close();
             }
         }
 
