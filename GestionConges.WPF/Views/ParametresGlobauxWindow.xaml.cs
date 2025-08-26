@@ -296,9 +296,18 @@ namespace GestionConges.WPF.Views
 
         private void BtnPrevisualiser_Click(object sender, RoutedEventArgs e)
         {
-            var previewWindow = new PreviewTemplateWindow(TxtSujetTemplate.Text, TxtCorpsTemplate.Text);
-            previewWindow.ShowDialog();
+            try
+            {
+                var previewWindow = new PreviewTemplateWindow(TxtSujetTemplate.Text, TxtCorpsTemplate.Text);
+                previewWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ouverture de la prévisualisation : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
 
         private async void BtnTesterTemplate_Click(object sender, RoutedEventArgs e)
         {
@@ -333,12 +342,12 @@ namespace GestionConges.WPF.Views
 
                 if (success)
                 {
-                    MessageBox.Show("✅ Email de test envoyé avec succès !\n\nVérifiez votre boîte de réception.", "Test réussi",
+                    MessageBox.Show("Email de test envoyé avec succès !\n\nVérifiez votre boîte de réception.", "Test réussi",
                                   MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("❌ Échec de l'envoi de l'email de test.", "Test échoué",
+                    MessageBox.Show("Échec de l'envoi de l'email de test.", "Test échoué",
                                   MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
