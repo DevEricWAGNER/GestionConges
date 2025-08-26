@@ -17,6 +17,26 @@ namespace GestionConges.WPF.Views
             InitialiserInterface();
         }
 
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                // Optionnel: gérer le double-clic pour maximiser
+                WindowState = WindowState == WindowState.Maximized
+                    ? WindowState.Normal
+                    : WindowState.Maximized;
+            }
+            else
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            BtnAnnuler_Click(sender, e);
+        }
+
         private void ChargerInformationsDemande(DemandeConge demande)
         {
             // Informations du demandeur
