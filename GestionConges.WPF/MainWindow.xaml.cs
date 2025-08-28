@@ -1,5 +1,7 @@
 ﻿using GestionConges.Core.Enums;
+using GestionConges.WPF.Controls;
 using GestionConges.WPF.Views;
+using Microsoft.EntityFrameworkCore;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,6 +12,7 @@ namespace GestionConges.WPF
     public partial class MainWindow : Window
     {
         private Button? _activeNavButton;
+        private DashboardUserControl? _dashboardControl;
 
         public MainWindow()
         {
@@ -31,13 +34,13 @@ namespace GestionConges.WPF
             // Affichage des infos utilisateur
             TxtUtilisateurNom.Text = utilisateur.NomComplet;
             TxtUtilisateurRole.Text = $"{utilisateur.RoleLibelle}";
-            TxtBienvenue.Text = $"Bienvenue, {utilisateur.Prenom} !";
 
             // Configuration des droits d'accès
             ConfigurerMenuSelonDroits(utilisateur.Role);
 
-            // Sélection de l'onglet accueil par défaut
+            // Sélection de l'onglet accueil par défaut et chargement du dashboard
             SelectionnerOnglet(BtnAccueil);
+            ChargerDashboard();
 
             // Mise à jour du statut rapide
             MettreAJourStatutRapide();
@@ -45,13 +48,13 @@ namespace GestionConges.WPF
 
         private void ConfigurerMenuSelonDroits(RoleUtilisateur role)
         {
-            // Les chefs de pôle et chef d'équipe voient les validations
+            // Les chefs de pôle et admin voient les validations
             if (role == RoleUtilisateur.Validateur || role == RoleUtilisateur.Admin)
             {
                 BtnValidation.Visibility = Visibility.Visible;
             }
 
-            // Seul le chef d'équipe voit l'administration
+            // Seul l'admin voit l'administration
             if (role == RoleUtilisateur.Admin)
             {
                 BtnAdmin.Visibility = Visibility.Visible;
@@ -76,8 +79,57 @@ namespace GestionConges.WPF
 
         private void MettreAJourStatutRapide()
         {
-            // TODO: Récupérer les vraies données depuis la base
-            TxtStatutRapide.Text = "2 demandes en attente";
+            // Le dashboard se chargera de mettre à jour ces informations
+            if (_dashboardControl != null)
+            {
+                _dashboardControl.Rafraichir();
+            }
+        }
+
+        private void ChargerDashboard()
+        {
+            ContentArea.Children.Clear();
+
+            // Créer le dashboard dynamique
+            _dashboardControl = new DashboardUserControl();
+
+            // Connecter les événements de navigation
+            _dashboardControl.NaviguerVersNouvelleDemandeRequested += (s, e) => BtnNouvelleDemandeRaccourci_Click(s, new RoutedEventArgs());
+            _dashboardControl.NaviguerVersCalendrierRequested += (s, e) => BtnCalendrier_Click(s, new RoutedEventArgs());
+            _dashboardControl.NaviguerVersMesCongesRequested += (s, e) => BtnMesConges_Click(s, new RoutedEventArgs());
+
+            ContentArea.Children.Add(_dashboardControl);
+
+            // Mettre à jour le statut rapide basé sur les données du dashboard
+            MettreAJourStatutRapideDepuisDashboard();
+        }
+
+        private async void MettreAJourStatutRapideDepuisDashboard()
+        {
+            try
+            {
+                // Calculer le statut rapide depuis la base de données
+                using var context = App.GetService<GestionConges.Core.Data.GestionCongesContext>();
+                var utilisateurId = App.UtilisateurConnecte?.Id ?? 0;
+
+                var demandesEnAttente = await context.DemandesConges
+                    .Where(d => d.UtilisateurId == utilisateurId && d.EstEnAttente)
+                    .CountAsync();
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    TxtStatutRapide.Text = demandesEnAttente > 0
+                        ? $"{demandesEnAttente} demande{(demandesEnAttente > 1 ? "s" : "")} en attente"
+                        : "0 demandes en attente";
+                });
+            }
+            catch
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    TxtStatutRapide.Text = "0 demandes en attente";
+                });
+            }
         }
 
         #region Window Controls
@@ -120,332 +172,7 @@ namespace GestionConges.WPF
         private void BtnAccueil_Click(object sender, RoutedEventArgs e)
         {
             SelectionnerOnglet(BtnAccueil);
-
-            ContentArea.Children.Clear();
-
-            // Créer le dashboard principal
-            var scrollViewer = new ScrollViewer();
-            var mainStack = new StackPanel { Margin = new Thickness(20) };
-
-            // En-tête avec titre et date/heure
-            var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 32) };
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            // Section titre
-            var titleStack = new StackPanel();
-            var welcomeText = new TextBlock
-            {
-                Text = "Bienvenue dans votre espace congés !",
-                FontSize = 28,
-                FontWeight = FontWeights.Bold,
-                Foreground = (Brush)FindResource("TextPrimary"),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-            var subtitleText = new TextBlock
-            {
-                Text = "Gérez vos demandes de congés en toute simplicité",
-                FontSize = 16,
-                Foreground = (Brush)FindResource("TextSecondary")
-            };
-            titleStack.Children.Add(welcomeText);
-            titleStack.Children.Add(subtitleText);
-            Grid.SetColumn(titleStack, 0);
-
-            // Section date/heure
-            var dateTimeStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var dateText = new TextBlock
-            {
-                Text = DateTime.Now.ToString("dddd dd MMMM yyyy"),
-                FontSize = 14,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextSecondary"),
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
-            var timeText = new TextBlock
-            {
-                Text = DateTime.Now.ToString("HH:mm"),
-                FontSize = 24,
-                FontWeight = FontWeights.Bold,
-                Foreground = (Brush)FindResource("Primary"),
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
-            dateTimeStack.Children.Add(dateText);
-            dateTimeStack.Children.Add(timeText);
-            Grid.SetColumn(dateTimeStack, 1);
-
-            headerGrid.Children.Add(titleStack);
-            headerGrid.Children.Add(dateTimeStack);
-            mainStack.Children.Add(headerGrid);
-
-            // Cartes statistiques
-            var statsGrid = new Grid { Margin = new Thickness(0, 0, 0, 32) };
-            for (int i = 0; i < 4; i++)
-            {
-                statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            }
-
-            // Carte 1 - Jours restants
-            var card1 = CreerCarteStatistique("💰", "25.5", "Jours restants", "Secondary", 0);
-            Grid.SetColumn(card1, 0);
-            statsGrid.Children.Add(card1);
-
-            // Carte 2 - En attente
-            var card2 = CreerCarteStatistique("⏳", "2", "En attente", "Warning", 8);
-            Grid.SetColumn(card2, 1);
-            statsGrid.Children.Add(card2);
-
-            // Carte 3 - Jours pris
-            var card3 = CreerCarteStatistique("📅", "12", "Jours pris", "Primary", 8);
-            Grid.SetColumn(card3, 2);
-            statsGrid.Children.Add(card3);
-
-            // Carte 4 - Absents aujourd'hui
-            var card4 = CreerCarteStatistique("👥", "3", "Absents aujourd'hui", "Danger", 8);
-            Grid.SetColumn(card4, 3);
-            statsGrid.Children.Add(card4);
-
-            mainStack.Children.Add(statsGrid);
-
-            // Section Actions Principales
-            var actionsCard = new Border
-            {
-                Background = (Brush)FindResource("Surface"),
-                BorderBrush = (Brush)FindResource("Gray200"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(24),
-                Margin = new Thickness(0, 0, 0, 24)
-            };
-
-            var actionsStack = new StackPanel();
-            var actionsTitle = new TextBlock
-            {
-                Text = "Actions Principales",
-                FontSize = 18,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextPrimary"),
-                Margin = new Thickness(0, 0, 0, 20)
-            };
-            actionsStack.Children.Add(actionsTitle);
-
-            var actionsGrid = new Grid();
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-
-            // Bouton Nouvelle Demande
-            var btnNouvelle = CreerBoutonAction("📝", "Nouvelle Demande", "MaterialDesignRaisedButton", new Thickness(0, 0, 8, 0));
-            btnNouvelle.Click += BtnNouvelleDemandeRaccourci_Click;
-            Grid.SetColumn(btnNouvelle, 0);
-            actionsGrid.Children.Add(btnNouvelle);
-
-            // Bouton Voir Calendrier
-            var btnCalendrier = CreerBoutonAction("📊", "Voir Calendrier", "MaterialDesignOutlineButton", new Thickness(4, 0, 4, 0));
-            btnCalendrier.Click += BtnCalendrier_Click;
-            Grid.SetColumn(btnCalendrier, 1);
-            actionsGrid.Children.Add(btnCalendrier);
-
-            // Bouton Mes Congés
-            var btnMesConges = CreerBoutonAction("📅", "Mes Congés", "MaterialDesignOutlineButton", new Thickness(8, 0, 0, 0));
-            btnMesConges.Click += BtnMesConges_Click;
-            Grid.SetColumn(btnMesConges, 2);
-            actionsGrid.Children.Add(btnMesConges);
-
-            actionsStack.Children.Add(actionsGrid);
-            actionsCard.Child = actionsStack;
-            mainStack.Children.Add(actionsCard);
-
-            // Section Activité Récente
-            var activiteCard = new Border
-            {
-                Background = (Brush)FindResource("Surface"),
-                BorderBrush = (Brush)FindResource("Gray200"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(24)
-            };
-
-            var activiteStack = new StackPanel();
-
-            // En-tête de la section activité
-            var activiteHeaderGrid = new Grid { Margin = new Thickness(0, 0, 0, 16) };
-            var activiteTitle = new TextBlock
-            {
-                Text = "Activité Récente",
-                FontSize = 18,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextPrimary")
-            };
-            var btnVoirTout = new Button
-            {
-                Content = "Voir tout",
-                Style = (Style)FindResource("MaterialDesignOutlineButton"),
-                Padding = new Thickness(12, 6, 12, 6),
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Right
-            };
-            btnVoirTout.Click += BtnMesConges_Click;
-
-            activiteHeaderGrid.Children.Add(activiteTitle);
-            activiteHeaderGrid.Children.Add(btnVoirTout);
-            activiteStack.Children.Add(activiteHeaderGrid);
-
-            // Liste des activités
-            var activiteListStack = new StackPanel();
-
-            // Activité 1 - Demande approuvée
-            var activite1 = CreerElementActivite("Secondary", "Demande approuvée", "Congés Payés du 15/01 au 19/01 (5 jours)", "Il y a 2h");
-            activiteListStack.Children.Add(activite1);
-
-            // Activité 2 - Demande en attente
-            var activite2 = CreerElementActivite("Warning", "Demande en attente", "RTT du 22/01 au 22/01 (1 jour)", "Hier");
-            activiteListStack.Children.Add(activite2);
-
-            activiteStack.Children.Add(activiteListStack);
-            activiteCard.Child = activiteStack;
-            mainStack.Children.Add(activiteCard);
-
-            scrollViewer.Content = mainStack;
-            ContentArea.Children.Add(scrollViewer);
-        }
-
-        private Border CreerCarteStatistique(string icone, string valeur, string libelle, string couleurResource, double marginLeft)
-        {
-            var card = new Border
-            {
-                Background = (Brush)FindResource("Surface"),
-                BorderBrush = (Brush)FindResource("Gray200"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(20),
-                Margin = new Thickness(marginLeft, 0, 8, 0)
-            };
-
-            var stack = new StackPanel();
-
-            var iconeText = new TextBlock
-            {
-                Text = icone,
-                FontSize = 32,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            var valeurText = new TextBlock
-            {
-                Text = valeur,
-                FontSize = 24,
-                FontWeight = FontWeights.Bold,
-                Foreground = (Brush)FindResource(couleurResource),
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-
-            var libelleText = new TextBlock
-            {
-                Text = libelle,
-                FontSize = 12,
-                Foreground = (Brush)FindResource("TextMuted"),
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-
-            stack.Children.Add(iconeText);
-            stack.Children.Add(valeurText);
-            stack.Children.Add(libelleText);
-            card.Child = stack;
-
-            return card;
-        }
-
-        private Button CreerBoutonAction(string icone, string texte, string styleResource, Thickness margin)
-        {
-            var button = new Button
-            {
-                Style = (Style)FindResource(styleResource),
-                Height = 60,
-                Margin = margin
-            };
-
-            var stack = new StackPanel { Orientation = Orientation.Horizontal };
-            var iconeText = new TextBlock
-            {
-                Text = icone,
-                FontSize = 20,
-                Margin = new Thickness(0, 0, 8, 0)
-            };
-            var texteText = new TextBlock
-            {
-                Text = texte,
-                FontWeight = FontWeights.SemiBold
-            };
-
-            stack.Children.Add(iconeText);
-            stack.Children.Add(texteText);
-            button.Content = stack;
-
-            return button;
-        }
-
-        private Border CreerElementActivite(string couleurResource, string titre, string description, string temps)
-        {
-            var border = new Border
-            {
-                Background = (Brush)FindResource("Gray50"),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            // Barre colorée
-            var colorBar = new Border
-            {
-                Background = (Brush)FindResource(couleurResource),
-                Width = 8,
-                Height = 40,
-                CornerRadius = new CornerRadius(4),
-                Margin = new Thickness(0, 0, 16, 0)
-            };
-            Grid.SetColumn(colorBar, 0);
-
-            // Contenu principal
-            var contentStack = new StackPanel();
-            var titreText = new TextBlock
-            {
-                Text = titre,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextPrimary")
-            };
-            var descText = new TextBlock
-            {
-                Text = description,
-                FontSize = 12,
-                Foreground = (Brush)FindResource("TextMuted")
-            };
-            contentStack.Children.Add(titreText);
-            contentStack.Children.Add(descText);
-            Grid.SetColumn(contentStack, 1);
-
-            // Temps
-            var tempsText = new TextBlock
-            {
-                Text = temps,
-                FontSize = 12,
-                Foreground = (Brush)FindResource("TextMuted"),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetColumn(tempsText, 2);
-
-            grid.Children.Add(colorBar);
-            grid.Children.Add(contentStack);
-            grid.Children.Add(tempsText);
-            border.Child = grid;
-
-            return border;
+            ChargerDashboard();
         }
 
         private void BtnMesConges_Click(object sender, RoutedEventArgs e)
@@ -458,6 +185,9 @@ namespace GestionConges.WPF
             {
                 var mesDemandesControl = new Controls.MesDemandesUserControl();
                 ContentArea.Children.Add(mesDemandesControl);
+
+                // Rafraîchir le dashboard si on revient à l'accueil plus tard
+                RefreshDashboardIfNeeded();
             }
             catch (Exception ex)
             {
@@ -475,6 +205,8 @@ namespace GestionConges.WPF
             {
                 var calendrierControl = new Controls.CalendrierControl();
                 ContentArea.Children.Add(calendrierControl);
+
+                RefreshDashboardIfNeeded();
             }
             catch (Exception ex)
             {
@@ -492,6 +224,8 @@ namespace GestionConges.WPF
             {
                 var validationsControl = new Controls.ValidationsUserControl();
                 ContentArea.Children.Add(validationsControl);
+
+                RefreshDashboardIfNeeded();
             }
             catch (Exception ex)
             {
@@ -521,7 +255,9 @@ namespace GestionConges.WPF
 
                 if (result == true && nouvelleDemandeWindow.DemandeCreee)
                 {
-                    MettreAJourStatutRapide();
+                    // Rafraîchir le dashboard et le statut rapide
+                    _dashboardControl?.Rafraichir();
+                    MettreAJourStatutRapideDepuisDashboard();
 
                     // Afficher notification de succès moderne
                     AfficherNotificationSucces("Demande créée avec succès !");
@@ -565,130 +301,24 @@ namespace GestionConges.WPF
 
         #region UI Helpers
 
-        private ScrollViewer CreerDashboard()
+        private void RefreshDashboardIfNeeded()
         {
-            // Créer le contenu dashboard tel que défini dans le XAML
-            // Pour simplifier, on retourne un dashboard basique
-            var scrollViewer = new ScrollViewer();
-            var stackPanel = new StackPanel { Margin = new Thickness(20) };
-
-            // Header
-            var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 32) };
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            var titleStack = new StackPanel();
-            var welcomeText = new TextBlock
+            // Si le dashboard existe, le rafraîchir pour avoir les données à jour
+            // quand l'utilisateur reviendra à l'accueil
+            if (_dashboardControl != null)
             {
-                Text = $"Bienvenue, {App.UtilisateurConnecte?.Prenom} !",
-                FontSize = 28,
-                FontWeight = FontWeights.Bold,
-                Foreground = (Brush)FindResource("TextPrimary"),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-            var subtitleText = new TextBlock
-            {
-                Text = "Gérez vos demandes de congés en toute simplicité",
-                FontSize = 16,
-                Foreground = (Brush)FindResource("TextSecondary")
-            };
-
-            titleStack.Children.Add(welcomeText);
-            titleStack.Children.Add(subtitleText);
-            Grid.SetColumn(titleStack, 0);
-            headerGrid.Children.Add(titleStack);
-
-            stackPanel.Children.Add(headerGrid);
-
-            // Actions principales
-            var actionsCard = new Border
-            {
-                Style = (Style)FindResource("Card"),
-                Margin = new Thickness(0, 0, 0, 24)
-            };
-
-            var actionsStack = new StackPanel();
-            var actionsTitle = new TextBlock
-            {
-                Text = "Actions Principales",
-                FontSize = 18,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextPrimary"),
-                Margin = new Thickness(0, 0, 0, 20)
-            };
-            actionsStack.Children.Add(actionsTitle);
-
-            var actionsGrid = new Grid();
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            actionsGrid.ColumnDefinitions.Add(new ColumnDefinition());
-
-            // Bouton Nouvelle Demande
-            var btnNouvelle = new Button
-            {
-                Style = (Style)FindResource("MaterialDesignRaisedButton"),
-                Height = 60,
-                Margin = new Thickness(0, 0, 8, 0),
-                Content = new StackPanel
+                // Utiliser un délai pour éviter de rafraîchir trop souvent
+                var timer = new System.Windows.Threading.DispatcherTimer
                 {
-                    Orientation = Orientation.Horizontal,
-                    Children =
-                    {
-                        new TextBlock { Text = "📝", FontSize = 20, Margin = new Thickness(0, 0, 8, 0) },
-                        new TextBlock { Text = "Nouvelle Demande", FontWeight = FontWeights.SemiBold }
-                    }
-                }
-            };
-            btnNouvelle.Click += BtnNouvelleDemandeRaccourci_Click;
-            Grid.SetColumn(btnNouvelle, 0);
-            actionsGrid.Children.Add(btnNouvelle);
-
-            // Bouton Calendrier
-            var btnCalendrier = new Button
-            {
-                Style = (Style)FindResource("MaterialDesignOutlineButton"),
-                Height = 60,
-                Margin = new Thickness(4, 0, 4, 0),
-                Content = new StackPanel
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                timer.Tick += (s, e) =>
                 {
-                    Orientation = Orientation.Horizontal,
-                    Children =
-                    {
-                        new TextBlock { Text = "📊", FontSize = 20, Margin = new Thickness(0, 0, 8, 0) },
-                        new TextBlock { Text = "Voir Calendrier", FontWeight = FontWeights.SemiBold }
-                    }
-                }
-            };
-            btnCalendrier.Click += BtnCalendrier_Click;
-            Grid.SetColumn(btnCalendrier, 1);
-            actionsGrid.Children.Add(btnCalendrier);
-
-            // Bouton Mes Congés
-            var btnMesConges = new Button
-            {
-                Style = (Style)FindResource("MaterialDesignOutlineButton"),
-                Height = 60,
-                Margin = new Thickness(8, 0, 0, 0),
-                Content = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Children =
-                    {
-                        new TextBlock { Text = "📅", FontSize = 20, Margin = new Thickness(0, 0, 8, 0) },
-                        new TextBlock { Text = "Mes Congés", FontWeight = FontWeights.SemiBold }
-                    }
-                }
-            };
-            btnMesConges.Click += BtnMesConges_Click;
-            Grid.SetColumn(btnMesConges, 2);
-            actionsGrid.Children.Add(btnMesConges);
-
-            actionsStack.Children.Add(actionsGrid);
-            actionsCard.Child = actionsStack;
-            stackPanel.Children.Add(actionsCard);
-
-            scrollViewer.Content = stackPanel;
-            return scrollViewer;
+                    timer.Stop();
+                    _dashboardControl?.Rafraichir();
+                };
+                timer.Start();
+            }
         }
 
         private StackPanel CreerPanneauAdmin()

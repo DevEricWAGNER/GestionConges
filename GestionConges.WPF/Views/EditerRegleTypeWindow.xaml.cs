@@ -148,8 +148,7 @@ namespace GestionConges.WPF.Views
                     }
                     else if (!string.IsNullOrWhiteSpace(TxtMaximumParAn.Text))
                     {
-                        MessageBox.Show("Le maximum par an doit être un nombre positif.", "Validation",
-                                      MessageBoxButton.OK, MessageBoxImage.Warning);
+                        AfficherMessageValidation("Le maximum par an doit être un nombre positif.");
                         TxtMaximumParAn.Focus();
                         return;
                     }
@@ -172,8 +171,7 @@ namespace GestionConges.WPF.Views
                     }
                     else if (!string.IsNullOrWhiteSpace(TxtMaximumConsecutif.Text))
                     {
-                        MessageBox.Show("Le maximum consécutif doit être un nombre positif.", "Validation",
-                                      MessageBoxButton.OK, MessageBoxImage.Warning);
+                        AfficherMessageValidation("Le maximum consécutif doit être un nombre positif.");
                         TxtMaximumConsecutif.Focus();
                         return;
                     }
@@ -196,8 +194,7 @@ namespace GestionConges.WPF.Views
                     }
                     else if (!string.IsNullOrWhiteSpace(TxtPreavisMinimum.Text))
                     {
-                        MessageBox.Show("Le préavis minimum doit être un nombre positif ou zéro.", "Validation",
-                                      MessageBoxButton.OK, MessageBoxImage.Warning);
+                        AfficherMessageValidation("Le préavis minimum doit être un nombre positif ou zéro.");
                         TxtPreavisMinimum.Focus();
                         return;
                     }
@@ -220,8 +217,7 @@ namespace GestionConges.WPF.Views
                     }
                     else if (!string.IsNullOrWhiteSpace(TxtAnticipationMaximum.Text))
                     {
-                        MessageBox.Show("L'anticipation maximum doit être un nombre positif.", "Validation",
-                                      MessageBoxButton.OK, MessageBoxImage.Warning);
+                        AfficherMessageValidation("L'anticipation maximum doit être un nombre positif.");
                         TxtAnticipationMaximum.Focus();
                         return;
                     }
@@ -239,8 +235,7 @@ namespace GestionConges.WPF.Views
                 {
                     if (RegleModifiee.MaximumConsecutif > RegleModifiee.MaximumParAn)
                     {
-                        MessageBox.Show("Le maximum consécutif ne peut pas être supérieur au maximum par an.",
-                                      "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        AfficherMessageValidation("Le maximum consécutif ne peut pas être supérieur au maximum par an.");
                         return;
                     }
                 }
@@ -250,8 +245,7 @@ namespace GestionConges.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la validation : {ex.Message}", "Erreur",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors de la validation : {ex.Message}");
             }
         }
 
@@ -259,6 +253,16 @@ namespace GestionConges.WPF.Views
         {
             DialogResult = false;
             Close();
+        }
+
+        private void AfficherMessageValidation(string message)
+        {
+            MessageBox.Show(message, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private void AfficherMessageErreur(string message)
+        {
+            MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

@@ -65,6 +65,9 @@ namespace GestionConges.WPF.Controls
                 CmbFiltreAnnee.Items.Insert(0, new ComboBoxItem { Content = "Toutes les années", Tag = null, IsSelected = true });
                 CmbFiltreAnnee.SelectedIndex = 0;
             }
+
+            // Initialiser les statistiques
+            MettreAJourStatistiques();
         }
 
         private async void ChargerDemandes()
@@ -89,8 +92,7 @@ namespace GestionConges.WPF.Controls
             {
                 await Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"Erreur lors du chargement des demandes : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    AfficherMessageErreur($"Erreur lors du chargement des demandes : {ex.Message}");
                 });
             }
         }
@@ -100,7 +102,7 @@ namespace GestionConges.WPF.Controls
             var demandesFiltrees = _toutesLesDemandes.AsEnumerable();
 
             // Filtre par statut
-            if (CmbFiltreStatut.SelectedItem is ComboBoxItem itemStatut && itemStatut.Tag != null)
+            if (CmbFiltreStatut?.SelectedItem is ComboBoxItem itemStatut && itemStatut.Tag != null)
             {
                 var statutFiltre = itemStatut.Tag.ToString();
                 switch (statutFiltre)
@@ -121,7 +123,7 @@ namespace GestionConges.WPF.Controls
             }
 
             // Filtre par année
-            if (CmbFiltreAnnee.SelectedItem is ComboBoxItem itemAnnee && itemAnnee.Tag != null)
+            if (CmbFiltreAnnee?.SelectedItem is ComboBoxItem itemAnnee && itemAnnee.Tag != null)
             {
                 var annee = (int)itemAnnee.Tag;
                 demandesFiltrees = demandesFiltrees.Where(d => d.DateDebut.Year == annee || d.DateFin.Year == annee);
@@ -189,12 +191,12 @@ namespace GestionConges.WPF.Controls
                 if (result == true && nouvelleDemandeWindow.DemandeCreee)
                 {
                     ChargerDemandes(); // Recharger la liste
+                    AfficherNotificationSucces("Demande créée avec succès !");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture du formulaire : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors de l'ouverture du formulaire : {ex.Message}");
             }
         }
 
@@ -210,12 +212,12 @@ namespace GestionConges.WPF.Controls
                     if (result == true && modificationWindow.DemandeCreee)
                     {
                         ChargerDemandes(); // Recharger la liste
+                        AfficherNotificationSucces("Demande modifiée avec succès !");
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la modification : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    AfficherMessageErreur($"Erreur lors de la modification : {ex.Message}");
                 }
             }
         }
@@ -247,12 +249,12 @@ namespace GestionConges.WPF.Controls
                     if (result == true && modificationWindow.DemandeCreee)
                     {
                         ChargerDemandes(); // Recharger la liste
+                        AfficherNotificationSucces("Demande dupliquée avec succès !");
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la duplication : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    AfficherMessageErreur($"Erreur lors de la duplication : {ex.Message}");
                 }
             }
         }
@@ -282,16 +284,13 @@ namespace GestionConges.WPF.Controls
                             context.DemandesConges.Remove(demandeASupprimer);
                             await context.SaveChangesAsync();
 
-                            MessageBox.Show("Demande supprimée avec succès.", "Succès",
-                                          MessageBoxButton.OK, MessageBoxImage.Information);
-
+                            AfficherNotificationSucces("Demande supprimée avec succès.");
                             ChargerDemandes(); // Recharger la liste
                         }
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Erreur lors de la suppression : {ex.Message}",
-                                      "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        AfficherMessageErreur($"Erreur lors de la suppression : {ex.Message}");
                     }
                 }
             }
@@ -335,8 +334,7 @@ namespace GestionConges.WPF.Controls
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'affichage des détails : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors de l'affichage des détails : {ex.Message}");
             }
         }
 
@@ -391,6 +389,16 @@ namespace GestionConges.WPF.Controls
                 MenuModifier.IsEnabled = false;
                 MenuSupprimer.IsEnabled = false;
             }
+        }
+
+        private void AfficherMessageErreur(string message)
+        {
+            MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void AfficherNotificationSucces(string message)
+        {
+            MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

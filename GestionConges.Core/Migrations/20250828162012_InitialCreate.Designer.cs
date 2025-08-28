@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestionConges.Core.Migrations
 {
     [DbContext(typeof(GestionCongesContext))]
-    [Migration("20250825083359_InitialCreate")]
+    [Migration("20250828162012_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,21 +24,6 @@ namespace GestionConges.Core.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("EquipePole", b =>
-                {
-                    b.Property<int>("EquipesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PolesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("EquipesId", "PolesId");
-
-                    b.HasIndex("PolesId");
-
-                    b.ToTable("EquipePole");
-                });
 
             modelBuilder.Entity("GestionConges.Core.Models.DemandeConge", b =>
                 {
@@ -186,73 +171,6 @@ namespace GestionConges.Core.Migrations
                             Description = "Équipe production Kronembourg",
                             Nom = "Production",
                             SocieteId = 3
-                        });
-                });
-
-            modelBuilder.Entity("GestionConges.Core.Models.EquipePole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Actif")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("DateAffectation")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateFin")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EquipeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PoleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PoleId");
-
-                    b.HasIndex("EquipeId", "PoleId")
-                        .IsUnique();
-
-                    b.ToTable("EquipesPoles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Actif = true,
-                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            EquipeId = 2,
-                            PoleId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Actif = true,
-                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            EquipeId = 2,
-                            PoleId = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Actif = true,
-                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            EquipeId = 2,
-                            PoleId = 3
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Actif = true,
-                            DateAffectation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            EquipeId = 5,
-                            PoleId = 4
                         });
                 });
 
@@ -596,6 +514,9 @@ namespace GestionConges.Core.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int>("EquipeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -603,7 +524,7 @@ namespace GestionConges.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Nom")
+                    b.HasIndex("EquipeId", "Nom")
                         .IsUnique();
 
                     b.ToTable("Poles");
@@ -615,6 +536,7 @@ namespace GestionConges.Core.Migrations
                             Actif = true,
                             DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Équipe de développement logiciel",
+                            EquipeId = 2,
                             Nom = "Développement"
                         },
                         new
@@ -623,6 +545,7 @@ namespace GestionConges.Core.Migrations
                             Actif = true,
                             DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Équipe infrastructure et réseaux",
+                            EquipeId = 2,
                             Nom = "Réseaux"
                         },
                         new
@@ -631,6 +554,7 @@ namespace GestionConges.Core.Migrations
                             Actif = true,
                             DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Équipe Reflex",
+                            EquipeId = 2,
                             Nom = "Reflex"
                         },
                         new
@@ -639,6 +563,7 @@ namespace GestionConges.Core.Migrations
                             Actif = true,
                             DateCreation = new DateTime(2025, 1, 1, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Équipe logistique et support",
+                            EquipeId = 5,
                             Nom = "Logistique"
                         });
                 });
@@ -1012,21 +937,6 @@ namespace GestionConges.Core.Migrations
                     b.ToTable("ValidationsDemanades");
                 });
 
-            modelBuilder.Entity("EquipePole", b =>
-                {
-                    b.HasOne("GestionConges.Core.Models.Equipe", null)
-                        .WithMany()
-                        .HasForeignKey("EquipesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GestionConges.Core.Models.Pole", null)
-                        .WithMany()
-                        .HasForeignKey("PolesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GestionConges.Core.Models.DemandeConge", b =>
                 {
                     b.HasOne("GestionConges.Core.Models.TypeAbsence", "TypeAbsence")
@@ -1057,23 +967,15 @@ namespace GestionConges.Core.Migrations
                     b.Navigation("Societe");
                 });
 
-            modelBuilder.Entity("GestionConges.Core.Models.EquipePole", b =>
+            modelBuilder.Entity("GestionConges.Core.Models.Pole", b =>
                 {
                     b.HasOne("GestionConges.Core.Models.Equipe", "Equipe")
-                        .WithMany()
+                        .WithMany("Poles")
                         .HasForeignKey("EquipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GestionConges.Core.Models.Pole", "Pole")
-                        .WithMany()
-                        .HasForeignKey("PoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Equipe");
-
-                    b.Navigation("Pole");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.RegleTypeAbsence", b =>
@@ -1178,6 +1080,8 @@ namespace GestionConges.Core.Migrations
             modelBuilder.Entity("GestionConges.Core.Models.Equipe", b =>
                 {
                     b.Navigation("Employes");
+
+                    b.Navigation("Poles");
                 });
 
             modelBuilder.Entity("GestionConges.Core.Models.Pole", b =>

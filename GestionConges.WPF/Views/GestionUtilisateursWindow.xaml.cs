@@ -303,32 +303,34 @@ namespace GestionConges.WPF.Views
 
         private async Task ChargerPolesPourEquipe(int equipeId)
         {
-            await _semaphore.WaitAsync();
             try
             {
-                var poles = await _context.EquipesPoles
-                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
-                    .Include(ep => ep.Pole)
-                    .Select(ep => ep.Pole)
-                    .Where(p => p.Actif)
+                using var context = CreerContexte();
+
+                // CORRECTION : Utiliser la relation directe Pole -> Equipe
+                var poles = await context.Poles
+                    .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
                     .ToListAsync();
 
-                _poles.Clear();
-                _poles.Add(new Pole { Id = 0, Nom = "Aucun pôle" }); // Option vide
-                foreach (var pole in poles)
+                var polesListe = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
+                polesListe.AddRange(poles);
+
+                await Dispatcher.InvokeAsync(() =>
                 {
-                    _poles.Add(pole);
-                }
+                    CmbFiltrePole.ItemsSource = polesListe;
+                    CmbFiltrePole.DisplayMemberPath = "Nom";
+                    CmbFiltrePole.SelectedValuePath = "Id";
+                    CmbFiltrePole.SelectedIndex = 0;
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                _semaphore.Release();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 
@@ -928,11 +930,9 @@ namespace GestionConges.WPF.Views
                 using var context = CreerContexte();
                 if (context == null) return;
 
-                var poles = await context.EquipesPoles
-                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
-                    .Include(ep => ep.Pole)
-                    .Select(ep => ep.Pole)
-                    .Where(p => p.Actif)
+                // CORRECTION : Utiliser la relation directe Pole -> Equipe
+                var poles = await context.Poles
+                    .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
                     .ToListAsync();
 

@@ -15,8 +15,10 @@ namespace GestionConges.Core.Models
 
         public bool Actif { get; set; } = true;
 
-        // Relations - Un pôle peut être rattaché à plusieurs équipes
-        public virtual ICollection<Equipe> Equipes { get; set; } = new List<Equipe>();
+        // Relations - Un pôle appartient à une seule équipe
+        [Required]
+        public int EquipeId { get; set; }
+        public virtual Equipe Equipe { get; set; } = null!;
 
         // Navigation - Employés du pôle
         public virtual ICollection<Utilisateur> Employes { get; set; } = new List<Utilisateur>();

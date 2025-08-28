@@ -15,7 +15,7 @@ namespace GestionConges.Core.Models
 
         public bool Actif { get; set; } = true;
 
-        // Relations
+        // Relations - Une équipe appartient à une société
         [Required]
         public int SocieteId { get; set; }
         public virtual Societe Societe { get; set; } = null!;
@@ -23,7 +23,7 @@ namespace GestionConges.Core.Models
         // Navigation - Employés de l'équipe
         public virtual ICollection<Utilisateur> Employes { get; set; } = new List<Utilisateur>();
 
-        // Navigation - Pôles rattachés à cette équipe
+        // Navigation - Pôles rattachés à cette équipe (une équipe peut avoir plusieurs pôles)
         public virtual ICollection<Pole> Poles { get; set; } = new List<Pole>();
 
         public DateTime DateCreation { get; set; } = DateTime.Now;

@@ -2,53 +2,224 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Ajouter un Jour Férié" 
-        Height="350" Width="400"
+        Height="420" Width="460"
         WindowStartupLocation="CenterOwner"
-        Background="#F5F5F5"
-        ResizeMode="NoResize">
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Border CornerRadius="12" Background="{StaticResource Background}" 
+            BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+            Effect="{StaticResource ShadowLarge}">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- Titre -->
-        <TextBlock Grid.Row="0" Text="📅 Ajouter un Jour Férié" 
-                 FontSize="18" FontWeight="Bold" 
-                 HorizontalAlignment="Center" Margin="0,0,0,20"/>
+            <!-- En-tête -->
+            <Border Grid.Row="0" Style="{StaticResource Card}" 
+                    Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        <!-- Date -->
-        <TextBlock Grid.Row="1" Text="Date :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-        <DatePicker Grid.Row="2" Name="DpDate" Padding="5" Margin="0,0,0,15"/>
+                    <!-- Icône et titre -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource Primary}" 
+                                Width="40" Height="40" CornerRadius="10" 
+                                Margin="0,0,16,0">
+                            <TextBlock Text="📅" FontSize="20" 
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Ajouter un Jour Férié" 
+                                     FontSize="18" FontWeight="Bold"
+                                     Foreground="{StaticResource TextPrimary}"/>
+                            <TextBlock Text="Configurez un nouveau jour férié" 
+                                     FontSize="12" 
+                                     Foreground="{StaticResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
 
-        <!-- Nom -->
-        <TextBlock Grid.Row="3" Text="Nom :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-        <TextBox Grid.Row="4" Name="TxtNom" Padding="8" Margin="0,0,0,15" MaxLength="100"/>
+                    <!-- Bouton fermer -->
+                    <Button Grid.Column="2" Content="✕" 
+                            Width="32" Height="32" 
+                            Background="Transparent" 
+                            BorderThickness="0" 
+                            Foreground="{StaticResource Gray400}"
+                            FontSize="16"
+                            Click="BtnAnnuler_Click"
+                            ToolTip="Fermer"/>
+                </Grid>
+            </Border>
 
-        <!-- Type -->
-        <TextBlock Grid.Row="5" Text="Type :" FontWeight="SemiBold" Margin="0,0,0,5"/>
-        <ComboBox Grid.Row="6" Name="CmbType" Padding="5" Margin="0,0,0,20">
-            <ComboBoxItem Content="National" IsSelected="True"/>
-            <ComboBoxItem Content="Local"/>
-            <ComboBoxItem Content="Religieux"/>
-            <ComboBoxItem Content="Entreprise"/>
-        </ComboBox>
+            <!-- Contenu défilable -->
+            <ScrollViewer Grid.Row="1" Margin="0,0,0,20">
+                <StackPanel>
+                    <!-- Formulaire -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                <Border Background="{StaticResource Secondary}" 
+                                        Width="32" Height="32" CornerRadius="8" 
+                                        Margin="0,0,12,0">
+                                    <TextBlock Text="📝" FontSize="16" 
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Informations du Jour Férié" 
+                                         FontSize="16" FontWeight="SemiBold" 
+                                         Foreground="{StaticResource TextPrimary}"
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
 
-        <!-- Boutons -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="BtnAjouter" Content="✅ Ajouter"
-                  Background="#4CAF50" Foreground="White" BorderThickness="0"
-                  Padding="20,10" Margin="0,0,10,0" Click="BtnAjouter_Click"/>
-            <Button Name="BtnAnnuler" Content="❌ Annuler"
-                  Background="#757575" Foreground="White" BorderThickness="0"
-                  Padding="20,10" Click="BtnAnnuler_Click"/>
-        </StackPanel>
-    </Grid>
+                            <!-- Date -->
+                            <StackPanel Margin="0,0,0,20">
+                                <TextBlock Text="Date" 
+                                         FontSize="14" FontWeight="SemiBold"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         Margin="0,0,0,8"/>
+                                <DatePicker Name="DpDate" 
+                                          Height="44"
+                                          Background="{StaticResource Surface}"
+                                          BorderBrush="{StaticResource Gray300}"
+                                          BorderThickness="1"
+                                          Padding="12,8"/>
+                            </StackPanel>
+
+                            <!-- Nom -->
+                            <StackPanel Margin="0,0,0,20">
+                                <TextBlock Text="Nom du jour férié" 
+                                         FontSize="14" FontWeight="SemiBold"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         Margin="0,0,0,8"/>
+                                <TextBox Name="TxtNom" 
+                                       Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                       MaxLength="100"
+                                       ToolTip="Ex: Jour de l'An, Fête Nationale..."/>
+                            </StackPanel>
+
+                            <!-- Type -->
+                            <StackPanel>
+                                <TextBlock Text="Type" 
+                                         FontSize="14" FontWeight="SemiBold"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         Margin="0,0,0,8"/>
+                                <ComboBox Name="CmbType" 
+                                        Height="44"
+                                        Background="{StaticResource Surface}"
+                                        BorderBrush="{StaticResource Gray300}"
+                                        BorderThickness="1"
+                                        Padding="12,8">
+                                    <ComboBoxItem Content="National" IsSelected="True">
+                                        <ComboBoxItem.Template>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                      Padding="8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="🏛️" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="National"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ComboBoxItem.Template>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="Local">
+                                        <ComboBoxItem.Template>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                      Padding="8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="🏘️" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Local"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ComboBoxItem.Template>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="Religieux">
+                                        <ComboBoxItem.Template>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                      Padding="8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="⛪" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Religieux"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ComboBoxItem.Template>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="Entreprise">
+                                        <ComboBoxItem.Template>
+                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                      Padding="8">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="🏢" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="Entreprise"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ComboBoxItem.Template>
+                                    </ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Informations supplémentaires -->
+                    <Border Background="{StaticResource Gray50}" 
+                            BorderBrush="{StaticResource Primary}" BorderThickness="1" 
+                            CornerRadius="8" Padding="16">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Background="{StaticResource Primary}" 
+                                        Width="20" Height="20" CornerRadius="10" 
+                                        Margin="0,0,8,0">
+                                    <TextBlock Text="💡" FontSize="10" 
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Information" 
+                                         FontWeight="SemiBold" FontSize="12"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock TextWrapping="Wrap" FontSize="11" 
+                                     Foreground="{StaticResource TextSecondary}"
+                                     LineHeight="16">
+                                Ce jour férié sera automatiquement pris en compte dans le calcul des congés et ne pourra pas être sélectionné pour une demande d'absence.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Boutons d'action -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Name="BtnAnnuler" Content="Annuler"
+                            Style="{StaticResource MaterialDesignOutlineButton}"
+                            Margin="0,0,12,0"
+                            Click="BtnAnnuler_Click"/>
+                    <Button Name="BtnAjouter" Content="Ajouter"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Click="BtnAjouter_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

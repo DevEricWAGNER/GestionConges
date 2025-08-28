@@ -64,12 +64,14 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
-                    // Charger les pôles avec leurs équipes
+                    // Charger les pôles avec leur équipe et société
                     var poles = await _context.Poles
-                        .Include(p => p.Equipes)
+                        .Include(p => p.Equipe)
                             .ThenInclude(e => e.Societe)
                         .Include(p => p.Employes)
-                        .OrderBy(p => p.Nom)
+                        .OrderBy(p => p.Equipe.Societe.Nom)
+                        .ThenBy(p => p.Equipe.Nom)
+                        .ThenBy(p => p.Nom)
                         .ToListAsync();
 
                     await Dispatcher.InvokeAsync(() =>
@@ -134,29 +136,17 @@ namespace GestionConges.WPF.Views
             TxtNom.Text = pole.Nom;
             TxtDescription.Text = pole.Description ?? string.Empty;
             ChkActif.IsChecked = pole.Actif;
-
-            // Afficher les équipes actuellement associées
-            var equipesAssociees = pole.Equipes.Where(e => e.Actif).ToList();
-            LstEquipesAssociees.ItemsSource = equipesAssociees;
+            CmbEquipes.SelectedItem = pole.Equipe;
 
             // Informations supplémentaires
             var infos = $"📅 Créé le : {pole.DateCreation:dd/MM/yyyy HH:mm}\n";
             infos += $"👥 Nombre d'employés : {pole.Employes.Count}\n";
-            infos += $"🏢 Équipes associées : {equipesAssociees.Count}\n";
+            infos += $"🏛️ Équipe : {pole.Equipe?.Nom} ({pole.Equipe?.Societe?.Nom})\n";
             infos += $"🆔 ID : {pole.Id}";
-
-            if (equipesAssociees.Count > 0)
-            {
-                infos += "\n\n🏢 Équipes associées :\n";
-                foreach (var equipe in equipesAssociees)
-                {
-                    infos += $"• {equipe.Nom} ({equipe.Societe?.Nom})\n";
-                }
-            }
 
             if (pole.Employes.Count > 0)
             {
-                infos += "\n👥 Employés dans ce pôle :\n";
+                infos += "\n\n👥 Employés dans ce pôle :\n";
                 var employesList = pole.Employes.ToList();
                 foreach (var employe in employesList.Take(5))
                 {
@@ -179,7 +169,6 @@ namespace GestionConges.WPF.Views
             TxtNom.Clear();
             TxtDescription.Clear();
             ChkActif.IsChecked = true;
-            LstEquipesAssociees.ItemsSource = null;
             CmbEquipes.SelectedItem = null;
             TxtInfos.Text = "Sélectionnez un pôle pour voir les détails";
 
@@ -192,8 +181,6 @@ namespace GestionConges.WPF.Views
             TxtDescription.IsEnabled = true;
             ChkActif.IsEnabled = true;
             CmbEquipes.IsEnabled = true;
-            BtnAjouterEquipe.IsEnabled = true;
-            BtnRetirerEquipe.IsEnabled = true;
             BtnSauvegarder.IsEnabled = true;
             BtnAnnuler.IsEnabled = true;
             _modeEdition = true;
@@ -205,8 +192,6 @@ namespace GestionConges.WPF.Views
             TxtDescription.IsEnabled = false;
             ChkActif.IsEnabled = false;
             CmbEquipes.IsEnabled = false;
-            BtnAjouterEquipe.IsEnabled = false;
-            BtnRetirerEquipe.IsEnabled = false;
             BtnSauvegarder.IsEnabled = false;
             BtnAnnuler.IsEnabled = false;
             _modeEdition = false;
@@ -246,7 +231,7 @@ namespace GestionConges.WPF.Views
 
                 var result = MessageBox.Show(
                     $"Êtes-vous sûr de vouloir supprimer le pôle '{_poleSelectionne.Nom}' ?\n\n" +
-                    "Cette action supprimera également toutes les associations avec les équipes.\n" +
+                    $"Ce pôle appartient à l'équipe '{_poleSelectionne.Equipe?.Nom}' de la société '{_poleSelectionne.Equipe?.Societe?.Nom}'.\n" +
                     "Cette action est irréversible.",
                     "Confirmation de suppression",
                     MessageBoxButton.YesNo,
@@ -256,14 +241,7 @@ namespace GestionConges.WPF.Views
                 {
                     try
                     {
-                        // Supprimer d'abord les relations équipe-pôle
-                        var relationsEquipePole = await _context.EquipesPoles
-                            .Where(ep => ep.PoleId == _poleSelectionne.Id)
-                            .ToListAsync();
-
-                        _context.EquipesPoles.RemoveRange(relationsEquipePole);
-
-                        // Puis supprimer le pôle
+                        // Supprimer directement le pôle
                         _context.Poles.Remove(_poleSelectionne);
                         await _context.SaveChangesAsync();
 
@@ -297,12 +275,12 @@ namespace GestionConges.WPF.Views
 
                     await ChargerDonneesAsync();
 
-                    // Utiliser les valeurs stockées au lieu de _poleSelectionne
+                    // Utiliser les valeurs stockées
                     string message = nouvelEtat ? "activé" : "désactivé";
                     MessageBox.Show($"Pôle {message} avec succès.", "Succès",
                                   MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    // Optionnel : resélectionner le pôle dans la grille
+                    // Resélectionner le pôle dans la grille
                     var poleRecharge = _poles.FirstOrDefault(p => p.Id == poleId);
                     if (poleRecharge != null)
                     {
@@ -317,121 +295,6 @@ namespace GestionConges.WPF.Views
             }
         }
 
-        private async void BtnAjouterEquipe_Click(object sender, RoutedEventArgs e)
-        {
-            if (CmbEquipes.SelectedItem is Equipe equipeSelectionnee && _poleSelectionne != null)
-            {
-                try
-                {
-                    // Vérifier si l'association existe déjà
-                    var existeDejaAssociation = await _context.EquipesPoles
-                        .AnyAsync(ep => ep.EquipeId == equipeSelectionnee.Id &&
-                                       ep.PoleId == _poleSelectionne.Id &&
-                                       ep.Actif);
-
-                    if (existeDejaAssociation)
-                    {
-                        MessageBox.Show("Cette équipe est déjà associée à ce pôle.",
-                                      "Information", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-
-                    // Créer la nouvelle association
-                    var nouvelleAssociation = new EquipePole
-                    {
-                        EquipeId = equipeSelectionnee.Id,
-                        PoleId = _poleSelectionne.Id,
-                        Actif = true,
-                        DateAffectation = DateTime.Now
-                    };
-
-                    _context.EquipesPoles.Add(nouvelleAssociation);
-                    await _context.SaveChangesAsync();
-
-                    // Recharger les données pour mettre à jour l'affichage
-                    await ChargerDonneesAsync();
-
-                    // Réafficher les détails du pôle
-                    var poleRechargé = await _context.Poles
-                        .Include(p => p.Equipes)
-                            .ThenInclude(e => e.Societe)
-                        .Include(p => p.Employes)
-                        .FirstOrDefaultAsync(p => p.Id == _poleSelectionne.Id);
-
-                    if (poleRechargé != null)
-                    {
-                        _poleSelectionne = poleRechargé;
-                        AfficherDetailsPole(_poleSelectionne);
-                    }
-
-                    MessageBox.Show("Équipe ajoutée avec succès au pôle.", "Succès",
-                                  MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Erreur lors de l'ajout de l'équipe : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private async void BtnRetirerEquipe_Click(object sender, RoutedEventArgs e)
-        {
-            if (LstEquipesAssociees.SelectedItem is Equipe equipeSelectionnee && _poleSelectionne != null)
-            {
-                var result = MessageBox.Show(
-                    $"Êtes-vous sûr de vouloir retirer l'équipe '{equipeSelectionnee.Nom}' de ce pôle ?",
-                    "Confirmation",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        var association = await _context.EquipesPoles
-                            .FirstOrDefaultAsync(ep => ep.EquipeId == equipeSelectionnee.Id &&
-                                                     ep.PoleId == _poleSelectionne.Id);
-
-                        if (association != null)
-                        {
-                            _context.EquipesPoles.Remove(association);
-                            await _context.SaveChangesAsync();
-
-                            // Recharger les données
-                            await ChargerDonneesAsync();
-
-                            // Réafficher les détails du pôle
-                            var poleRechargé = await _context.Poles
-                                .Include(p => p.Equipes)
-                                    .ThenInclude(e => e.Societe)
-                                .Include(p => p.Employes)
-                                .FirstOrDefaultAsync(p => p.Id == _poleSelectionne.Id);
-
-                            if (poleRechargé != null)
-                            {
-                                _poleSelectionne = poleRechargé;
-                                AfficherDetailsPole(_poleSelectionne);
-                            }
-
-                            MessageBox.Show("Équipe retirée avec succès du pôle.", "Succès",
-                                          MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Erreur lors du retrait de l'équipe : {ex.Message}",
-                                      "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show("Veuillez sélectionner une équipe à retirer.",
-                              "Information", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
         private async void BtnSauvegarder_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -443,15 +306,26 @@ namespace GestionConges.WPF.Views
                                   "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                if (CmbEquipes.SelectedItem is not Equipe equipeSelectionnee)
+                {
+                    MessageBox.Show("Veuillez sélectionner une équipe.",
+                                  "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 int poleIdActuel = _poleSelectionne != null ? _poleSelectionne.Id : 0;
-                // Vérifier l'unicité du nom
+
+                // Vérifier l'unicité du nom dans l'équipe
                 var nomExiste = await _context.Poles
-                    .Where(p => p.Nom == TxtNom.Text.Trim() && p.Id != poleIdActuel)
+                    .Where(p => p.Nom == TxtNom.Text.Trim()
+                             && p.EquipeId == equipeSelectionnee.Id
+                             && p.Id != poleIdActuel)
                     .AnyAsync();
 
                 if (nomExiste)
                 {
-                    MessageBox.Show("Ce nom de pôle est déjà utilisé.",
+                    MessageBox.Show("Ce nom de pôle est déjà utilisé dans cette équipe.",
                                   "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -477,6 +351,7 @@ namespace GestionConges.WPF.Views
                 pole.Nom = TxtNom.Text.Trim();
                 pole.Description = string.IsNullOrWhiteSpace(TxtDescription.Text) ? null : TxtDescription.Text.Trim();
                 pole.Actif = ChkActif.IsChecked ?? true;
+                pole.EquipeId = equipeSelectionnee.Id;
 
                 await _context.SaveChangesAsync();
 
@@ -529,12 +404,14 @@ namespace GestionConges.WPF.Views
         {
             try
             {
-                // Charger les pôles avec leurs équipes
+                // Charger les pôles avec leur équipe et société
                 var poles = await _context.Poles
-                    .Include(p => p.Equipes)
+                    .Include(p => p.Equipe)
                         .ThenInclude(e => e.Societe)
                     .Include(p => p.Employes)
-                    .OrderBy(p => p.Nom)
+                    .OrderBy(p => p.Equipe.Societe.Nom)
+                    .ThenBy(p => p.Equipe.Nom)
+                    .ThenBy(p => p.Nom)
                     .ToListAsync();
 
                 await Dispatcher.InvokeAsync(() =>

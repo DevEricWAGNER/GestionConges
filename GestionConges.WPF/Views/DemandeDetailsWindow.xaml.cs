@@ -21,7 +21,7 @@ namespace GestionConges.WPF.Views
             _modeConsultation = modeConsultation;
 
             // Initialiser les collections pour éviter les erreurs
-            LvValidations.ItemsSource = new List<object>();
+            LvValidations.ItemsSource = new List<ValidationAffichage>();
 
             ChargerDetails();
             ConfigurerBoutons();
@@ -58,8 +58,7 @@ namespace GestionConges.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des détails : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors du chargement des détails : {ex.Message}");
             }
         }
 
@@ -81,27 +80,8 @@ namespace GestionConges.WPF.Views
                 BorderTypeColor.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(demande.TypeAbsence.CouleurHex));
             }
 
-            // Formatage de la période
-            var periode = $"{demande.DateDebut:dd/MM/yyyy} au {demande.DateFin:dd/MM/yyyy}";
-            if (demande.DateDebut == demande.DateFin)
-            {
-                periode = $"{demande.DateDebut:dd/MM/yyyy}";
-                if (demande.TypeJourneeDebut != TypeJournee.JourneeComplete)
-                {
-                    periode += demande.TypeJourneeDebut == TypeJournee.MatiMatin ? " (matin)" : " (après-midi)";
-                }
-                else
-                {
-                    periode += " (journée complète)";
-                }
-            }
-            else
-            {
-                if (demande.TypeJourneeDebut != TypeJournee.JourneeComplete)
-                    periode += demande.TypeJourneeDebut == TypeJournee.MatiMatin ? " (début matin)" : " (début après-midi)";
-                if (demande.TypeJourneeFin != TypeJournee.JourneeComplete)
-                    periode += demande.TypeJourneeFin == TypeJournee.MatiMatin ? " (fin matin)" : " (fin après-midi)";
-            }
+            // Formatage de la période avec plus de détails
+            var periode = FormatePeriode(demande);
             TxtPeriode.Text = periode;
 
             TxtDuree.Text = $"{demande.NombreJours} jour{(demande.NombreJours > 1 ? "s" : "")}";
@@ -129,18 +109,58 @@ namespace GestionConges.WPF.Views
 
             // Informations techniques
             TxtId.Text = demande.Id.ToString();
-            TxtDateCreation.Text = demande.DateCreation.ToString("dd/MM/yyyy HH:mm");
+            TxtDateCreation.Text = demande.DateCreation.ToString("dd/MM/yyyy à HH:mm");
 
             if (demande.DateModification.HasValue)
             {
                 LblDateModification.Visibility = Visibility.Visible;
-                TxtDateModification.Text = demande.DateModification.Value.ToString("dd/MM/yyyy HH:mm");
+                TxtDateModification.Text = demande.DateModification.Value.ToString("dd/MM/yyyy à HH:mm");
             }
 
             if (demande.DateValidationFinale.HasValue)
             {
                 LblDateValidation.Visibility = Visibility.Visible;
-                TxtDateValidation.Text = demande.DateValidationFinale.Value.ToString("dd/MM/yyyy HH:mm");
+                TxtDateValidation.Text = demande.DateValidationFinale.Value.ToString("dd/MM/yyyy à HH:mm");
+            }
+        }
+
+        private string FormatePeriode(DemandeConge demande)
+        {
+            if (demande.DateDebut == demande.DateFin)
+            {
+                // Journée unique
+                var periode = $"Le {demande.DateDebut:dd/MM/yyyy}";
+
+                if (demande.TypeJourneeDebut != TypeJournee.JourneeComplete)
+                {
+                    periode += demande.TypeJourneeDebut == TypeJournee.MatiMatin ? " (matin)" : " (après-midi)";
+                }
+
+                return periode;
+            }
+            else
+            {
+                // Période multiple
+                var periode = $"Du {demande.DateDebut:dd/MM/yyyy} au {demande.DateFin:dd/MM/yyyy}";
+
+                var precisions = new List<string>();
+
+                if (demande.TypeJourneeDebut != TypeJournee.JourneeComplete)
+                {
+                    precisions.Add(demande.TypeJourneeDebut == TypeJournee.MatiMatin ? "début matin" : "début après-midi");
+                }
+
+                if (demande.TypeJourneeFin != TypeJournee.JourneeComplete)
+                {
+                    precisions.Add(demande.TypeJourneeFin == TypeJournee.MatiMatin ? "fin matin" : "fin après-midi");
+                }
+
+                if (precisions.Any())
+                {
+                    periode += $" ({string.Join(", ", precisions)})";
+                }
+
+                return periode;
             }
         }
 
@@ -152,13 +172,13 @@ namespace GestionConges.WPF.Views
 
                 var validationsAffichage = demande.Validations
                     .OrderBy(v => v.OrdreValidation)
-                    .Select(v => new
+                    .Select(v => new ValidationAffichage
                     {
                         ValidationIcon = v.Approuve ? "✅" : "❌",
                         ValidateurNom = v.Validateur?.NomComplet ?? "Validateur inconnu",
                         Commentaire = v.Commentaire ?? "",
                         CommentaireVisible = !string.IsNullOrWhiteSpace(v.Commentaire) ? Visibility.Visible : Visibility.Collapsed,
-                        DateValidation = v.DateValidation.ToString("dd/MM/yyyy HH:mm")
+                        DateValidation = v.DateValidation.ToString("dd/MM/yyyy à HH:mm")
                     })
                     .ToList();
 
@@ -166,9 +186,8 @@ namespace GestionConges.WPF.Views
             }
             else
             {
-                // Aucune validation - laisser la section cachée et une liste vide
                 BorderValidations.Visibility = Visibility.Collapsed;
-                LvValidations.ItemsSource = new List<object>();
+                LvValidations.ItemsSource = new List<ValidationAffichage>();
             }
         }
 
@@ -225,12 +244,13 @@ namespace GestionConges.WPF.Views
                 {
                     ActionEffectuee = true;
                     ChargerDetails(); // Recharger les détails mis à jour
+
+                    AfficherNotificationSucces("Demande modifiée avec succès !");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la modification : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors de la modification : {ex.Message}");
             }
         }
 
@@ -259,14 +279,12 @@ namespace GestionConges.WPF.Views
                 if (result == true && nouvelleDemandeWindow.DemandeCreee)
                 {
                     ActionEffectuee = true;
-                    MessageBox.Show("Demande dupliquée avec succès !", "Succès",
-                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                    AfficherNotificationSucces("Demande dupliquée avec succès !");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la duplication : {ex.Message}",
-                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                AfficherMessageErreur($"Erreur lors de la duplication : {ex.Message}");
             }
         }
 
@@ -295,16 +313,13 @@ namespace GestionConges.WPF.Views
 
                         ActionEffectuee = true;
 
-                        MessageBox.Show("Demande supprimée avec succès.", "Succès",
-                                      MessageBoxButton.OK, MessageBoxImage.Information);
-
+                        AfficherNotificationSucces("Demande supprimée avec succès.");
                         Close();
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la suppression : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    AfficherMessageErreur($"Erreur lors de la suppression : {ex.Message}");
                 }
             }
         }
@@ -312,6 +327,16 @@ namespace GestionConges.WPF.Views
         private void BtnFermer_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void AfficherMessageErreur(string message)
+        {
+            MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void AfficherNotificationSucces(string message)
+        {
+            MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

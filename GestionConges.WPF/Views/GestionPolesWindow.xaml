@@ -38,7 +38,7 @@
                         <Border Background="{StaticResource Secondary}" 
                               Width="40" Height="40" 
                               CornerRadius="12" Margin="0,0,16,0">
-                            <TextBlock Text="🏢" FontSize="20" 
+                            <TextBlock Text="📋" FontSize="20" 
                                      Foreground="White"
                                      HorizontalAlignment="Center" 
                                      VerticalAlignment="Center"/>
@@ -47,7 +47,7 @@
                             <TextBlock Text="Gestion des Pôles" 
                                      FontSize="18" FontWeight="SemiBold" 
                                      Foreground="{StaticResource TextPrimary}"/>
-                            <TextBlock Text="Organisation des équipes par pôles" 
+                            <TextBlock Text="Organisation des pôles par équipes" 
                                      FontSize="12" 
                                      Foreground="{StaticResource TextMuted}"/>
                         </StackPanel>
@@ -182,7 +182,7 @@
 
                             <DataGrid.Columns>
                                 <!-- Nom -->
-                                <DataGridTextColumn Header="🏢 Nom du Pôle" Binding="{Binding Nom}" Width="180">
+                                <DataGridTextColumn Header="📋 Nom du Pôle" Binding="{Binding Nom}" Width="180">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -201,13 +201,21 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
-                                <!-- Équipes -->
-                                <DataGridTextColumn Header="🏛️ Équipes" Binding="{Binding Equipes.Count}" Width="100">
+                                <!-- Équipe -->
+                                <DataGridTextColumn Header="🏛️ Équipe" Binding="{Binding Equipe.Nom}" Width="150">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="Foreground" Value="{StaticResource Primary}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Société -->
+                                <DataGridTextColumn Header="🏢 Société" Binding="{Binding Equipe.Societe.Nom}" Width="120">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
@@ -399,118 +407,43 @@
                                    VerticalScrollBarVisibility="Auto"
                                    Margin="0,0,0,20"/>
 
+                            <!-- Équipe -->
+                            <TextBlock Text="Équipe d'appartenance" 
+                                     FontSize="14" FontWeight="SemiBold"
+                                     Foreground="{StaticResource TextPrimary}" 
+                                     Margin="0,0,0,8"/>
+                            <ComboBox Name="CmbEquipes" 
+                                    Height="40"
+                                    FontSize="14"
+                                    Background="{StaticResource Surface}"
+                                    BorderBrush="{StaticResource Gray300}"
+                                    BorderThickness="1"
+                                    Padding="12,8"
+                                    Margin="0,0,0,20"
+                                    IsEnabled="False">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="4">
+                                            <TextBlock Text="{Binding Nom}" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="{StaticResource TextPrimary}"/>
+                                            <TextBlock Text=" (" 
+                                                     Foreground="{StaticResource TextMuted}"/>
+                                            <TextBlock Text="{Binding Societe.Nom}" 
+                                                     Foreground="{StaticResource TextMuted}"/>
+                                            <TextBlock Text=")" 
+                                                     Foreground="{StaticResource TextMuted}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
                             <!-- Actif -->
                             <CheckBox Name="ChkActif" 
                                     Content="Pôle actif" 
                                     FontSize="14"
                                     Foreground="{StaticResource TextPrimary}"
                                     Margin="0,0,0,24"/>
-
-                            <!-- Section Équipes -->
-                            <Border Background="{StaticResource Gray50}" 
-                                  CornerRadius="8" 
-                                  Padding="16"
-                                  Margin="0,0,0,20">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                        <Border Background="{StaticResource Warning}" 
-                                              Width="24" Height="24" 
-                                              CornerRadius="6" Margin="0,0,8,0">
-                                            <TextBlock Text="🏛️" FontSize="12" 
-                                                     Foreground="White"
-                                                     HorizontalAlignment="Center" 
-                                                     VerticalAlignment="Center"/>
-                                        </Border>
-                                        <TextBlock Text="Équipes associées" 
-                                                 FontSize="14" FontWeight="SemiBold" 
-                                                 Foreground="{StaticResource TextPrimary}"
-                                                 VerticalAlignment="Center"/>
-                                    </StackPanel>
-
-                                    <!-- Liste des équipes actuelles -->
-                                    <TextBlock Text="Équipes actuelles" 
-                                             FontSize="13" FontWeight="SemiBold"
-                                             Foreground="{StaticResource TextSecondary}" 
-                                             Margin="0,0,0,8"/>
-                                    <ListBox Name="LstEquipesAssociees" 
-                                           Height="100" 
-                                           Background="{StaticResource Surface}"
-                                           BorderBrush="{StaticResource Gray300}" 
-                                           BorderThickness="1"
-                                           Padding="8"
-                                           Margin="0,0,0,12">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="0,4">
-                                                    <Border Width="4" Height="16" 
-                                                          Background="{StaticResource Primary}" 
-                                                          CornerRadius="2" 
-                                                          Margin="0,0,8,0"/>
-                                                    <TextBlock Text="{Binding Nom}" 
-                                                             FontWeight="SemiBold"
-                                                             Foreground="{StaticResource TextPrimary}"/>
-                                                    <TextBlock Text=" (" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                    <TextBlock Text="{Binding Societe.Nom}" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                    <TextBlock Text=")" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-
-                                    <!-- Ajouter une équipe -->
-                                    <TextBlock Text="Ajouter une équipe" 
-                                             FontSize="13" FontWeight="SemiBold"
-                                             Foreground="{StaticResource TextSecondary}" 
-                                             Margin="0,0,0,8"/>
-                                    <ComboBox Name="CmbEquipes" 
-                                            Height="40"
-                                            FontSize="14"
-                                            Background="{StaticResource Surface}"
-                                            BorderBrush="{StaticResource Gray300}"
-                                            BorderThickness="1"
-                                            Padding="12,8"
-                                            Margin="0,0,0,12"
-                                            IsEnabled="False">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="4">
-                                                    <TextBlock Text="{Binding Nom}" 
-                                                             FontWeight="SemiBold"
-                                                             Foreground="{StaticResource TextPrimary}"/>
-                                                    <TextBlock Text=" (" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                    <TextBlock Text="{Binding Societe.Nom}" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                    <TextBlock Text=")" 
-                                                             Foreground="{StaticResource TextMuted}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-
-                                    <!-- Boutons gestion équipes -->
-                                    <StackPanel Orientation="Horizontal" 
-                                              HorizontalAlignment="Center">
-                                        <Button Name="BtnAjouterEquipe" Content="+ Ajouter"
-                                              Style="{StaticResource SecondaryButton}"
-                                              Padding="12,6" 
-                                              Margin="0,0,6,0" 
-                                              FontSize="12"
-                                              Click="BtnAjouterEquipe_Click" 
-                                              IsEnabled="False"/>
-                                        <Button Name="BtnRetirerEquipe" Content="- Retirer"
-                                              Style="{StaticResource DangerButton}"
-                                              Padding="12,6" 
-                                              FontSize="12"
-                                              Margin="6,0,0,0" 
-                                              Click="BtnRetirerEquipe_Click" 
-                                              IsEnabled="False"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
 
                             <!-- Boutons de validation -->
                             <StackPanel Orientation="Horizontal" 

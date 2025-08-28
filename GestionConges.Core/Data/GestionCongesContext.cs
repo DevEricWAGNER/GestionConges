@@ -15,7 +15,7 @@ namespace GestionConges.Core.Data
         public DbSet<Societe> Societes { get; set; }
         public DbSet<Equipe> Equipes { get; set; }
         public DbSet<Pole> Poles { get; set; }
-        public DbSet<EquipePole> EquipesPoles { get; set; }
+        // EquipePole supprimé - plus besoin de table de liaison
         public DbSet<UtilisateurSocieteSecondaire> UtilisateursSocietesSecondaires { get; set; }
         public DbSet<ValidateurSociete> ValidateursSocietes { get; set; }
         public DbSet<TypeAbsence> TypesAbsences { get; set; }
@@ -47,26 +47,15 @@ namespace GestionConges.Core.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configuration Pole
+            // Configuration Pole - relation directe avec Equipe
             modelBuilder.Entity<Pole>(entity =>
             {
-                entity.HasIndex(e => e.Nom).IsUnique();
-            });
+                entity.HasIndex(e => new { e.EquipeId, e.Nom }).IsUnique();
 
-            // Configuration EquipePole (relation many-to-many)
-            modelBuilder.Entity<EquipePole>(entity =>
-            {
-                entity.HasIndex(e => new { e.EquipeId, e.PoleId }).IsUnique();
-
-                entity.HasOne(ep => ep.Equipe)
-                      .WithMany()
-                      .HasForeignKey(ep => ep.EquipeId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(ep => ep.Pole)
-                      .WithMany()
-                      .HasForeignKey(ep => ep.PoleId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(p => p.Equipe)
+                      .WithMany(e => e.Poles)
+                      .HasForeignKey(p => p.EquipeId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Configuration Utilisateur
@@ -224,23 +213,14 @@ namespace GestionConges.Core.Data
 
             // ===== PÔLES DE DÉMONSTRATION =====
             modelBuilder.Entity<Pole>().HasData(
-                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex", Actif = true, DateCreation = seedDate },
-                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", Actif = true, DateCreation = seedDate }
+                // Pôles de l'équipe Projets (Id=2)
+                new Pole { Id = 1, Nom = "Développement", Description = "Équipe de développement logiciel", EquipeId = 2, Actif = true, DateCreation = seedDate },
+                new Pole { Id = 2, Nom = "Réseaux", Description = "Équipe infrastructure et réseaux", EquipeId = 2, Actif = true, DateCreation = seedDate },
+                new Pole { Id = 3, Nom = "Reflex", Description = "Équipe Reflex", EquipeId = 2, Actif = true, DateCreation = seedDate },
+
+                // Pôle de l'équipe Logistique Dambach (Id=5)
+                new Pole { Id = 4, Nom = "Logistique", Description = "Équipe logistique et support", EquipeId = 5, Actif = true, DateCreation = seedDate }
             );
-
-            // ===== RELATIONS ÉQUIPES-PÔLES =====
-            modelBuilder.Entity<EquipePole>().HasData(
-                // L'équipe Projets du siège a les pôles Développement et Réseaux
-                new EquipePole { Id = 1, EquipeId = 2, PoleId = 1, Actif = true, DateAffectation = seedDate },
-                new EquipePole { Id = 2, EquipeId = 2, PoleId = 2, Actif = true, DateAffectation = seedDate },
-                new EquipePole { Id = 3, EquipeId = 2, PoleId = 3, Actif = true, DateAffectation = seedDate },
-
-                // L'équipe Logistique de Dambach a le pôle Logistique
-                new EquipePole { Id = 4, EquipeId = 5, PoleId = 4, Actif = true, DateAffectation = seedDate }
-            );
-
             // Types d'absences par défaut
             modelBuilder.Entity<TypeAbsence>().HasData(
                 new TypeAbsence { Id = 1, Nom = "Congés Payés", CouleurHex = "#e74c3c", OrdreAffichage = 1, Actif = true, NecessiteValidation = true, DateCreation = seedDate },

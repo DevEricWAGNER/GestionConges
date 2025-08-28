@@ -118,7 +118,6 @@ namespace GestionConges.WPF.Views
             try
             {
                 CmbPole.Items.Clear();
-
                 // Ajouter l'option "Aucun pôle"
                 CmbPole.Items.Add(new System.Windows.Controls.ComboBoxItem
                 {
@@ -130,11 +129,10 @@ namespace GestionConges.WPF.Views
                     equipeItem.Tag is int equipeId)
                 {
                     using var context = App.GetService<GestionCongesContext>();
-                    var poles = await context.EquipesPoles
-                        .Where(ep => ep.EquipeId == equipeId && ep.Actif)
-                        .Include(ep => ep.Pole)
-                        .Select(ep => ep.Pole)
-                        .Where(p => p.Actif)
+
+                    // CORRECTION: Utiliser la relation directe Pole -> Equipe
+                    var poles = await context.Poles
+                        .Where(p => p.EquipeId == equipeId && p.Actif)
                         .OrderBy(p => p.Nom)
                         .ToListAsync();
 

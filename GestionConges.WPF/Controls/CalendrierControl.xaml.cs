@@ -648,11 +648,9 @@ namespace GestionConges.WPF.Controls
                 using var context = CreerContexte();
                 if (context == null) return;
 
-                var poles = await context.EquipesPoles
-                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
-                    .Include(ep => ep.Pole)
-                    .Select(ep => ep.Pole)
-                    .Where(p => p.Actif)
+                // CORRECTION : Utiliser la relation directe Pole -> Equipe
+                var poles = await context.Poles
+                    .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
                     .ToListAsync();
 
@@ -834,11 +832,9 @@ namespace GestionConges.WPF.Controls
             {
                 using var context = CreerContexte();
 
-                var poles = await context.EquipesPoles
-                    .Where(ep => ep.EquipeId == equipeId && ep.Actif)
-                    .Include(ep => ep.Pole)
-                    .Select(ep => ep.Pole)
-                    .Where(p => p.Actif)
+                // CORRECTION : Utiliser la relation directe Pole -> Equipe
+                var poles = await context.Poles
+                    .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
                     .ToListAsync();
 
