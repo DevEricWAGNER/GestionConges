@@ -359,7 +359,7 @@ namespace GestionConges.WPF
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition());
             }
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 3; i++)
             {
                 grid.RowDefinitions.Add(new RowDefinition());
             }
@@ -400,6 +400,42 @@ namespace GestionConges.WPF
             Grid.SetRow(btnTypes, 0);
             grid.Children.Add(btnTypes);
 
+            // Bouton Societe
+            var btnSociete = CreerBoutonAdmin("🏢", "Gestion des\nSociétés", (Brush)FindResource("Warning"));
+            btnSociete.Click += (s, e) =>
+            {
+                try
+                {
+                    var gestionSocietesWindow = new Views.GestionSocietesWindow();
+                    gestionSocietesWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    AfficherMessageErreur($"Erreur lors de l'ouverture de la gestion des sociétés : {ex.Message}");
+                }
+            };
+            Grid.SetColumn(btnSociete, 0);
+            Grid.SetRow(btnSociete, 1);
+            grid.Children.Add(btnSociete);
+
+            // Bouton Equipes
+            var btnEquipes = CreerBoutonAdmin("🏢", "Gestion des\nEquipes", (Brush)FindResource("Warning"));
+            btnEquipes.Click += (s, e) =>
+            {
+                try
+                {
+                    var gestionEquipesWindow = new Views.GestionEquipesWindow();
+                    gestionEquipesWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    AfficherMessageErreur($"Erreur lors de l'ouverture de la gestion des équipes : {ex.Message}");
+                }
+            };
+            Grid.SetColumn(btnEquipes, 1);
+            Grid.SetRow(btnEquipes, 1);
+            grid.Children.Add(btnEquipes);
+
             // Bouton Pôles
             var btnPoles = CreerBoutonAdmin("🏢", "Gestion des\nPôles", (Brush)FindResource("Warning"));
             btnPoles.Click += (s, e) =>
@@ -415,7 +451,7 @@ namespace GestionConges.WPF
                 }
             };
             Grid.SetColumn(btnPoles, 2);
-            Grid.SetRow(btnPoles, 0);
+            Grid.SetRow(btnPoles, 1);
             grid.Children.Add(btnPoles);
 
             // Bouton Paramètres
@@ -432,24 +468,24 @@ namespace GestionConges.WPF
                     AfficherMessageErreur($"Erreur lors de l'ouverture des paramètres : {ex.Message}");
                 }
             };
-            Grid.SetColumn(btnParametres, 0);
-            Grid.SetRow(btnParametres, 1);
+            Grid.SetColumn(btnParametres, 2);
+            Grid.SetRow(btnParametres, 0);
             grid.Children.Add(btnParametres);
 
             // Bouton Rapports (désactivé)
             var btnRapports = CreerBoutonAdmin("📊", "Rapports &\nStatistiques", (Brush)FindResource("Gray400"));
             btnRapports.IsEnabled = false;
             btnRapports.ToolTip = "Prochainement disponible";
-            Grid.SetColumn(btnRapports, 1);
-            Grid.SetRow(btnRapports, 1);
+            Grid.SetColumn(btnRapports, 0);
+            Grid.SetRow(btnRapports, 2);
             grid.Children.Add(btnRapports);
 
             // Bouton Sauvegarde (désactivé)
             var btnSauvegarde = CreerBoutonAdmin("💾", "Sauvegarde &\nExport", (Brush)FindResource("Gray400"));
             btnSauvegarde.IsEnabled = false;
             btnSauvegarde.ToolTip = "Prochainement disponible";
-            Grid.SetColumn(btnSauvegarde, 2);
-            Grid.SetRow(btnSauvegarde, 1);
+            Grid.SetColumn(btnSauvegarde, 1);
+            Grid.SetRow(btnSauvegarde, 2);
             grid.Children.Add(btnSauvegarde);
 
             stackPanel.Children.Add(grid);
