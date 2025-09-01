@@ -1,6 +1,7 @@
 ﻿using GestionConges.Core.Data;
 using GestionConges.Core.Enums;
 using GestionConges.Core.Models;
+using GestionConges.WPF.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Collections.ObjectModel;
@@ -16,8 +17,10 @@ namespace GestionConges.WPF.Views
         private readonly GestionCongesContext _context;
         private ObservableCollection<Utilisateur> _utilisateurs;
         private ObservableCollection<Societe> _societes;
+        private ObservableCollection<Pays> _pays;
         private ObservableCollection<Equipe> _equipes;
         private ObservableCollection<Pole> _poles;
+
         private ObservableCollection<UtilisateurSocieteSecondaire> _societesSecondaires;
         private Utilisateur? _utilisateurSelectionne;
         private bool _modeEdition = false;
@@ -32,6 +35,7 @@ namespace GestionConges.WPF.Views
             // Initialiser les collections
             _utilisateurs = new ObservableCollection<Utilisateur>();
             _societes = new ObservableCollection<Societe>();
+            _pays = new ObservableCollection<Pays>();
             _equipes = new ObservableCollection<Equipe>();
             _poles = new ObservableCollection<Pole>();
             _societesSecondaires = new ObservableCollection<UtilisateurSocieteSecondaire>();
@@ -46,9 +50,9 @@ namespace GestionConges.WPF.Views
                     return;
                 }
 
-                InitialiserInterface(); // Ajoutez cette ligne
+                InitialiserInterface();
                 ChargerFiltres();
-                ChargerDonnees(); // Changez FiltrerUtilisateurs() par ChargerDonnees()
+                ChargerDonnees();
             }
             catch (Exception ex)
             {
@@ -149,6 +153,10 @@ namespace GestionConges.WPF.Views
             CmbSociete.DisplayMemberPath = "Nom";
             CmbSociete.SelectedValuePath = "Id";
 
+            CmbPays.ItemsSource = _pays;
+            CmbPays.DisplayMemberPath = "Nom";
+            CmbPays.SelectedValuePath = "Code";
+
             CmbEquipe.ItemsSource = _equipes;
             CmbEquipe.DisplayMemberPath = "Nom";
             CmbEquipe.SelectedValuePath = "Id";
@@ -170,6 +178,17 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
+                    // Charger les pays depuis le service corrigé
+                    var paysList = await PaysService.GetPaysAsync();
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        _pays.Clear();
+                        foreach (var pays in paysList)
+                        {
+                            _pays.Add(pays);
+                        }
+                    });
+
                     // Charger les utilisateurs avec toutes leurs relations
                     var tousUtilisateurs = await _context.Utilisateurs
                         .Include(u => u.Societe)
@@ -262,6 +281,52 @@ namespace GestionConges.WPF.Views
             }
         }
 
+        private async void CmbPays_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Les pays sont maintenant chargés depuis le JSON, rien de spécial à faire
+        }
+
+        private async Task ChargerPays(string codePaysSélectionné = null)
+        {
+            try
+            {
+                var paysList = await PaysService.GetPaysAsync();
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    _pays.Clear();
+                    foreach (var pays in paysList)
+                    {
+                        _pays.Add(pays);
+                    }
+
+                    // Si un code pays est fourni, le sélectionner
+                    if (!string.IsNullOrEmpty(codePaysSélectionné))
+                    {
+                        CmbPays.SelectedValue = codePaysSélectionné;
+                    }
+                    else
+                    {
+                        // Sélectionner la France par défaut
+                        var france = paysList.FirstOrDefault(p => p.Code == "FR");
+                        if (france != null)
+                        {
+                            CmbPays.SelectedValue = "FR";
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Erreur lors du chargement des pays : {ex.Message}",
+                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+        }
+
+
         private async void CmbEquipe_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbEquipe.SelectedValue is int equipeId && equipeId > 0)
@@ -307,30 +372,21 @@ namespace GestionConges.WPF.Views
             {
                 using var context = CreerContexte();
 
-                // CORRECTION : Utiliser la relation directe Pole -> Equipe
                 var poles = await context.Poles
                     .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
                     .ToListAsync();
 
-                var polesListe = new List<Pole> { new Pole { Id = 0, Nom = "Tous les pôles" } };
-                polesListe.AddRange(poles);
-
-                await Dispatcher.InvokeAsync(() =>
+                _poles.Clear();
+                foreach (var pole in poles)
                 {
-                    CmbFiltrePole.ItemsSource = polesListe;
-                    CmbFiltrePole.DisplayMemberPath = "Nom";
-                    CmbFiltrePole.SelectedValuePath = "Id";
-                    CmbFiltrePole.SelectedIndex = 0;
-                });
+                    _poles.Add(pole);
+                }
             }
             catch (Exception ex)
             {
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
-                                  "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                });
+                MessageBox.Show($"Erreur lors du chargement des pôles : {ex.Message}",
+                              "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -366,6 +422,9 @@ namespace GestionConges.WPF.Views
             CmbSociete.SelectedValue = utilisateur.SocieteId;
             await ChargerEquipesPourSociete(utilisateur.SocieteId);
 
+            // Pays - charger et sélectionner le bon pays
+            await ChargerPays(utilisateur.CodePays);
+
             // Équipe
             CmbEquipe.SelectedValue = utilisateur.EquipeId;
             await ChargerPolesPourEquipe(utilisateur.EquipeId);
@@ -397,6 +456,11 @@ namespace GestionConges.WPF.Views
             {
                 infos += $"Pôle : {utilisateur.Pole.Nom}\n";
             }
+            if (!string.IsNullOrEmpty(utilisateur.CodePays))
+            {
+                var pays = _pays.FirstOrDefault(p => p.Code == utilisateur.CodePays);
+                infos += $"Pays : {pays?.Nom ?? utilisateur.CodePays}\n";
+            }
             if (_societesSecondaires.Count > 0)
             {
                 infos += $"Sociétés secondaires : {_societesSecondaires.Count}\n";
@@ -416,6 +480,7 @@ namespace GestionConges.WPF.Views
             TxtEmail.Clear();
             CmbRole.SelectedIndex = 0;
             CmbSociete.SelectedValue = null;
+            CmbPays.SelectedValue = null;
             CmbEquipe.SelectedValue = null;
             CmbPole.SelectedValue = 0;
             ChkActif.IsChecked = true;
@@ -432,6 +497,7 @@ namespace GestionConges.WPF.Views
             TxtEmail.IsEnabled = true;
             CmbRole.IsEnabled = true;
             CmbSociete.IsEnabled = true;
+            CmbPays.IsEnabled = true;
             CmbEquipe.IsEnabled = true;
             CmbPole.IsEnabled = true;
             ChkActif.IsEnabled = true;
@@ -449,6 +515,7 @@ namespace GestionConges.WPF.Views
             TxtEmail.IsEnabled = false;
             CmbRole.IsEnabled = false;
             CmbSociete.IsEnabled = false;
+            CmbPays.IsEnabled = false;
             CmbEquipe.IsEnabled = false;
             CmbPole.IsEnabled = false;
             ChkActif.IsEnabled = false;
@@ -459,12 +526,15 @@ namespace GestionConges.WPF.Views
             _modeEdition = false;
         }
 
-        private void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
+        private async void BtnNouvelUtilisateur_Click(object sender, RoutedEventArgs e)
         {
             _utilisateurSelectionne = null;
             DgUtilisateurs.SelectedItem = null;
 
             ViderFormulaire();
+
+            // Charger les pays
+            await ChargerPays("FR"); // Sélectionner la France par défaut
 
             // Charger les équipes pour la première société si disponible
             if (_societes.Count > 0)
@@ -472,7 +542,6 @@ namespace GestionConges.WPF.Views
                 CmbSociete.SelectedIndex = 0;
                 ChargerEquipesPourSociete(_societes[0].Id);
             }
-
 
             ActiverFormulaire();
             TxtNom.Focus();
@@ -555,9 +624,10 @@ namespace GestionConges.WPF.Views
                     string.IsNullOrWhiteSpace(TxtPrenom.Text) ||
                     string.IsNullOrWhiteSpace(TxtEmail.Text) ||
                     CmbSociete.SelectedValue == null ||
+                    CmbPays.SelectedValue == null ||
                     CmbEquipe.SelectedValue == null)
                 {
-                    MessageBox.Show("Veuillez remplir tous les champs obligatoires (Nom, Prénom, Email, Société, Équipe).",
+                    MessageBox.Show("Veuillez remplir tous les champs obligatoires (Nom, Prénom, Email, Société, Pays, Équipe).",
                                   "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -608,6 +678,13 @@ namespace GestionConges.WPF.Views
                 utilisateur.Email = TxtEmail.Text.Trim();
                 utilisateur.Role = (RoleUtilisateur)CmbRole.SelectedIndex;
                 utilisateur.SocieteId = ((Societe)CmbSociete.SelectedItem).Id;
+
+                // Gestion du pays
+                if (CmbPays.SelectedValue is string codePays)
+                {
+                    utilisateur.CodePays = codePays;
+                }
+
                 utilisateur.EquipeId = ((Equipe)CmbEquipe.SelectedItem).Id;
 
                 // Gestion du pôle
@@ -618,9 +695,6 @@ namespace GestionConges.WPF.Views
                 }
                 utilisateur.PoleId = selectedPoleId;
                 utilisateur.Actif = ChkActif.IsChecked ?? true;
-
-                // Pas besoin de marquer manuellement les propriétés comme modifiées
-                // EF Core le fait automatiquement pour les entités trackées
 
                 await context.SaveChangesAsync();
 
@@ -847,7 +921,6 @@ namespace GestionConges.WPF.Views
             }
         }
 
-
         private void CmbFiltrePole_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             FiltrerUtilisateurs();
@@ -930,7 +1003,6 @@ namespace GestionConges.WPF.Views
                 using var context = CreerContexte();
                 if (context == null) return;
 
-                // CORRECTION : Utiliser la relation directe Pole -> Equipe
                 var poles = await context.Poles
                     .Where(p => p.EquipeId == equipeId && p.Actif)
                     .OrderBy(p => p.Nom)
@@ -950,8 +1022,6 @@ namespace GestionConges.WPF.Views
                               "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-
 
         private void BtnGestionPoles_Click(object sender, RoutedEventArgs e)
         {
@@ -975,10 +1045,9 @@ namespace GestionConges.WPF.Views
             {
                 try
                 {
-                    //var gestionValidationWindow = new GestionValidateurWindow(_utilisateurSelectionne.Id);
-                    //gestionValidationWindow.ShowDialog();
-
-                    ChargerDonnees();
+                    // Cette fonctionnalité pourrait être ajoutée plus tard
+                    MessageBox.Show("Fonctionnalité de gestion des validateurs à venir dans une prochaine version.",
+                                  "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {

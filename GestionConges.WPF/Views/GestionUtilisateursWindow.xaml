@@ -401,6 +401,19 @@
                                     </Border>
                                 </StackPanel>
 
+                                <!-- Pays -->
+                                <StackPanel Margin="0,0,0,16">
+                                    <TextBlock Text="Pays" FontWeight="SemiBold" 
+                                             Foreground="{StaticResource TextPrimary}" 
+                                             Margin="0,0,0,6"/>
+                                    <Border Background="{StaticResource Surface}" 
+                                          BorderBrush="{StaticResource Gray300}" BorderThickness="1"
+                                          >
+                                        <ComboBox Name="CmbPays" Background="Transparent" BorderThickness="0" 
+                                                Padding="12,10" SelectionChanged="CmbPays_SelectionChanged"/>
+                                    </Border>
+                                </StackPanel>
+
                                 <!-- Séparateur -->
                                 <Border Height="1" Background="{StaticResource Gray200}" Margin="0,12,0,20"/>
 

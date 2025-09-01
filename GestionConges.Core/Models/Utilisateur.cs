@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GestionConges.Core.Enums;
+﻿using GestionConges.Core.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GestionConges.Core.Models
 {
@@ -19,6 +20,11 @@ namespace GestionConges.Core.Models
 
         [Required]
         public string MotDePasseHash { get; set; } = string.Empty;
+
+        public string? CodePays { get; set; }
+
+        [NotMapped]
+        public Pays? Pays { get; set; }
 
         public RoleUtilisateur Role { get; set; } = RoleUtilisateur.Employe;
 
